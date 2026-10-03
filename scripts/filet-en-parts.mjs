@@ -36,7 +36,7 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { cpus } from "node:os";
-import { TOUCHES_L_ETAT_COMMUN, filetResolu } from "./ezechiel-les-tests.mjs";
+import { TOUCHES_L_ETAT_COMMUN, filetResolu, dansUneChaine } from "./ezechiel-les-tests.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, imprimerPlanDaction } from "./report-template.mjs";
 
@@ -136,7 +136,23 @@ export function repartir(blocs = [], combien = PARTS_PAR_DEFAUT) {
 // à éviter — chacun a donc son propre sous-dossier. Plus bas dans le fichier, les blocs ont leurs
 // propres dossiers temporaires ; comme un bloc donné ne tourne que dans UNE part, ils ne peuvent
 // pas se rencontrer, et les toucher aurait cassé des assertions qui citent ces chemins.
-export function genererLaPart(src = "", blocsGardes = [], { numero = 1, finDuPreambule = 0 } = {}) {
+// `epineDansCettePart` — L'EXPÉRIENCE QUI DÉCIDE DU PLAFOND (2026-10-03).
+//
+// CE QUE LE RUNNER FAISAIT, ET PERSONNE NE L'AVAIT REGARDÉ : il ne vide que l'INTÉRIEUR des blocs
+// non retenus. Tout ce qui est hors bloc est donc gardé dans CHAQUE part — or 176 groupes de tests
+// du jeu sont écrits à plat ENTRE les blocs, dispersés dans 27 000 lignes. Ils pèsent 120 s, la
+// moitié du filet, et ils sont rejoués quatre fois : 480 s de processeur pour 120 s de travail.
+//
+// L'HYPOTHÈSE QUI SE TESTE : les 127 blocs déplaçables sont, par définition, ceux qui ne touchent
+// PAS l'état commun. Ils n'ont donc pas besoin de ce que l'épine installe. Si c'est vrai, l'épine
+// peut ne tourner que dans UNE part.
+//
+// COMMENT ON SAURA QUE C'EST FAUX, et c'est ce qui rend l'expérience acceptable : le mode d'échec
+// est BRUYANT. Une variable définie entre deux blocs et utilisée par un bloc déplaçable rend un
+// `ReferenceError` immédiat, jamais un vert silencieux. Et le garde-fou qui compte vraiment est le
+// NOMBRE DE SUCCÈS DISTINCTS : s'il tombe sous celui du séquentiel, une vérification a disparu, et
+// c'est exactement la faute que ce gain ne doit jamais coûter.
+export function genererLaPart(src = "", blocsGardes = [], { numero = 1, finDuPreambule = 0, epineDansCettePart = true } = {}) {
   const lignes = String(src).split("\n");
   const tousLesBlocs = blocsDeNiveauZero(src);
   const garde = new Set();
@@ -144,7 +160,11 @@ export function genererLaPart(src = "", blocsGardes = [], { numero = 1, finDuPre
   const sortie = lignes.map((l, i) => {
     const n = i + 1;
     const dansUnBloc = tousLesBlocs.some((b) => n >= b.debut && n <= b.fin);
-    return dansUnBloc && !garde.has(n) ? "" : l;
+    if (dansUnBloc) return garde.has(n) ? l : "";
+    // LE PRÉAMBULE RESTE PARTOUT, TOUJOURS : il porte les imports, l'ouverture de la base et les
+    // fonctions d'aide. Le vider casserait tout, bruyamment, et pour rien.
+    if (n <= finDuPreambule) return l;
+    return epineDansCettePart ? l : "";
   });
   // LE DÉFAUT LE PLUS GRAVE DE CE RUNNER, ET IL ÉTAIT SILENCIEUX (2026-09-27, quatrième lancement
   // réel). La substitution ne portait d'abord que sur le préambule, parce que c'est lui qui écrit
@@ -157,12 +177,244 @@ export function genererLaPart(src = "", blocsGardes = [], { numero = 1, finDuPre
   // LA SUBSTITUTION VISE DONC `.sites-runtime/test-`, PARTOUT DANS LE FICHIER, et rien d'autre :
   // c'est exactement le préfixe des modules transpilés, et laisser les autres chemins tranquilles
   // évite de casser les assertions qui citent un dossier de couverture par son nom littéral.
-  const sortieTexte = sortie.join("\n").replaceAll(".sites-runtime/test-", `.sites-runtime/p${numero}/test-`);
+  // LA SECONDE SUBSTITUTION, ET SON ABSENCE AVAIT TUÉ LE RUNNER EN SILENCE (2026-10-03).
+  //
+  // LE FILET IMPORTE SES VOISINS DE DEUX FAÇONS MÉLANGÉES : `../scripts/x.mjs`, qui survit au
+  // déplacement de la copie dans `.sites-runtime/`, et `./x.mjs`, qui ne survit pas — depuis
+  // `.sites-runtime/`, `./the-king.mjs` désigne `.sites-runtime/the-king.mjs`, qui n'existe pas.
+  // Il y en a VINGT-HUIT en statique plus plusieurs en dynamique, toutes ajoutées APRÈS l'écriture
+  // de ce runner.
+  //
+  // POURQUOI PERSONNE NE L'A VU : le runner n'a plus jamais tourné après le jour de sa naissance
+  // (22 passages le jour un, zéro ensuite). **Un outil qu'on n'utilise pas ne signale jamais qu'il
+  // est cassé** — c'est la leçon L2 prise par son autre bout, et elle a coûté quatre jours pendant
+  // lesquels le seul levier connu contre le temps du filet était mort sans que personne le sache.
+  //
+  // LA RÉÉCRITURE EST VOLONTAIREMENT ÉTROITE : seuls les imports d'un FRÈRE DIRECT en `.mjs` sont
+  // réécrits vers `../scripts/`. Un `./` suivi d'un sous-dossier, ou d'une autre extension, est
+  // laissé tel quel — élargir le motif risquerait de toucher une chaîne de caractères citée dans
+  // une assertion, et ce runner a déjà payé une fois pour avoir réécrit trop large.
+  const sortieTexte = reecrireLesImportsFreres(
+    sortie.join("\n").replaceAll(".sites-runtime/test-", `.sites-runtime/p${numero}/test-`),
+  );
   const lignesFinales = sortieTexte.split("\n");
   for (let i = 0; i < Math.min(finDuPreambule, lignesFinales.length); i++) {
     lignesFinales[i] = lignesFinales[i].replaceAll("'.sites-runtime'", `'.sites-runtime/p${numero}'`);
   }
   return lignesFinales.join("\n");
+}
+
+// `from "./x.mjs"` ou `import("./x.mjs")` — un frère DIRECT, jamais un sous-dossier. Le groupe
+// capturant garde le guillemet d'ouverture pour que la réécriture ne change rien d'autre.
+export const MOTIF_IMPORT_FRERE = /(from\s*["']|import\(\s*["'])\.\/([a-z0-9][a-z0-9._-]*\.mjs)/gi;
+
+// LE GARDE-FOU QUI EMPÊCHE CE DÉFAUT DE REVENIR (Article 24) : aucune copie générée ne doit
+// contenir un import relatif qui ne se résout pas depuis `.sites-runtime/`. Sans lui, le prochain
+// style d'import ajouté au filet re-casserait le runner, et on ne le saurait qu'en le relançant —
+// c'est-à-dire potentiellement jamais.
+export const MOTIF_RELATIF_RESTANT = /(?:from\s*["']|import\(\s*["'])(\.\/[^"']+)["']/g;
+
+// LA RÉÉCRITURE NE TOUCHE QUE LES VRAIS IMPORTS, et la première version a prouvé pourquoi il
+// fallait cette précaution — en une seule exécution. Elle réécrivait par expression régulière sur
+// tout le texte, et elle a modifié un `from "./lib-shell.mjs"` CITÉ À L'INTÉRIEUR D'UNE CHAÎNE,
+// dans une éprouvette qui vérifie justement comment on détecte les dépendances internes. Le test
+// attendait deux dépendances, il n'en a plus vu qu'une : le runner cassait le test qu'il lançait,
+// pour la seconde fois de sa vie et pour la même raison de fond.
+//
+// LA DISTINCTION QUI TRANCHE : le chemin d'un vrai import est TOUJOURS dans une chaîne — ça ne
+// distingue rien. Ce qui distingue, c'est le MOT-CLÉ : dans un vrai import, `from` ou `import(`
+// est du code ; dans une citation, il est lui-même à l'intérieur d'une chaîne. On teste donc la
+// position du mot-clé, pas celle du chemin. Le détecteur existait déjà chez Ezechiel ; on le
+// réutilise plutôt que d'en écrire un second qui divergerait (leçon L29).
+export function reecrireLesImportsFreres(texte = "", { estDansUneChaine = dansUneChaine } = {}) {
+  return String(texte).split("\n").map((ligne) => {
+    if (!ligne.includes("./")) return ligne;
+    let sortie = "";
+    const motif = new RegExp(MOTIF_IMPORT_FRERE.source, "gi");
+    let m;
+    let dernier = 0;
+    while ((m = motif.exec(ligne)) !== null) {
+      if (estDansUneChaine(ligne, m.index)) continue;  // le mot-clé est cité : ce n'est pas un import
+      sortie += ligne.slice(dernier, m.index) + `${m[1]}../scripts/${m[2]}`;
+      dernier = m.index + m[0].length;
+    }
+    return dernier ? sortie + ligne.slice(dernier) : ligne;
+  }).join("\n");
+}
+
+export function findImportsIrresolus(texteDeLaPart = "", { existe = null, root = "" } = {}) {
+  const verifie = existe ?? (() => false);
+  const restants = [...new Set([...String(texteDeLaPart).matchAll(MOTIF_RELATIF_RESTANT)].map((m) => m[1]))];
+  return restants.filter((chemin) => !verifie(`${root}.sites-runtime/${chemin.replace(/^\.\//, "")}`));
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LE PLANCHER — ce que la parallélisation ne pourra JAMAIS faire descendre (2026-10-03)
+// ————————————————————————————————————————————————————————————————————————
+//
+// POURQUOI CE CALCUL EXISTE : le gain du parallélisme a un plafond, et ce plafond n'est pas une
+// question de machine — c'est l'ÉPINE, le code écrit au niveau du fichier (préambule plus les
+// ~70 tests du jeu), qui se rejoue intégralement dans chaque part. Tant qu'on ne la connaît pas,
+// « ajoutons des parts » est une réponse qu'on répète sans savoir qu'elle ne rend plus rien.
+//
+// LE CHIFFRE A ÉTÉ MULTIPLIÉ PAR 6,5 EN QUATRE JOURS, et personne ne l'a vu : 18,6 s le
+// 2026-09-29, 120,4 s le 2026-10-03, soit la MOITIÉ du temps total. Le runner n'avait plus tourné
+// depuis sa naissance, donc rien ne le mesurait — et il était cassé par-dessus le marché.
+//
+// LA MESURE EST CORROBORÉE PAR DEUX CHEMINS INDÉPENDANTS, et c'est ce qui la rend crédible : le
+// découpage par plages de lignes rend 121 s, et le lancement RÉEL à quatre parts (147 à 169 s par
+// part) en implique 124 par l'équation du plancher. Un seul des deux n'aurait rien prouvé, parce
+// que le recollage chronomètre↔groupes se déclare lui-même INCOMPLET.
+export function plancherDuParallelisme({ src = "", mesures = [], parts = [2, 3, 4, 6, 8] } = {}) {
+  if (!src) return { mesurable: false, pourquoi: "aucun filet fourni : un plancher calculé sur rien se lirait comme un plancher nul" };
+  if (!mesures.length) return { mesurable: false, pourquoi: "aucun chronométrage : le plancher est un partage de TEMPS, pas de lignes — sans durées il n'y a rien à partager (leçons L5/L11)" };
+  const blocs = blocsDeNiveauZero(src);
+  const { socle, deplacables } = separerSocleEtDeplacables(src, blocs);
+  const poids = (bs) => bs.reduce((a, b) => a + mesures.filter((m) => m.ligne >= b.debut && m.ligne <= b.fin).reduce((x, m) => x + (m.ms ?? 0), 0), 0);
+  const msSocle = poids(socle);
+  const msDeplacables = poids(deplacables);
+  const total = mesures.reduce((a, m) => a + (m.ms ?? 0), 0);
+  const msEpine = Math.max(0, total - msSocle - msDeplacables);
+  const plancher = msSocle + msEpine;
+  return {
+    mesurable: true, total, msSocle, msDeplacables, msEpine, plancher,
+    blocs: blocs.length, socle: socle.length, deplacables: deplacables.length,
+    partDeLEpine: total ? msEpine / total : 0,
+    projection: parts.map((n) => ({ parts: n, msTheorique: plancher + msDeplacables / n })),
+    // LA LIMITE EST DÉCLARÉE PLUTÔT QUE TUE : l'attribution ligne→durée vient du recollage
+    // d'Ezechiel, qui se déclare INCOMPLET quand une fonction imprime plusieurs « Passed ». Le
+    // TOTAL reste juste ; le partage entre épine et blocs ne vaut que corroboré par un lancement
+    // réel, et c'est pour ça que le rapport donne les deux.
+    horsPortee: "l'attribution ligne→durée dépend d'un recollage qui peut être incomplet : ce partage se LIT à côté d'un lancement réel, jamais à sa place",
+  };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LES COUPLAGES AVEC L'ÉPINE — la liste de courses de la refonte (2026-10-03)
+// ————————————————————————————————————————————————————————————————————————
+//
+// D'OÙ VIENT CE DÉTECTEUR : on a tenté de ne faire tourner l'épine que dans UNE part. Trois parts
+// sur quatre sont tombées, sur un `ReferenceError: perceptionEpoch is not defined`. L'échec était
+// BRUYANT, comme on l'espérait — mais le relancer pour découvrir les couplages un par un coûterait
+// quatre minutes par variable. On les lit statiquement.
+//
+// CE QUE ÇA REND, ET C'EST LA VRAIE VALEUR : la liste exacte des variables posées à plat entre les
+// blocs et utilisées À L'INTÉRIEUR d'un bloc déplaçable. C'est très précisément ce qu'il faut
+// découpler pour que le plancher de 121 s tombe — ni plus, ni moins. Sans cette liste, « sortir
+// les tests du jeu » est une intention ; avec elle, c'est un chantier chiffré.
+//
+// CE QU'IL NE SAIT PAS FAIRE, ET LE DIRE ÉVITE DE LE CROIRE : il lit des déclarations `const`,
+// `let` et `var` en colonne zéro, et cherche le nom ailleurs. Une variable créée par
+// déstructuration complexe, ou une fonction déclarée puis réassignée, lui échappe. Il SOUS-déclare
+// donc les couplages plutôt qu'il n'en invente — et un couplage manqué se verra au lancement, pas
+// dans un faux vert.
+// LE MOTIF NE PEUT PAS S'ANCRER EN DÉBUT DE LIGNE, et le premier passage l'a prouvé sur le cas
+// qu'on connaissait déjà : `perceptionEpoch` — la variable qui avait fait tomber trois parts sur
+// quatre — est déclarée EN MILIEU DE LIGNE, `…;const perceptionEpoch=result.epoch;…`. L'épine est
+// écrite en lignes denses où dix instructions se suivent, donc un détecteur ancré au début ne voit
+// qu'une déclaration sur dix. Il rendait 7 couplages en ratant celui par lequel on l'avait trouvé :
+// une liste courte et rassurante, c'est-à-dire le pire des deux résultats possibles.
+export const MOTIF_DECLARATION_A_PLAT = /(?:^|[;{(}]\s*)(?:const|let|var)\s+(?:\{([^}]+)\}|\[([^\]]+)\]|([A-Za-z_$][\w$]*))/g;
+
+export function nomsDeclares(ligne = "") {
+  const out = [];
+  for (const m of String(ligne).matchAll(MOTIF_DECLARATION_A_PLAT)) {
+    const brut = m[1] ?? m[2] ?? m[3] ?? "";
+    for (const x of brut.split(",")) {
+      const nom = x.split(":").pop().split("=")[0].trim();
+      if (/^[A-Za-z_$][\w$]*$/.test(nom) && !out.includes(nom)) out.push(nom);
+    }
+  }
+  return out;
+}
+
+// ⚠️ CETTE FONCTION REFUSE DE CONCLURE, ET LE REFUS EST LE RÉSULTAT (2026-10-03).
+//
+// DEUX VERSIONS ONT ÉTÉ ESSAYÉES, ET AUCUNE N'EST CROYABLE. La première n'acceptait qu'une
+// déclaration en colonne zéro : elle a rendu SEPT couplages en ratant `perceptionEpoch`, c'est-à-
+// dire très exactement celui par lequel le problème avait été découvert — une liste courte et
+// rassurante, le pire des deux résultats possibles. La seconde accepte une déclaration en milieu
+// de ligne : elle rend QUARANTE-CINQ couplages dont `a`, `n`, `t`, `r`, `e` — des variables
+// LOCALES de blocs qui portent le même nom qu'une variable d'épine, donc du bruit pur.
+//
+// LA CAUSE EST STRUCTURELLE, PAS UN RÉGLAGE À TROUVER : distinguer une variable de portée fichier
+// d'une variable locale qui porte le même nom demande de connaître les PORTÉES, c'est-à-dire un
+// analyseur de syntaxe. `decouperEnGroupes` déclare explicitement n'en être pas un, et bricoler
+// une approximation de portée par expressions régulières reproduirait la leçon L39 (un détecteur
+// qui compte une profondeur est faux jusqu'à preuve du contraire).
+//
+// ET LE PREMIER PASSAGE A CORRIGÉ LE DIAGNOSTIC LUI-MÊME, ce qui vaut mieux qu'une liste :
+// `perceptionEpoch` n'est PAS dans l'épine, il est déclaré DANS UN BLOC (ligne 638). Le couplage
+// qui a fait tomber trois parts est donc BLOC → BLOC, et non épine → bloc. Autrement dit le
+// détecteur de socle (`TOUCHES_L_ETAT_COMMUN`) ne voit que les blocs qui touchent `post`, `db` ou
+// `world` — jamais ceux qui se passent une variable ordinaire. C'est LÀ qu'est le trou, et c'est
+// un autre chantier que celui qu'on croyait ouvrir.
+export function couplagesAvecLEpine({ src = "", jeLeCroisVraiment = false } = {}) {
+  if (!jeLeCroisVraiment) {
+    return {
+      mesurable: false,
+      pourquoi: "ce détecteur ne distingue pas une variable de PORTÉE FICHIER d'une variable LOCALE qui porte le même nom — il a rendu 7 couplages en ratant le cas connu, puis 45 dont « a », « n » et « t ». Trancher demande un analyseur de portées, pas un motif. Et le passage a corrigé le diagnostic : le couplage qui fait tomber les parts est BLOC → BLOC, pas épine → bloc",
+      couplages: [],
+    };
+  }
+  if (!src) return { mesurable: false, pourquoi: "aucun filet fourni : une liste de couplages vide se lirait comme « rien ne couple »" };
+  const lignes = String(src).split("\n");
+  const blocs = blocsDeNiveauZero(src);
+  if (!blocs.length) return { mesurable: false, pourquoi: "aucun bloc de niveau zéro détecté : le découpage a échoué, et sans lui la notion d'épine n'a pas de sens" };
+  const { deplacables } = separerSocleEtDeplacables(src, blocs);
+  const finDuPreambule = blocs[0].debut - 1;
+  const dansUnBloc = new Set();
+  for (const b of blocs) for (let n = b.debut; n <= b.fin; n++) dansUnBloc.add(n);
+  // Les noms posés à plat APRÈS le préambule : ceux-là disparaîtraient si l'épine ne tournait que
+  // dans une part. Ceux du préambule restent partout, donc ils ne couplent rien.
+  const posesParLEpine = new Map();
+  for (let n = finDuPreambule + 1; n <= lignes.length; n++) {
+    if (dansUnBloc.has(n)) continue;
+    for (const nom of nomsDeclares(lignes[n - 1])) if (!posesParLEpine.has(nom)) posesParLEpine.set(nom, n);
+  }
+  if (!posesParLEpine.size) return { mesurable: true, couplages: [], posesParLEpine: 0, blocsTouches: 0, deplacables: deplacables.length };
+  const couplages = new Map();
+  for (const b of deplacables) {
+    const texte = lignes.slice(b.debut - 1, b.fin).join("\n");
+    for (const [nom, ligne] of posesParLEpine) {
+      if (!new RegExp(`\\b${nom.replace(/[$]/g, "\\$")}\\b`).test(texte)) continue;
+      if (!couplages.has(nom)) couplages.set(nom, { nom, declareeLigne: ligne, blocs: [] });
+      couplages.get(nom).blocs.push(b.debut);
+    }
+  }
+  const liste = [...couplages.values()].sort((a, b) => b.blocs.length - a.blocs.length);
+  return {
+    mesurable: true, couplages: liste,
+    posesParLEpine: posesParLEpine.size,
+    blocsTouches: new Set(liste.flatMap((c) => c.blocs)).size,
+    deplacables: deplacables.length,
+    horsPortee: "il lit des déclarations const/let/var en colonne zéro : une déstructuration complexe lui échappe. Il SOUS-déclare les couplages, il n'en invente jamais",
+  };
+}
+
+export function formatCouplagesLines(c = {}) {
+  if (!c.mesurable) return [`PAS MESURÉ — ${c.pourquoi}`];
+  const L = [];
+  L.push(`${c.posesParLEpine} nom(s) posé(s) à plat par l'épine · ${c.couplages.length} réellement utilisé(s) dans un bloc déplaçable · ${c.blocsTouches}/${c.deplacables} bloc(s) couplé(s)`);
+  if (!c.couplages.length) { L.push("  Aucun couplage : l'épine pourrait ne tourner que dans une part."); return L; }
+  L.push("  Les plus couplants — c'est par eux qu'il faut commencer :");
+  for (const x of c.couplages.slice(0, 12)) L.push(`    ${String(x.blocs.length).padStart(3)} bloc(s) · ${x.nom} (posé ligne ${x.declareeLigne})`);
+  L.push(`  HORS PORTÉE : ${c.horsPortee}`);
+  return L;
+}
+
+export function formatPlancherLines(p = {}) {
+  if (!p.mesurable) return [`PAS MESURÉ — ${p.pourquoi}`];
+  const s = (ms) => `${(ms / 1000).toFixed(1)} s`;
+  const L = [];
+  L.push(`${p.blocs} bloc(s) · ${p.socle} du socle · ${p.deplacables} déplaçable(s) · total chronométré ${s(p.total)}`);
+  L.push(`  ÉPINE (hors blocs, rejouée dans CHAQUE part) : ${s(p.msEpine)} — ${Math.round(p.partDeLEpine * 100)} % du total`);
+  L.push(`  socle (blocs attachés à l'état commun)       : ${s(p.msSocle)}`);
+  L.push(`  travail réellement divisible                 : ${s(p.msDeplacables)}`);
+  L.push(`  PLANCHER = ${s(p.plancher)} — aucun nombre de parts ne descend en dessous.`);
+  for (const x of p.projection) L.push(`    à ${x.parts} parts → ${s(x.msTheorique)} en théorie`);
+  L.push(`  HORS PORTÉE : ${p.horsPortee}`);
+  return L;
 }
 
 // --- La remise en ordre : ce que l'utilisateur voit à la fin ------------------------------------
@@ -225,6 +477,7 @@ async function main() {
   const src = readFileSync(new URL(`../${cheminDuFilet}`, import.meta.url), "utf8");
   const blocs = blocsDeNiveauZero(src);
   const finDuPreambule = blocs[0] ? blocs[0].debut - 1 : 0;
+  const epineIsolee = process.argv.includes("--epine-isolee");
   let mesures = [];
   try { mesures = JSON.parse(readFileSync(new URL(`../${MESURES}`, import.meta.url), "utf8")).mesures ?? []; } catch { /* pas de mesure : on répartit au nombre de blocs */ }
   const { socle, deplacables } = separerSocleEtDeplacables(src, blocs);
@@ -245,7 +498,10 @@ async function main() {
   mkdirSync(dossier, { recursive: true });
   const chemins = parts.map((p, i) => {
     const chemin = new URL(`../.sites-runtime/filet-part-${i + 1}.mjs`, import.meta.url);
-    writeFileSync(chemin, genererLaPart(src, p.blocs, { numero: i + 1, finDuPreambule }));
+    // L'ÉPINE NE TOURNE QUE DANS LA PREMIÈRE PART quand l'option est demandée. Elle reste PARTOUT
+    // par défaut : ce runner a déjà cassé trois fois le filet qu'il lançait, et un gain de temps
+    // qui se paierait d'une vérification perdue n'est pas un gain (Article 0 de l'outillage).
+    writeFileSync(chemin, genererLaPart(src, p.blocs, { numero: i + 1, finDuPreambule, epineDansCettePart: !epineIsolee || i === 0 }));
     return chemin.pathname;
   });
 

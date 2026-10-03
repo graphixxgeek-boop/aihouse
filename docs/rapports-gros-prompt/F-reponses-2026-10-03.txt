@@ -1,8 +1,8 @@
 ⚠️  Attention, mes résultats peuvent être inexacts : il découpe une demande longue en points par des marqueurs de texte : une demande formulée sans marqueur ressort en un seul bloc. À vérifier avant d'agir, jamais un verdict acquis.
 
 Version de Claude : claude-opus-5
-Produit le : samedi 3 octobre 2026 à 10h31 (UTC)
-État du code : 0de593b sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Produit le : samedi 3 octobre 2026 à 17h20 (UTC)
+État du code : ce92357 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
 Contexte de production : fichier Word de 35 pages, envoyé en réponse aux documents livrés les 1er et 2 octobre
 Outil : rapport-gros-prompt — inchangé depuis le dimanche 27 septembre 2026
 Santé de l'outil : 2/2 signal(aux) au vert
@@ -10,7 +10,11 @@ Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
 
 === RAPPORT DE GROS PROMPT ===
 Saisine du 2026-10-03, vers 04h30 Paris, juste avant d'aller dormir après une nuit blanche · 96 point(s) · 44 tâche(s) associée(s)
-Date : 2026-10-03T10:31:50.456Z
+Date : 2026-10-03T17:20:31.645Z
+
+OÙ EN SONT LES TÂCHES DE CE RAPPORT, à l'instant où tu le lis — lu dans docs/suivi/, jamais recopié :
+35 tâche(s) sur 44 sont FAITES, 9 restent ouvertes.
+Chaque point ci-dessous porte l'état réel de ses tâches à côté de leur numéro.
 
 Ton prompt du 2026-10-03, vers 04h30 Paris, juste avant d'aller dormir après une nuit blanche contient 96 point(s) distinct(s). Ils sont repris ci-dessous RÉORGANISÉS par sujet — jamais dans l'ordre où ils sont arrivés, qui est l'ordre où tu y as pensé, pas celui où ils se traitent.
 🟢 83 retenu(s) · ⚪ 12 écarté(s) · 🟠 1 à trancher par toi.
@@ -682,13 +686,13 @@ la-nuit-du-2-au-3-octobre.html
 
 Stratégies et documents
 
-🟢 [P01] RETENU — #1531
+🟢 [P01] RETENU — #1531 ✅ faite
    TA DEMANDE : « Existe-t-il, pour chaque stratégie, une « arborescence incluse » comme pour la GRANDE STRATÉGIE ? »
    OÙ ÇA EN EST : **ZÉRO SUR TREIZE.** J'ai compté les caractères de dessin d'arbre dans les treize documents de `docs/strategies/` : aucun n'en porte un seul. L'arborescence que tu as vue vient de `docs/systeme-de-suivi.md`, le seul document du dépôt qui en contienne une. Donc non, ce n'est pas un standard — c'était une exception. #1531 les ajoute, et les GÉNÈRE depuis le contenu réel plutôt que de les dessiner à la main, sans quoi elles se périmeront au premier document ajouté.
 
 Registre des remises
 
-🟢 [P02] RETENU — #1532
+🟢 [P02] RETENU — #1532 ✅ faite
    TA DEMANDE : « « si je réponds à un document, c'est que je l'ai bien reçu et lu » — une réponse vaut accusé de réception ET de lecture »
    OÙ ÇA EN EST : Acté comme règle : ta réponse à un document vaut accusé de réception ET de lecture. Branché dans #1532, avec la nuance mesurée du point suivant.
 
@@ -696,7 +700,7 @@ Registre des remises
    TA DEMANDE : « Peux-tu détecter que je CLIQUE sur le fichier ? C'est dans ton environnement »
    POURQUOI ON NE FAIT RIEN : **NON, ET C'EST UN NON FRANC.** Rien dans mon environnement ne me dit qu'un fichier a été ouvert ou cliqué. Je sais seulement que je l'ai envoyé. Il n'y a pas de demi-réponse ici : si un jour je te disais « ouvert », ce serait une déduction déguisée en fait.
 
-🟢 [P08] RETENU — #1532
+🟢 [P08] RETENU — #1532 ✅ faite
    TA DEMANDE : « Nouvel axe de classification des docs : ENVOYÉ, REÇU, OUVERT, LU — à mettre en place si utile et facile »
    OÙ ÇA EN EST : Ton idée tient, sauf sur un état. ENVOYÉ je le sais, REÇU tu peux me le confirmer, LU se déduit de ta réponse (ton point P02). OUVERT ne se mesure pas — et une colonne qu'aucune mesure ne peut remplir reste vide pour toujours en donnant l'impression d'être surveillée. #1532 construit donc trois états vrais plutôt que quatre dont un ment.
 
@@ -708,126 +712,126 @@ Ordre des événements
 
 PACK DÉCOUVERTE
 
-🟢 [P04] RETENU — #1533
+🟢 [P04] RETENU — #1533 ✅ faite
    TA DEMANDE : « Le pack existe déjà chez Cassandra ? C'est un process ? Il veut la LISTE EXHAUSTIVE, pas des pointillés »
    OÙ ÇA EN EST : Repris dans #1533 avec tes trois autres points sur le même pack. La liste exhaustive sera GÉNÉRÉE depuis le contenu réel, jamais recopiée — c'est la seule façon qu'elle ne redevienne pas des pointillés.
 
-🟢 [P05] RETENU — #1533
+🟢 [P05] RETENU — #1533 ✅ faite
    TA DEMANDE : « Supprimer l'idée d'une version « admin » : l'Agence est la même, seul son statut change (projet vs aide exécutive). Dans le pack, la présenter comme AIDE EXÉCUTIVE — sa forme finale »
    OÙ ÇA EN EST : Acté : plus de version « admin ». L'Agence est la même, seul son statut change — projet à part entière, ou aide exécutive au service de ton projet. Dans le pack, c'est la forme AIDE EXÉCUTIVE qui est présentée. La vérification de cohérence dans le code est #1553, parce que dire qu'on a supprimé l'idée et vérifier qu'elle n'a pas laissé de traces sont deux choses différentes.
 
-🟢 [P06] RETENU — #1533
+🟢 [P06] RETENU — #1533 ✅ faite
    TA DEMANDE : « « PARFAIT on s'est bien compris » sur la rationalisation par PACK — enregistrer l'idée »
    OÙ ÇA EN EST : Enregistré comme principe de rationalisation dans #1533.
 
-🟢 [P86] RETENU — #1533
+🟢 [P86] RETENU — #1533 ✅ faite
    TA DEMANDE : « Inès porte le PACK DÉCOUVERTE, et tiendra aussi le process TOTAL RECALL. Redonner la liste des documents du pack »
    OÙ ÇA EN EST : Acté : INES-official porte le PACK DÉCOUVERTE et portera le process TOTAL RECALL. La liste des documents du pack t'est redonnée dans #1533, exhaustive cette fois.
 
 Zones fragiles
 
-🟢 [P09] RETENU — #1528
+🟢 [P09] RETENU — #1528 ✅ faite
    TA DEMANDE : « Les zones fragiles méritent-elles aussi une tâche ouverte pour qu'elles cessent d'être fragiles ? »
    OÙ ÇA EN EST : **OUI, ET LE CHIFFRE EST MAUVAIS : 13 des 14 zones fragiles ne citent aucune tâche.** Mesuré le 3 octobre, tâche #1528. Une zone déclarée fragile sans tâche derrière, c'est un avertissement que personne ne peut traiter — exactement ce que l'Article 28 interdit aux rapports, et que le registre des zones fragiles faisait sans que personne le remarque. Le contrôle est désormais mécanique : `auditPointsFragiles()` refuse le silence.
 
 Fils de discussion
 
-🟢 [P10] RETENU — #1542
+🟢 [P10] RETENU — #1542 ✅ faite
    TA DEMANDE : « Une RÉPONSE que tu m'envoies peut-elle alimenter AUTOMATIQUEMENT un fil, en reprenant MA QUESTION + TA RÉPONSE, même si la réponse est dans un doc éphémère ? »
    OÙ ÇA EN EST : Oui, c'est faisable, et c'est le cœur de #1542 : ta question + ma réponse alimentent le fil quel que soit le canal, y compris quand ma réponse vit dans un document éphémère — c'est même le cas qui justifie le plus la mécanique, puisque c'est celui où la réponse se perd.
 
-🟢 [P51] RETENU — #1542
+🟢 [P51] RETENU — #1542 ✅ faite
    TA DEMANDE : « Une tâche peut être « poser ou répondre à une question », et une tâche à trancher EST une question : comment l'outil s'y retrouve sans erreur ? »
    OÙ ÇA EN EST : Bonne question, et l'outil s'y retrouve par le STATUT, jamais par le texte. Une tâche « à trancher » est une tâche dont l'état dit qu'elle attend une décision de toi ; un fil est un SUJET qui peut porter plusieurs tâches et plusieurs questions dans le temps. La confusion arrive quand une tâche à trancher n'est reliée à aucun fil — c'est ce que #1542 ferme.
 
-🟢 [P55] RETENU — #1542
+🟢 [P55] RETENU — #1542 ✅ faite
    TA DEMANDE : « Si je réponds à une question de calibrage dans une fenêtre, ça alimente un fil ? Comment tu gères tout ça ? »
    OÙ ÇA EN EST : Oui — et aujourd'hui, non : une réponse donnée en fenêtre de calibrage n'alimente rien automatiquement. C'est exactement ce que #1542 construit, et c'est le canal où la perte est la plus fréquente, puisque la fenêtre disparaît une fois répondue.
 
-🟢 [P57] RETENU — #1542
+🟢 [P57] RETENU — #1542 ✅ faite
    TA DEMANDE : « Quel est le rôle du document maître ? + OK pour « Cerveau des fils » »
    OÙ ÇA EN EST : Nom acté : « Cerveau des fils ». Son rôle : être le seul endroit qui sait quels fils existent, lequel attend qui, et où en est chacun — pour qu'aucun sujet ne se perde entre deux canaux.
 
-🟢 [P58] RETENU — #1542
+🟢 [P58] RETENU — #1542 ✅ faite
    TA DEMANDE : « Fil clos mais réouvrable = reste au catalogue ; clos définitivement = archivé, compressé, JAMAIS supprimé. « Ok comme ça ou il y a une meilleure solution ? » »
    OÙ ÇA EN EST : Ta solution est la bonne, je n'ai pas mieux à proposer. La seule précision que j'ajoute : « compressé » doit vouloir dire résumé ET texte intégral conservé, jamais résumé seul — un fil réduit à son résumé ne peut plus être rouvert utilement.
 
-🟢 [P60] RETENU — #1542
+🟢 [P60] RETENU — #1542 ✅ faite
    TA DEMANDE : « Les réponses (a), (c) et (d) conviennent : un fil où c'est à lui, OU un fil où j'ai répondu en dernier mais qui n'a jamais été livré »
    OÙ ÇA EN EST : Appliqué : un fil est « à toi » soit quand la balle est dans ton camp, soit quand j'ai répondu en dernier mais que la réponse ne t'a jamais été livrée.
 
-🟢 [P61] RETENU — #1542
+🟢 [P61] RETENU — #1542 ✅ faite
    TA DEMANDE : « Les questions de calibrage répondues doivent être renseignées dans les fils, quel que soit le canal (doc, conversation, fenêtre). Dans tous les cas le fil est alimenté »
    OÙ ÇA EN EST : Construit dans #1542, tous canaux confondus.
 
-🟢 [P62] RETENU — #1542
+🟢 [P62] RETENU — #1542 ✅ faite
    TA DEMANDE : « (a) »
    OÙ ÇA EN EST : Option (a) appliquée.
 
-🟢 [P75] RETENU — #1542
+🟢 [P75] RETENU — #1542 ✅ faite
    TA DEMANDE : « (c) »
    OÙ ÇA EN EST : Option (c) appliquée.
 
-🟢 [P78] RETENU — #1542
+🟢 [P78] RETENU — #1542 ✅ faite
    TA DEMANDE : « (c) »
    OÙ ÇA EN EST : Option (c) appliquée.
 
-🟢 [P81] RETENU — #1542
+🟢 [P81] RETENU — #1542 ✅ faite
    TA DEMANDE : « Ma réponse est obsolète : les stratégies existent désormais. Compléter le doc « cerveau des fils » plutôt qu'un nouveau doc ? »
    OÙ ÇA EN EST : Correction acceptée : ma réponse était obsolète, les stratégies existent désormais. On complète le Cerveau des fils plutôt que de créer un document de plus.
 
-🟢 [P84] RETENU — #1542
+🟢 [P84] RETENU — #1542 ✅ faite
    TA DEMANDE : « (c) »
    OÙ ÇA EN EST : Option (c) appliquée.
 
-🟢 [P87] RETENU — #1542
+🟢 [P87] RETENU — #1542 ✅ faite
    TA DEMANDE : « (c) — l'écart était une marge, pas un blocage »
    OÙ ÇA EN EST : Option (c) appliquée : l'écart était une marge, pas un blocage.
 
 Données
 
-🟢 [P11] RETENU — #1530
+🟢 [P11] RETENU — #1530 ✅ faite
    TA DEMANDE : « Enregistres-tu TOUS les docs que je t'envoie ? (question, pas consigne) »
    OÙ ÇA EN EST : **OUI À MOITIÉ — ET J'AI DÛ CORRIGER MA PROPRE RÉPONSE EN COURS DE ROUTE, CE QUI EN DIT PLUS QUE LA RÉPONSE.** Premier constat, trop rapide : « rien n'est archivé, tes fichiers Word n'existent que dans mon brouillon de session ». J'allais te le livrer comme ça. Un contrôle du dépôt — celui qui détecte deux documents jumeaux — a refusé mon commit en signalant que les fichiers que je venais de « sauver » existaient DÉJÀ ailleurs. La vérité est donc : `docs/grand-projet/00-sources/01-sa-demande/` archive bien ta parole, avec le bon statut (« rien ici ne se modifie ») — tes textes y sont jusqu'au 1er octobre. Ce qui manquait vraiment : les 2 et 3 octobre, soit tes deux derniers envois, dont celui-ci. Ils y sont maintenant. **LE VRAI DÉFAUT N'EST DONC PAS L'ABSENCE, C'EST QUE LE DÉPÔT EST MANUEL ET QU'IL S'EST ARRÊTÉ IL Y A DEUX JOURS** sans que rien ne le signale. C'est l'objet de #1530 et #1532. Et j'ai failli créer un second dossier concurrent pour le même contenu, ce qui aurait garanti que les deux divergent (c'est une leçon déjà payée ici, la L29) — le contrôle l'a empêché, pas moi.
 
 Charte et gouvernance
 
-⚪ [P12] ÉCARTÉ — #1487
+⚪ [P12] ÉCARTÉ — #1487 ✅ faite
    TA DEMANDE : « « Tu as mon GO OUI » pour écrire le 4e mot d'ordre dans philosophie-et-politique.md »
    POURQUOI ON NE FAIT RIEN : **RIEN À FAIRE : C'ÉTAIT DÉJÀ ÉCRIT, ET MA TÂCHE #1487 SE TROMPAIT.** INTELLIGENT figure dans l'annexe A de `docs/philosophie-et-politique.md` depuis le 2 octobre à 05h23. Ma tâche #1487, écrite le même jour à 20h29 — quinze heures APRÈS — affirmait le contraire, et l'affirmait en ces termes : « la réponse est NON, et elle est MESURÉE, PAS SUPPOSÉE ». C'était faux, et la formule qui prétendait garantir la mesure est exactement ce qui l'a rendue crédible. Je te demandais donc un GO pour un travail déjà fait, et tu me l'as donné. #1487 est close avec cet écart déclaré. La leçon est pour moi, pas pour toi : une phrase qui jure qu'elle a mesuré n'est pas une mesure.
 
-🟢 [P13] RETENU — #1534
+🟢 [P13] RETENU — #1534 ✅ faite
    TA DEMANDE : « Il reformule pour que je corrige : PHILO/POLITIQUE ne contient pas les convictions des RÈGLES ? Nos règles ne sont pas cohérentes avec la vérité, ou avec philo-politique ? »
    OÙ ÇA EN EST : Ta reformulation est à corriger sur un point. Les deux documents ne portent pas les mêmes convictions : la philosophie dit POURQUOI on tranche, la charte dit COMMENT on travaille. Ce que mesure `tension`, ce n'est pas leur cohérence avec « la vérité » — aucun outil ne sait faire ça — c'est leur cohérence ENTRE ELLES. Et jusqu'au 3 octobre, il n'en lisait qu'un seul des deux : 71 convictions au lieu de 104. C'est corrigé (#1523).
 
-🟠 [P14] À TRANCHER — #1535
+🟠 [P14] À TRANCHER — #1535 ⏳ ouverte
    TA DEMANDE : « « tu dois toujours répondre de manière honnête, même si la réponse est dure à entendre, jamais aménagée pour me plaire » »
    OÙ ÇA EN EST : **C'est la règle la plus importante que tu m'aies demandée cette nuit, et je ne l'ai pas écrite.** L'Article 14 m'oblige à te montrer le texte exact avant de toucher à la charte, puis à obtenir DEUX confirmations. Le texte proposé est dans la section « LES DEUX TEXTES QUE JE NE PEUX PAS ÉCRIRE SANS TOI » de ce rapport. Note l'ironie, elle est volontaire : une règle qui m'ordonne d'être franc même quand ça dérange serait mal née si je l'écrivais en contournant une protection.
    ❓ CE QUE J'ATTENDS DE TOI : Le texte d'Article proposé pour la règle d'honnêteté te convient-il tel quel ? (Si oui, il me faudra une seconde confirmation explicite avant que je l'écrive.)
 
-🟢 [P15] RETENU — #1534
+🟢 [P15] RETENU — #1534 ✅ faite
    TA DEMANDE : « Liste des 104 convictions sous forme résumée, en tableau, 5 par ligne »
    OÙ ÇA EN EST : Le tableau est dû, 5 par ligne, en #1534. Le chiffre a bougé pendant la nuit : 104 et non 71, parce que `tension` lit désormais les deux corpus.
 
-🟢 [P16] RETENU — #1534
+🟢 [P16] RETENU — #1534 ✅ faite
    TA DEMANDE : « « Oui je suis d'accord c'est aussi une question d'export » + on refait le point à la prochaine réponse »
    OÙ ÇA EN EST : Noté, et le point sera refait à ta prochaine réponse comme tu le demandes.
 
-🟢 [P18] RETENU — #1523, #1489
+🟢 [P18] RETENU — #1523 ✅ faite, #1489 ⏳ À TRANCHER
    TA DEMANDE : « « OUI GO » : que `tension` lise aussi la charte »
    OÙ ÇA EN EST : Fait cette nuit (#1523). `tension` lit désormais la Charte en plus du document de gouvernance : 71 → 104 règles comparées. Le rapprochement se fait par un extracteur par corpus, parce que les deux documents numérotent leurs règles différemment et qu'un seul extracteur rendait zéro sur la Charte.
 
-🟢 [P43] RETENU — #1534
+🟢 [P43] RETENU — #1534 ✅ faite
    TA DEMANDE : « Si le codage respecte philo-politique, en est-il de même pour les outils et modules ? »
    OÙ ÇA EN EST : Pas encore, et c'est une vraie lacune. THE-KING vérifie la cohérence du CODE avec la philosophie ; il ne regarde pas si les OUTILS et les MODULES la respectent. Un outil peut parfaitement passer tous les contrôles de code et violer une conviction — par exemple en concluant là où il devrait poser une question. À verser à #1534.
 
-🟢 [P90] RETENU — #1493, #1526
+🟢 [P90] RETENU — #1493 ✅ faite, #1526 ✅ faite
    TA DEMANDE : « Oui : écrire un document pour les 3 règles sans domicile, et me dire quelles elles sont »
    OÙ ÇA EN EST : Fait cette nuit. Les trois règles sans domicile étaient `eval-hors-ronde`, `reveil-arme` et `reveil-a-jour` : elles étaient surveillées par un contrôleur mais ne pointaient vers aucun document, donc impossibles à relire. Elles vivent désormais dans `docs/referentiel/regles-nees-dune-conversation.md`.
 
 Mode auto
 
-🟢 [P17] RETENU — #1480
+🟢 [P17] RETENU — #1480 ⏳ Ouverte
    TA DEMANDE : « Trois bornes : autant de Rondes que utile · pas de limite API (clé gratuite) · les questions sautées n'ont plus de sens en circle auto, pas de livraison HTML, seule la Ronde principale livre »
    OÙ ÇA EN EST : **UNE DE TES TROIS BORNES EST FAUSSE, ET JE PRÉFÈRE TE LE DIRE.** « Pas de limite API parce que la clé est gratuite » : la clé est gratuite, les quotas ne le sont pas. Une clé gratuite Gemini a des plafonds par minute et par jour, et c'est ce qui a bloqué des simulations entières par le passé (HTTP 429). Les deux autres bornes sont appliquées telles quelles : autant de Rondes qu'utile, et pas de livraison HTML en Ronde automatique puisque les questions sautées n'y ont plus de sens.
 
@@ -841,11 +845,11 @@ Licence
    TA DEMANDE : « Explique-moi l'intérêt et comment ça se passe concrètement, est-ce payant ? »
    POURQUOI ON NE FAIT RIEN : Concrètement : tu écris un fichier LICENSE à la racine du dépôt, il dit qui détient les droits et ce qui est interdit, et il s'applique dès qu'il est publié avec le code. L'intérêt n'est pas d'empêcher la copie — rien ne l'empêche — c'est de rendre la copie attaquable. Ce n'est pas payant.
 
-🟢 [P70] RETENU — #1368
+🟢 [P70] RETENU — #1368 ✅ faite
    TA DEMANDE : « plutôt (b) mais (d) pour l'instant »
    OÙ ÇA EN EST : Noté : (b) à terme, (d) pour l'instant.
 
-🟢 [P92] RETENU — #1368, #1494
+🟢 [P92] RETENU — #1368 ✅ faite, #1494 ⏳ Ouverte
    TA DEMANDE : « (b) mais « famille A, propriétaire, en trois lignes » suit-il bien mon conseil ? Le code est-il protégé par « tous droits réservés » pour l'instant ? »
    OÙ ÇA EN EST : Oui, « famille A, propriétaire, en trois lignes » suit bien le conseil : c'est la forme la plus simple qui protège. Et non — à cette heure, le code n'est PAS couvert : il n'y a aucun fichier LICENSE à la racine, donc rien n'affirme « tous droits réservés ». C'est trois lignes de travail et ça ne coûte rien ; c'est dans #1368.
 
@@ -861,69 +865,69 @@ Suivi
 
 Filet de sécurité
 
-🟢 [P21] RETENU — #1485, #1547
+🟢 [P21] RETENU — #1485 ⏳ Ouverte, #1547 ✅ faite
    TA DEMANDE : « Y rattacher une session d'allègement avec ÉZÉCHIEL pour réduire concrètement les impacts négatifs du filet ; grouper/fusionner avec une tâche existante si elle existe »
    OÙ ÇA EN EST : Cherché : il n'y avait PAS de tâche jumelle à fusionner. #1485 porte l'enquête, et #1547 porte ce que tu demandes de concret — le rapport complet sur le filet, pour pouvoir l'alléger en connaissance de cause. La session Ézéchiel se branchera dessus plutôt qu'à côté.
 
-🟢 [P66] RETENU — #1547
+🟢 [P66] RETENU — #1547 ✅ faite
    TA DEMANDE : « (d) oui, rapport complet sur le filet : maîtriser le sujet, sa manipulation, sa rationalisation »
    OÙ ÇA EN EST : Option (d) retenue : rapport complet sur le filet (#1547).
 
-🟢 [P91] RETENU — #1485
+🟢 [P91] RETENU — #1485 ⏳ Ouverte
    TA DEMANDE : « Continue l'enquête — pense à CLAUDE.md et philo-politique aussi, mais enquête sur TOUT. Les opérations d'Ézéchiel ou Moïse comptent-elles comme de la rationalisation ? Liste de ce qui n'est pas exportable vs pas rationalisable vs pas améliorable »
    OÙ ÇA EN EST : L'enquête est élargie dans #1485, CLAUDE.md et la philosophie compris. Ta question sur Ézéchiel et Moïse mérite une réponse de principe : oui, leurs opérations sont de la rationalisation — elles réduisent le coût sans retirer de fonction. La liste que tu demandes (pas exportable / pas rationalisable / pas améliorable) est le livrable de la tâche.
 
 Travail à distance
 
-🟢 [P22] RETENU — #1486, #1499
+🟢 [P22] RETENU — #1486 ⏳ Ouverte, #1499 ⏳ Ouverte
    TA DEMANDE : « Dis-moi juste comment on peut travailler/échanger à distance depuis mon tel ou mail »
    OÙ ÇA EN EST : Concrètement : tu peux déjà me joindre depuis ton téléphone via l'application Claude, et la session continue là où elle en est. Ce qui ne marche pas encore, c'est le mail. Et j'ai trouvé un défaut en répondant (#1499) : mes réveils automatiques sont attachés à CETTE session — si elle meurt, ils meurent avec elle. Le document complet est dans le lot qui t'est livré.
 
 Modules et cartes
 
-🟢 [P23] RETENU — #1536
+🟢 [P23] RETENU — #1536 ✅ faite
    TA DEMANDE : « Il veut une VRAIE carte schématique, pas un texte. DEUX documents : carte ACTUELLE et carte CIBLE. Schéma en tête, pas de long texte, tout compréhensible par le visuel »
    OÙ ÇA EN EST : Deux documents, schéma en tête, texte réduit au minimum. #1536.
 
-🟢 [P24] RETENU — #1536
+🟢 [P24] RETENU — #1536 ✅ faite
    TA DEMANDE : « La carte montre l'organisation de l'Agence : comment les modules interagissent entre eux »
    OÙ ÇA EN EST : Cadrage retenu : la carte montre comment les modules interagissent, pas ce que chacun fait.
 
-🟢 [P27] RETENU — #1536, #1540
+🟢 [P27] RETENU — #1536 ✅ faite, #1540 ✅ faite
    TA DEMANDE : « Sous le schéma, un tableau avec la VRAIE organisation : oublier les familles qu'il a créées, reprendre la classification par type et par axe transverse CONSTATÉS »
    OÙ ÇA EN EST : Ta consigne est tranchante et la mesure te donne raison : les familles que tu as créées ne sont PAS constatées — elles sont déclarées à la main, une par une, dans une liste du code. Le tableau sous le schéma reprendra donc la classification par type et par axe transverse, qui elle est dérivée du dépôt.
 
-🟢 [P28] RETENU — #1538
+🟢 [P28] RETENU — #1538 ✅ faite
    TA DEMANDE : « « un ensemble d'agents qui œuvrent dans un sens commun pour produire UNE PRESTATION DE L'AGENCE » »
    OÙ ÇA EN EST : Acté. Et une mesure à verser au dossier tout de suite, parce qu'elle contredit en partie ta définition : sur les 76 prestations du catalogue, 71 ne sont portées que par UN SEUL outil. « Un ensemble d'agents » décrit donc 5 cas sur 76 aujourd'hui. Soit le catalogue est trop découpé, soit la définition vise la cible et pas l'existant — c'est une des choses à trancher dans #1538.
 
-🟢 [P29] RETENU — #1538, #1540
+🟢 [P29] RETENU — #1538 ✅ faite, #1540 ✅ faite
    TA DEMANDE : « Rappelle les prestations · cette définition est-elle compatible avec « un module se constate » · les Gardiens Sacrés sont-ils un vrai module · les familles actuelles sont-elles constatées · une famille = un module · les familles sont-elles constatées à 100% · sait-on constater des familles par l'axe PRESTATION RENDUE »
    OÙ ÇA EN EST : Tes sept questions, point par point, avec les mesures du 3 octobre. **(1) Les prestations** : 76 au catalogue — et au passage, 76 prestations pour seulement 75 NOMS, « Pack Boussole » en désignant deux. **(2) Ta définition est compatible** avec « un module se constate », à condition que la prestation soit l'axe de regroupement — et c'est précisément l'axe qu'on ne sait pas encore constater (voir 7). **(3) Les Gardiens sacrés sont un vrai module** au sens de ta définition : 7 outils, une prestation commune (scanner la qualité du code à chaque commit), un critère d'appartenance écrit. **(4) Les familles sont-elles constatées ? À 71 %, et j'ai dû corriger ma première réponse** : j'avais dit « 0 %, tout est à la main ». Faux — 44 des 62 familles sont corroborées par une seconde source (le registre de chaque outil), avec ZÉRO divergence ; 18 reposent sur une seule déclaration parce que ces outils n'ont pas de registre. **(5) Une famille n'est pas un module** : les 7 familles regroupent par parenté de rôle, pas par prestation, et la carte le montre — un module peut être transverse à plusieurs familles. **(6) Donc 71 % constatées, pas 0 %.** **(7) Non, on ne sait pas constater une famille par l'axe PRESTATION** : trois tentatives mécaniques ont échoué, chiffres dans la carte des modules (#1536).
 
-🟢 [P30] RETENU — #1538
+🟢 [P30] RETENU — #1538 ✅ faite
    TA DEMANDE : « Module = outils réunis autour d'UNE prestation · Partie indétachable = ce que toute prestation réclame · Partie détachable = un module qui se branche. Le cœur = cœur de la partie indétachable »
    OÙ ÇA EN EST : Acté, et je reformule pour qu'on vérifie qu'on s'est compris : un MODULE est un groupe d'outils réunis parce qu'ils rendent la même prestation. La PARTIE INDÉTACHABLE est ce dont toute prestation a besoin quoi qu'il arrive — on ne peut pas l'enlever sans que plus rien ne fonctionne. La PARTIE DÉTACHABLE est faite de modules qu'on branche ou qu'on retire selon le besoin du client. Le CŒUR est le centre de la partie indétachable : ce qu'on garderait si on ne gardait qu'une chose. Si cette reformulation dévie de ce que tu voulais dire, c'est maintenant qu'il faut le dire.
 
-🟢 [P31] RETENU — #1538
+🟢 [P31] RETENU — #1538 ✅ faite
    TA DEMANDE : « As-tu compris la vision, peux-tu la reformuler · est-ce ça « rationalisation et modularisation » · s'est-on compris depuis le départ · est-ce réaliste · peux-tu m'aider à y penser de façon plus ordonnée »
    OÙ ÇA EN EST : Tes cinq questions. (1) Oui, je crois avoir compris — la reformulation ci-dessus est là pour que tu le vérifies plutôt que me croire. (2) Oui, c'est bien ça « rationalisation et modularisation » : ranger pour pouvoir détacher. (3) Non, pas depuis le départ — les premières semaines, « modulariser » voulait dire « ranger les fichiers », pas « pouvoir vendre une partie seule ». (4) Oui c'est réaliste, à une condition : définir le cœur AVANT de découper, sinon chaque module emporte un bout de cœur avec lui. (5) Oui, et c'est #1538.
 
-🟢 [P46] RETENU — #1538
+🟢 [P46] RETENU — #1538 ✅ faite
    TA DEMANDE : « Le découpage en modules voisins rejoint ce qu'il imagine — à noter dans « alignement de compréhension » »
    OÙ ÇA EN EST : Noté dans l'alignement de compréhension (#1538).
 
-🟢 [P77] RETENU — #1538
+🟢 [P77] RETENU — #1538 ✅ faite
    TA DEMANDE : « Comment on traduit ça en action ? On révèle les packs potentiels ? Module par module ? »
    OÙ ÇA EN EST : En action, ça veut dire : on révèle les packs potentiels module par module, en partant de la prestation. Mais la mesure du P28 impose une étape avant : avec 71 prestations sur 76 portées par un seul outil, révéler les packs aujourd'hui donnerait 71 packs d'un outil — ce qui ne révèle rien. Il faut d'abord regrouper les prestations (#1538).
 
 Format des documents
 
-🟢 [P25] RETENU — #1537
+🟢 [P25] RETENU — #1537 ✅ faite
    TA DEMANDE : « Le schéma du module « gestion des tâches » est EXACTEMENT ce qu'il attend. Ce type de schéma doit être utilisé DÉSORMAIS DE FAÇON RÉCURRENTE dans tous les docs pertinents »
    OÙ ÇA EN EST : Acté comme règle de format (#1537) : ce type de schéma devient la norme dans tous les documents pertinents.
 
-🟢 [P26] RETENU — #1537
+🟢 [P26] RETENU — #1537 ✅ faite
    TA DEMANDE : « Donner un TITRE au schéma »
    OÙ ÇA EN EST : Acté : tout schéma porte un titre.
 
@@ -931,91 +935,91 @@ Format des documents
    TA DEMANDE : « « Je n'ai rien compris à ce document, c'est trop abstrait pour moi. On passe à autre chose » »
    POURQUOI ON NE FAIT RIEN : Entendu, et la leçon est prise : ce document était trop abstrait, je ne poursuis pas ce format. Ce qui compte pour la suite, ce n'est pas d'avoir abandonné le document, c'est de retenir la règle — un document qui exige de l'abstraction pour être compris n'est pas un document de travail dans ce projet.
 
-🟢 [P42] RETENU — #1541
+🟢 [P42] RETENU — #1541 ✅ faite
    TA DEMANDE : « Le format de la fiche module convient »
    OÙ ÇA EN EST : Acté.
 
-🟢 [P45] RETENU — #1541
+🟢 [P45] RETENU — #1541 ✅ faite
    TA DEMANDE : « Mieux détailler « ce qu'il refuse » dans la fiche module »
    OÙ ÇA EN EST : Appliqué au gabarit dans #1541.
 
-🟢 [P48] RETENU — #1541
+🟢 [P48] RETENU — #1541 ✅ faite
    TA DEMANDE : « Mieux mettre en avant LE PÉRIMÈTRE · dépend-il d'autres modules · pourrait-il être la seule prestation · quelle est sa classe (détachable/non) · tableau exhaustif des scripts qui lisent, pourquoi, utilité, produisent-ils un rapport »
    OÙ ÇA EN EST : Tes six ajouts sont repris dans #1541, et appliqués AU GABARIT, pas aux fiches une par une — sinon la septième fiche repartirait du vieux format.
 
-🟢 [P49] RETENU — #1537
+🟢 [P49] RETENU — #1537 ✅ faite
    TA DEMANDE : « Quand une fiche de module mentionne une liste, elle doit être EXHAUSTIVE et déroulée en tableau explicatif »
    OÙ ÇA EN EST : Inscrit comme règle de format (#1537) : une liste mentionnée est exhaustive et déroulée en tableau.
 
-🟢 [P54] RETENU — #1527
+🟢 [P54] RETENU — #1527 ✅ faite
    TA DEMANDE : « Éviter le bleu foncé sur fond noir, peu visible »
    OÙ ÇA EN EST : Corrigé cette nuit (#1527). Les liens étaient en bleu foncé sur fond noir parce que le thème HTML ne les stylait pas du tout : ils prenaient la couleur par défaut du navigateur. Ils sont désormais sur la couleur d'accent, soulignés, et un contrôle refuse qu'un prochain thème les oublie.
 
 Classification
 
-🟢 [P32] RETENU — #1539
+🟢 [P32] RETENU — #1539 ✅ faite
    TA DEMANDE : « As-tu réalisé la classification des RÈGLES, et ce document existe-t-il chez LE-CLASSIFICATEUR ou ailleurs ? »
    OÙ ÇA EN EST : Vérifié : `docs/referentiel/` porte neuf documents de règles, et AUCUN n'est la classification que tu demandes. Elle n'existe nulle part, ni chez LE-CLASSIFICATEUR ni ailleurs. #1539 la construit.
 
-🟢 [P33] RETENU — #1539
+🟢 [P33] RETENU — #1539 ✅ faite
    TA DEMANDE : « Les 6 niveaux de protection d'une règle sont déjà un axe de classement — à réutiliser »
    OÙ ÇA EN EST : Bonne intuition, et elle évite du travail : les six niveaux de protection sont déjà un axe, déjà mesuré par MOÏSE. #1539 les réutilise au lieu d'inventer une échelle de plus.
 
-🟢 [P34] RETENU — #1539
+🟢 [P34] RETENU — #1539 ✅ faite
    TA DEMANDE : « Écrire quelque part, de façon DYNAMIQUE, le niveau de protection des 6 textes qui font loi ; mutualiser avec la classification des règles dans un même doc « classification des lois et des règles » — constatées, jamais inventées »
    OÙ ÇA EN EST : Retenu tel quel, y compris l'exigence dure : constatées, jamais inventées. Un niveau de protection recopié à la main se périmerait au premier garde-fou ajouté.
 
-🟢 [P35] RETENU — #1540
+🟢 [P35] RETENU — #1540 ✅ faite
    TA DEMANDE : « Combien de classifications sont INVENTÉES et non CONSTATÉES ? Il veut une classification propre, réelle, DYNAMIQUE : un outil modifié change de classe sans geste manuel »
    OÙ ÇA EN EST : **LA MESURE, ET J'AI DÛ CORRIGER MA PROPRE RÉPONSE EN ROUTE.** Premier chiffre, donné plus haut dans ce rapport : « les familles sont déclarées à 100 % à la main ». Il était mesuré — et sur la mauvaise question. J'avais regardé comment la valeur est LUE (une chaîne qu'on découpe, donc manuelle), pas d'où elle VIENT. Or chaque famille a été dérivée du registre qui la portait déjà, et ce registre existe toujours. **LE VRAI CHIFFRE : 44 familles sur 62 sont corroborées par une seconde source, et partout où les deux sources parlent, elles disent la même chose — zéro divergence.** Les 18 restantes reposent sur une seule déclaration, simplement parce que ces outils-là n'ont pas de registre : ce n'est pas une faute, c'est la part du classement qu'il fallait connaître, et c'était exactement ta question. **CE QUI MANQUAIT N'ÉTAIT DONC PAS LA DÉRIVATION MAIS SON GARDE-FOU** : la corroboration était vraie le jour où elle a été faite, et rien ne vérifiait qu'elle le reste — la copie sans mécanisme que l'Article 24 interdit. Il existe depuis cette nuit (#1540). Pour le reste des axes : le type, les moments, les domaines, les destinataires, la vitalité et la nature sont DÉRIVÉS du dépôt par des sondes, donc un outil modifié change de classe tout seul.
 
-🟢 [P37] RETENU — #1539
+🟢 [P37] RETENU — #1539 ✅ faite
    TA DEMANDE : « Format imposé : « Article N de la Charte (Art. N au sujet de S) » · idem gouvernance · les quatre autres par leur nom + « au sujet de S » »
    OÙ ÇA EN EST : Ta convention de citation est appliquée dans #1539 et dans tout nouveau document : « Article N de la Charte (Art. N au sujet de S) », idem pour la gouvernance, et les quatre autres textes par leur nom suivi de « au sujet de S ».
 
-🟢 [P38] RETENU — #1539, #1553
+🟢 [P38] RETENU — #1539 ✅ faite, #1553 ✅ faite
    TA DEMANDE : « La vraie vision est portée par philo-politique (le Projet Utilisateur prime, l'Agence n'est qu'une aide exécutive), la charte n'est qu'un moyen — compatible avec l'exportabilité des documents de gouvernance ? »
    OÙ ÇA EN EST : Oui, c'est compatible, et ta formulation est plus juste que la mienne : la vision est portée par la philosophie — ton projet prime, l'Agence n'est qu'une aide exécutive — et la charte n'est qu'un moyen. L'exportabilité ne change pas ce rang : un document de gouvernance qui part avec l'Agence emporte le rang avec lui, puisque c'est lui qui le déclare.
 
-🟢 [P40] RETENU — #1539
+🟢 [P40] RETENU — #1539 ✅ faite
    TA DEMANDE : « Le doc organisation-des-lois est consigné chez qui ? Aux côtés de philo-politique dans le pack gouvernance ? Le pack gouvernance est-il inclus dans le pack gouvernance 360 ? Que contient le 360 ? »
    OÙ ÇA EN EST : Repris dans #1539, qui est le document où ces quatre questions trouveront leur réponse au même endroit plutôt qu'éparpillées.
 
-🟢 [P44] RETENU — #1540
+🟢 [P44] RETENU — #1540 ✅ faite
    TA DEMANDE : « L'Agence en tant qu'entité dans le code : réglé ? Un MODULE est-il reconnu comme entité dans le code ? »
    OÙ ÇA EN EST : Vérifié : non, un MODULE n'est pas reconnu comme entité dans le code. Les entités reconnues sont le script, l'outil, la prestation et le poste. Le module n'existe aujourd'hui que dans nos documents — c'est précisément pour ça que « les familles sont-elles des modules » n'a pas de réponse mécanique. #1540.
 
-🟢 [P47] RETENU — #1540
+🟢 [P47] RETENU — #1540 ✅ faite
    TA DEMANDE : « Je n'ai toujours pas compris comment différencier un script d'un outil, et ce qui rend ça visible dans la classification. Combien de scripts, combien d'outils ? »
    OÙ ÇA EN EST : **LA RÉPONSE EN UNE PHRASE : un SCRIPT est un fichier, un OUTIL est un fichier qui rend un service nommé et documenté.** Le dépôt porte 95 scripts. Parmi eux : 65 commandes documentées (ce que nous appelons des outils), 13 bibliothèques partagées (du code que d'autres utilisent, sans commande propre), 5 bibliothèques solitaires, 5 crochets git, 4 scripts d'infrastructure, 2 exécutions directes non documentées, et 1 filet de sécurité. Ce qui rend la différence visible dans la classification, c'est l'axe `type`, et il est DÉRIVÉ : un script qui gagne une commande documentée change de type tout seul — personne n'a à le reclasser à la main.
 
-🟢 [P50] RETENU — #1540
+🟢 [P50] RETENU — #1540 ✅ faite
    TA DEMANDE : « « le bazar que je soupçonnais est peut-être du côté de ces 34 scripts. J'enquête… » »
    OÙ ÇA EN EST : La matière est dans #1540 : le détail des 95 scripts par type. Et ton intuition visait juste, mais pas tout à fait à l'endroit que tu croyais — ni à celui que je croyais non plus. Le bazar n'est pas dans ces 34 scripts, et il n'est pas non plus dans les familles comme je te l'ai d'abord dit : 44 des 62 sont corroborées par une seconde source, sans une seule divergence. Ce qui manquait, c'était le garde-fou qui vérifie que ça le reste. Il existe depuis cette nuit.
 
-🟢 [P67] RETENU — #1548
+🟢 [P67] RETENU — #1548 ✅ faite
    TA DEMANDE : « Chaque data qui porte une preuve juridique doit être DÉCLARÉE comme telle (axe transverse) ; règle écrite quelque part ; renseigné dans la stratégie de rationalisation ; adapté pour les outils »
    OÙ ÇA EN EST : Construit en #1548, les quatre temps compris : axe transverse, règle écrite, inscription dans la stratégie de rationalisation, et extension aux outils.
 
 Livraison
 
-🟢 [P36] RETENU — #1521, #1522
+🟢 [P36] RETENU — #1521 ✅ faite, #1522 ⏳ En attente
    TA DEMANDE : « Il ne connaît pas systeme-de-suivi.md, loi-de-l-agence.md, manifeste-de-l-agence.md — les livrer »
    OÙ ÇA EN EST : Les sources brutes t'ont été envoyées cette nuit ; les versions HTML lisibles arrivent dans la livraison de 14h (#1522), avec le tri que tu as demandé.
 
 Stratégie
 
-🟢 [P39] RETENU — #1553
+🟢 [P39] RETENU — #1553 ✅ faite
    TA DEMANDE : « Y a-t-il une différence philo/politique entre « agence = projet » et « agence = aide exécutive » ? Le projet jeu prime-t-il toujours ? A-t-on vraiment fait une séparation ? Qu'est-ce qui s'est passé dans le code ? Quand est-elle vraiment utile ? »
    OÙ ÇA EN EST : Tes six questions demandent une enquête dans le code, pas une réponse de mémoire — et c'est précisément parce qu'elles portent sur l'écart entre ce qu'on a DIT et ce qu'on a FAIT. #1553.
 
 Process
 
-🟢 [P52] RETENU — #1543
+🟢 [P52] RETENU — #1543 ✅ faite
    TA DEMANDE : « Il veut voir l'index des fils à CHAQUE fin de Ronde — l'ajouter si pas déjà fait »
    OÙ ÇA EN EST : Vérifié : il n'y est pas. Ajouté en #1543.
 
-🟢 [P53] RETENU — #1543
+🟢 [P53] RETENU — #1543 ✅ faite
    TA DEMANDE : « « le process ronde est pas propre » »
    OÙ ÇA EN EST : Noté, et je ne vais pas refondre le process sur six mots. Je te poserai la question au bon moment : ce qui n'est pas propre peut être l'ordre des étapes, leur nombre, ou ce qu'elles te demandent — et les trois appellent des corrections opposées.
 
@@ -1023,57 +1027,57 @@ Process
    TA DEMANDE : « dépassé, la cascade est actionnée »
    POURQUOI ON NE FAIT RIEN : Vérifié : oui, la cascade est actionnée. Le point est effectivement dépassé, rien à faire.
 
-🟢 [P94] RETENU — #1554
+🟢 [P94] RETENU — #1554 ✅ faite
    TA DEMANDE : « « ÉTAGE 2 — le document maître et son porteur ne sont pas tranchés. Revoyons cette question » »
    OÙ ÇA EN EST : Rouvert (#1554), avec un élément nouveau depuis : le « Cerveau des fils » que tu viens de nommer est un candidat sérieux au rôle de document maître — ou un cinquième candidat de plus, ce qui est justement le problème.
 
 Coûts
 
-🟢 [P56] RETENU — #1544
+🟢 [P56] RETENU — #1544 ✅ faite
    TA DEMANDE : « La livraison de docs HTML à cette fréquence est-elle un vrai coût pour moi, ou négligeable ? »
    OÙ ÇA EN EST : Ta question mérite un chiffre, pas une impression — c'est #1544. Ce que je peux déjà dire sans mesure : la conversion en HTML elle-même ne coûte RIEN (elle est locale, zéro appel API). Le coût est celui de ma génération du contenu, et il est le même que le document soit livré en HTML ou pas.
 
 TOTAL RECALL
 
-🟢 [P59] RETENU — #1545
+🟢 [P59] RETENU — #1545 ✅ faite
    TA DEMANDE : « La soirée du 30/09 : j'ai perdu la mémoire de session parce qu'il a éteint son PC. Il prépare l'opération « TOTAL RECALL ». Tâche : se tenir informé de son évolution »
    OÙ ÇA EN EST : Tâche de veille créée (#1545). Et la cause de la perte du 30 septembre vaut d'être nommée : ce n'est pas ton PC, c'est que la mémoire de session vivait uniquement dans la session. C'est le même défaut que celui du point P11, sous une autre forme.
 
-🟢 [P79] RETENU — #1545
+🟢 [P79] RETENU — #1545 ✅ faite
    TA DEMANDE : « Comparer TOTAL RECALL au système existant, rapport entre « où on en est » et « total recall ». TOTAL RECALL = rafraîchissement complet et FORCÉ de la mémoire, trop lourd pour « où on en est » ; une couche plus légère est prévue »
    OÙ ÇA EN EST : Le document de stratégie est #1545, et ta distinction est exactement la bonne ligne de partage : TOTAL RECALL est un rafraîchissement complet et forcé, « où on en est » est une couche légère. Les confondre donnerait soit une couche trop lourde pour servir souvent, soit un rafraîchissement trop partiel pour servir après une perte.
 
-🟢 [P80] RETENU — #1546
+🟢 [P80] RETENU — #1546 ✅ faite
    TA DEMANDE : « Quelles actions pour rendre l'ensemble cohérent ? Comment nommer le groupe qui réunit ces 5 systèmes ? »
    OÙ ÇA EN EST : #1546. Pour le nom, je te proposerai une série dans la même famille plutôt qu'un nom isolé — c'est ta façon de nommer, et un nom choisi au cas par cas se retrouve orphelin au troisième.
 
-🟢 [P82] RETENU — #1545
+🟢 [P82] RETENU — #1545 ✅ faite
    TA DEMANDE : « les 4, et on en reparle à TOTAL RECALL »
    OÙ ÇA EN EST : Les quatre retenues, et on en reparle au moment de TOTAL RECALL.
 
 Export
 
-🟢 [P63] RETENU — #1538
+🟢 [P63] RETENU — #1538 ✅ faite
    TA DEMANDE : « Quel impact de n'avoir qu'une seule version ? Rappelle-le-moi »
    OÙ ÇA EN EST : L'impact d'une seule version : tu ne peux pas vendre ou donner une partie de l'Agence sans donner le tout, et tu ne peux pas faire évoluer une partie sans risquer les autres. C'est toute la raison d'être de la partie détachable (#1538).
 
-🟢 [P65] RETENU — #1555
+🟢 [P65] RETENU — #1555 ✅ faite
    TA DEMANDE : « Sa peur porte sur le cas où des fonctionnalités de l'Agence seraient en réalité des fonctions de MON périmètre Claude Code et non de l'Agence — mener l'enquête »
    OÙ ÇA EN EST : Ta peur est précise et elle est fondée — c'est #1555. Le risque réel : des fonctions que nous croyons « de l'Agence » sont en fait des miennes (mes réveils, mes crochets de session, mes outils d'environnement). Installée ailleurs, l'Agence les perdrait sans que rien ne l'annonce.
 
-🟢 [P85] RETENU — #1538
+🟢 [P85] RETENU — #1538 ✅ faite
    TA DEMANDE : « Oui, reconstruire le NOYAU seulement, les outils devenant des modules — encore faut-il définir le cœur »
    OÙ ÇA EN EST : Acté : voie B, reconstruire le noyau seulement. Et ta réserve est la bonne — « encore faut-il définir le cœur » est littéralement l'étape qui bloque tout le reste.
 
-🟢 [P88] RETENU — #1551
+🟢 [P88] RETENU — #1551 ✅ faite
    TA DEMANDE : « As-tu sauvegardé ce doc ? Il est chez qui ? Chaque expérience de ce type doit être historisée au même endroit, dans un dossier dédié »
    OÙ ÇA EN EST : Sauvegardé, oui. Et ta consigne vaut plus que la réponse : #1551 crée le dossier unique où chaque expérience de ce type sera historisée — une expérience isolée ne se compare à aucune autre, et c'est la comparaison qui fait progresser l'exportabilité.
 
-🟢 [P95] RETENU — #1479
+🟢 [P95] RETENU — #1479 ⏳ Ouverte
    TA DEMANDE : « L'outil devenu extension et ses apports ne disparaissent pas ? Ni son nom ? Détaille pour que ce soit clair »
    OÙ ÇA EN EST : Non, rien ne disparaît. Un outil devenu extension garde son nom, son code et tout ce qu'il sait faire : ce qui change, c'est qu'il cesse d'être chargé par défaut et devient quelque chose qu'on branche. Concrètement : aujourd'hui il tourne pour tout le monde, demain il tourne pour qui l'installe. Ses apports restent dans le dépôt, sa documentation aussi, et son nom reste réservé — ce serait d'ailleurs une faute de le libérer, puisque d'anciens documents le citent.
 
-🟢 [P96] RETENU — #1496, #1525
+🟢 [P96] RETENU — #1496 ✅ faite, #1525 ✅ faite
    TA DEMANDE : « YES (deux fois) — les 6 bibliothèques et les 4 outils d'environnement dispensés du kit »
    OÙ ÇA EN EST : Fait cette nuit (#1525) sur ton double YES : les 6 bibliothèques et les 4 outils d'environnement sont dispensés du kit d'export, chacun avec sa raison écrite. Le contrôle qui compte les dispenses a été corrigé du même coup — il punissait ta décision légitime en s'alarmant au-delà de 15 dispenses, trois lignes sous un commentaire décrivant exactement ce défaut.
 
@@ -1085,17 +1089,17 @@ Jeu
 
 Sécurité
 
-🟢 [P68] RETENU — #1549
+🟢 [P68] RETENU — #1549 ✅ faite
    TA DEMANDE : « AS-TU LA POSSIBILITÉ DE TESTER CES CLÉS ? « elles commencent à me hanter » ; ensuite (a) »
    OÙ ÇA EN EST : Oui, c'est testable — mais tester une clé est un appel réel à l'API, donc l'Article 22 impose de consulter Smart Conso API d'abord, même pour un diagnostic. #1549 commence par ce qui se vérifie à coût zéro (la forme, la présence, l'âge) avant de dépenser quoi que ce soit. Option (a) retenue.
 
 Lourdeurs
 
-🟢 [P71] RETENU — #1550
+🟢 [P71] RETENU — #1550 ✅ faite
    TA DEMANDE : « Jésus garantit que l'AGENCE ne ralentit pas le codage ; le jeu relève d'un autre outil ? Les lourdeurs du jeu qui impactent le codage global ? Les éléments partagés/fusionnés ? Les lourdeurs du jeu dans le jeu ? Les lourdeurs du jeu dans l'exécution de l'Agence ? Qu'est-ce que JESUS peut détecter, est-il assez équipé ? »
    OÙ ÇA EN EST : **MA RÉPONSE COURTE DE CE MATIN ÉTAIT FAUSSE, ET LA MESURE L'A CORRIGÉE.** Je t'avais écrit que JESUS « regarde ce qui freine le TRAVAIL, pas le JEU ». Faux : il a une sonde dédiée au jeu, elle tourne, et elle mesure le poste de lenteur le PLUS important d'un tour. **LE CHIFFRE** : 310 tours mesurés, **9 821 tokens envoyés en moyenne par personnage**, deux cerveaux par tour, soit **~19 642 tokens par tour de jeu** — contre un repère de 8 000. C'est le premier poste de lenteur, loin devant le rendu. Tes cinq questions, maintenant : **(1) le jeu relève-t-il d'un autre outil ?** Non — JESUS le regarde lui-même, par une seule porte. **(2) Les lourdeurs du jeu qui impactent le codage global ?** Mesurées : c'est ce poids en tokens, et c'est aussi ce qui coûte en quota. **(3) Les éléments partagés ?** La sonde lit `app/api/lia/route.ts`, qui est exactement la frontière entre le jeu et l'Agence. **(4) Les lourdeurs du jeu DANS le jeu ?** Non surveillées. **(5) Est-il assez équipé ?** Voici la vraie mesure, et elle est sévère : **JESUS voit 1 fichier du jeu sur 93** (14,4 % des lignes). Tout le reste — la simulation, le rendu, les jauges, la mémoire des personnages, soit 12 624 lignes — n'est regardé par personne. **MAIS CE CHIFFRE N'EST PAS UN REPROCHE EN SOI** : la porte unique qu'il emploie est la BONNE. Un outil qui lirait les 93 fichiers et raterait celui-là serait plus complet et moins utile.
 
-🟢 [P72] RETENU — #1550
+🟢 [P72] RETENU — #1550 ✅ faite
    TA DEMANDE : « Selon notre philo, on devrait permettre à l'utilisateur de détecter les lourdeurs dans le PROJET UTILISATEUR »
    OÙ ÇA EN EST : Noté comme principe, et c'est plus fort qu'une note : selon notre philosophie, l'Agence doit servir TON projet avant de se servir elle-même. Un détecteur de lourdeurs qui ne regarde que l'outillage inverse exactement ce rapport.
 
@@ -1113,14 +1117,14 @@ Leçons
 
 Conduite
 
-🟢 [P76] RETENU — #1535
+🟢 [P76] RETENU — #1535 ⏳ ouverte
    TA DEMANDE : « « essaie de me poser des questions uniquement quand c'est pertinent » »
    OÙ ÇA EN EST : Noté, et il y a une tension réelle à te signaler : la charte dit déjà « mieux vaut trop de questions que pas assez », sur ta demande explicite du 22 septembre. Ta consigne d'aujourd'hui dit l'inverse. Les deux sont défendables, et je ne vais pas choisir à ta place lequel l'emporte.
    ❓ CE QUE J'ATTENDS DE TOI : Entre « mieux vaut trop de questions que pas assez » (22 septembre) et « pose des questions uniquement quand c'est pertinent » (3 octobre), lequel doit l'emporter quand les deux s'appliquent ?
 
 Séparation Agence / moi
 
-🟢 [P89] RETENU — #1552
+🟢 [P89] RETENU — #1552 ✅ faite
    TA DEMANDE : « Rapport éphémère sur : les consignes de ma session, l'outillage de l'éditeur, nos habitudes de travail jamais écrites. Identifier les règles à ajouter à l'Agence »
    OÙ ÇA EN EST : C'est exactement ce que #1484 avait déclaré hors de sa portée, et tu as raison de le demander quand même : c'est la seule façon de savoir ce qui, dans ce que tu crois être l'Agence, vient en réalité de mon environnement. #1552.
 
@@ -1129,13 +1133,13 @@ Plan d'action
   → RETENU · [P01] ✅ 🟠 docs/strategies/ — tâche [RECOMMANDEE] : 1531
   → RETENU · [P02] ✅ 🟠 data-archangel / livraisons — tâche [RECOMMANDEE] : 1532
   ✗ ÉCARTÉ · [P03] Ordre des événements — Rangé, chantier non ouvert, comme tu l'as décidé. L'idée attend un quatrième cas réel avant de valoir un outil : trois occurrences ne suffisent pas à distinguer un vrai motif d'une coïncidence, et un détecteur construit sur trois cas crie sur le quatrième.
-  → RETENU · [P04] ⬜ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
-  → RETENU · [P05] ⬜ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
-  → RETENU · [P06] ⬜ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
+  → RETENU · [P04] ✅ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
+  → RETENU · [P05] ✅ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
+  → RETENU · [P06] ✅ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
   ✗ ÉCARTÉ · [P07] Registre des remises — **NON, ET C'EST UN NON FRANC.** Rien dans mon environnement ne me dit qu'un fichier a été ouvert ou cliqué. Je sais seulement que je l'ai envoyé. Il n'y a pas de demi-réponse ici : si un jour je te disais « ouvert », ce serait une déduction déguisée en fait.
   → RETENU · [P08] ✅ 🟠 data-archangel / livraisons — tâche [RECOMMANDEE] : 1532
   → RETENU · [P09] ✅ 🟠 god-of-all-process / Article 28 — tâche [RECOMMANDEE] : 1528
-  → RETENU · [P10] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P10] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
   → RETENU · [P11] ✅ 🔴 docs/grand-projet/00-sources / tâche #723 — tâche [RECOMMANDEE] : 1530
   ✗ ÉCARTÉ · [P12] ✅ 🔴 Sa question du 2026-10-02 : « dans doc PHILO il fallait ajouter ces notio… — **RIEN À FAIRE : C'ÉTAIT DÉJÀ ÉCRIT, ET MA TÂCHE #1487 SE TROMPAIT.** INTELLIGENT figure dans l'annexe A de `docs/philosophie-et-politique.md` depuis le 2 octobre à 05h23. Ma tâche #1487, écrite le même jour à 20h29 — quinze heures APRÈS — affirmait le contraire, et l'affirmait en ces termes : « la réponse est NON, et elle est MESURÉE, PAS SUPPOSÉE ». C'était faux, et la formule qui prétendait garantir la mesure est exactement ce qui l'a rendue crédible. Je te demandais donc un GO pour un travail déjà fait, et tu me l'as donné. #1487 est close avec cet écart déclaré. La leçon est pour moi, pas pour toi : une phrase qui jure qu'elle a mesuré n'est pas une mesure.
   → RETENU · [P13] ✅ 🟠 the-king / philosophie — tâche [RECOMMANDEE] : 1534
@@ -1148,7 +1152,7 @@ Plan d'action
   ✗ ÉCARTÉ · [P19] Licence — **Non, rien n'est payant.** Déposer un code sous licence propriétaire ne coûte rien : la mention « tous droits réservés » et le dépôt daté suffisent. Ce qui coûte, c'est un dépôt officiel type enveloppe Soleau ou INPI, et il n'est pas nécessaire pour être protégé — il sert à PROUVER la date en cas de litige. Détail dans #1368.
   ✗ ÉCARTÉ · [P20] Suivi — Noté. #1482 reste ouverte et avancera dans les prochains temps, comme tu l'acceptes.
   → RETENU · [P21] ⬜ 🟠 Ses quatre questions du 2026-10-02 sur le filet, et la liste « pas ration…
-       + ⬜ 🟠 check-house / Ézéchiel — tâche [RECOMMANDEE] : 1485
+       + ✅ 🟠 check-house / Ézéchiel — tâche [RECOMMANDEE] : 1485
   → RETENU · [P22] ⬜ ⚪ Sa demande du 2026-10-02 : « Tu dois retrouver : je t'ai posé une questio…
        + ⬜ 🟠 Trouvé le 2026-10-02 en répondant à sa question sur le travail à distance — tâche [RECOMMANDEE] : 1486
   → RETENU · [P23] ✅ 🔴 docs/referentiel/ / modularisation — tâche [RECOMMANDEE] : 1536
@@ -1157,69 +1161,69 @@ Plan d'action
   → RETENU · [P26] ✅ 🟠 docs/regles-de-travail.md — tâche [RECOMMANDEE] : 1537
   → RETENU · [P27] ✅ 🔴 docs/referentiel/ / modularisation
        + ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1536
-  → RETENU · [P28] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
-  → RETENU · [P29] ⬜ 🔴 modularisation / export
+  → RETENU · [P28] ✅ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
+  → RETENU · [P29] ✅ 🔴 modularisation / export
        + ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1538
-  → RETENU · [P30] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
-  → RETENU · [P31] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
-  → RETENU · [P32] ⬜ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
-  → RETENU · [P33] ⬜ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
-  → RETENU · [P34] ⬜ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
+  → RETENU · [P30] ✅ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
+  → RETENU · [P31] ✅ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
+  → RETENU · [P32] ✅ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
+  → RETENU · [P33] ✅ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
+  → RETENU · [P34] ✅ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
   → RETENU · [P35] ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
   → RETENU · [P36] ✅ 🔴 Livrables / docs à livrer à son réveil
        + ⬜ 🔴 Livrables / livraison à heure fixe — tâche [RECOMMANDEE] : 1521
-  → RETENU · [P37] ⬜ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
-  → RETENU · [P38] ⬜ 🟠 le-classificateur / MOÏSE
-       + ⬜ 🟠 philosophie / code — tâche [RECOMMANDEE] : 1539
-  → RETENU · [P39] ⬜ 🟠 philosophie / code — tâche [RECOMMANDEE] : 1553
-  → RETENU · [P40] ⬜ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
+  → RETENU · [P37] ✅ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
+  → RETENU · [P38] ✅ 🟠 le-classificateur / MOÏSE
+       + ✅ 🟠 philosophie / code — tâche [RECOMMANDEE] : 1539
+  → RETENU · [P39] ✅ 🟠 philosophie / code — tâche [RECOMMANDEE] : 1553
+  → RETENU · [P40] ✅ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
   ✗ ÉCARTÉ · [P41] Format des documents — Entendu, et la leçon est prise : ce document était trop abstrait, je ne poursuis pas ce format. Ce qui compte pour la suite, ce n'est pas d'avoir abandonné le document, c'est de retenir la règle — un document qui exige de l'abstraction pour être compris n'est pas un document de travail dans ce projet.
   → RETENU · [P42] ✅ 🟠 gabarit de fiche de module — tâche [RECOMMANDEE] : 1541
   → RETENU · [P43] ✅ 🟠 the-king / philosophie — tâche [RECOMMANDEE] : 1534
   → RETENU · [P44] ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
   → RETENU · [P45] ✅ 🟠 gabarit de fiche de module — tâche [RECOMMANDEE] : 1541
-  → RETENU · [P46] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
+  → RETENU · [P46] ✅ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
   → RETENU · [P47] ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
   → RETENU · [P48] ✅ 🟠 gabarit de fiche de module — tâche [RECOMMANDEE] : 1541
   → RETENU · [P49] ✅ 🟠 docs/regles-de-travail.md — tâche [RECOMMANDEE] : 1537
   → RETENU · [P50] ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
-  → RETENU · [P51] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P51] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
   → RETENU · [P52] ✅ 🟠 circle-tasks / Ronde — tâche [RECOMMANDEE] : 1543
   → RETENU · [P53] ✅ 🟠 circle-tasks / Ronde — tâche [RECOMMANDEE] : 1543
   → RETENU · [P54] ✅ ⚪ html-report / lisibilité — tâche [RECOMMANDEE] : 1527
-  → RETENU · [P55] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P55] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
   → RETENU · [P56] ✅ ⚪ smart-conso-token — tâche [RECOMMANDEE] : 1544
-  → RETENU · [P57] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
-  → RETENU · [P58] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
-  → RETENU · [P59] ⬜ 🔴 docs/strategies/ / mémoire — tâche [RECOMMANDEE] : 1545
-  → RETENU · [P60] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
-  → RETENU · [P61] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
-  → RETENU · [P62] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
-  → RETENU · [P63] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
+  → RETENU · [P57] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P58] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P59] ✅ 🔴 docs/strategies/ / mémoire — tâche [RECOMMANDEE] : 1545
+  → RETENU · [P60] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P61] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P62] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P63] ✅ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
   ✗ ÉCARTÉ · [P64] Jeu — Oui, c'est techniquement faisable : le visiteur saisit sa propre clé, elle reste dans son navigateur, et c'est lui qui paie ses appels. Deux conséquences à peser : tu perds la maîtrise de la qualité (une clé épuisée casse l'expérience sans que tu le saches) et tu dois gérer la responsabilité d'une clé saisie sur ton site. Réponse seulement : le jeu est hors périmètre de cette nuit, donc aucune tâche ouverte.
-  → RETENU · [P65] ⬜ 🔴 safe-export / #1484 — tâche [RECOMMANDEE] : 1555
-  → RETENU · [P66] ⬜ 🟠 check-house / Ézéchiel — tâche [RECOMMANDEE] : 1547
-  → RETENU · [P67] ⬜ 🟠 le-classificateur / stratégie — tâche [RECOMMANDEE] : 1548
+  → RETENU · [P65] ✅ 🔴 safe-export / #1484 — tâche [RECOMMANDEE] : 1555
+  → RETENU · [P66] ✅ 🟠 check-house / Ézéchiel — tâche [RECOMMANDEE] : 1547
+  → RETENU · [P67] ✅ 🟠 le-classificateur / stratégie — tâche [RECOMMANDEE] : 1548
   → RETENU · [P68] ✅ 🔴 clés / Smart Breaker — tâche [RECOMMANDEE] : 1549
   ✗ ÉCARTÉ · [P69] Licence — Concrètement : tu écris un fichier LICENSE à la racine du dépôt, il dit qui détient les droits et ce qui est interdit, et il s'applique dès qu'il est publié avec le code. L'intérêt n'est pas d'empêcher la copie — rien ne l'empêche — c'est de rendre la copie attaquable. Ce n'est pas payant.
   → RETENU · [P70] ✅ 🔴 Sa demande ⑥ : « quel est le standard de livraison d'un code, pour que l'… — tâche [RECOMMANDEE] : 1368
-  → RETENU · [P71] ⬜ 🟠 jesus-le-sauveur — tâche [RECOMMANDEE] : 1550
-  → RETENU · [P72] ⬜ 🟠 jesus-le-sauveur — tâche [RECOMMANDEE] : 1550
+  → RETENU · [P71] ✅ 🟠 jesus-le-sauveur — tâche [RECOMMANDEE] : 1550
+  → RETENU · [P72] ✅ 🟠 jesus-le-sauveur — tâche [RECOMMANDEE] : 1550
   ✗ ÉCARTÉ · [P73] Pédagogie — Un « serveur qui tourne » : un programme qui reste allumé en permanence et répond quand quelqu'un demande une page — c'est lui qui fabrique le site à chaque visite. S'il est éteint, le site ne répond pas. Une « compilation » : l'étape qui traduit le code que nous écrivons en une version que la machine sait exécuter vite — comme imprimer un livre à partir du manuscrit. On compile une fois, on sert ensuite des milliers de visiteurs sans recommencer.
   ✗ ÉCARTÉ · [P74] Leçons — Elle est dans `docs/referentiel/lecons.md`, qui porte aujourd'hui 19 entrées. C'est le registre unique : une leçon qui vivrait dans un commentaire de code à côté ne ressortirait jamais au bon moment.
-  → RETENU · [P75] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P75] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
   → RETENU · [P76] ⬜ 🔴 CLAUDE.md / Article 14 — tâche [RECOMMANDEE] : 1535
-  → RETENU · [P77] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
-  → RETENU · [P78] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
-  → RETENU · [P79] ⬜ 🔴 docs/strategies/ / mémoire — tâche [RECOMMANDEE] : 1545
+  → RETENU · [P77] ✅ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
+  → RETENU · [P78] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P79] ✅ 🔴 docs/strategies/ / mémoire — tâche [RECOMMANDEE] : 1545
   → RETENU · [P80] ✅ 🟠 fils / suivi / stratégies — tâche [RECOMMANDEE] : 1546
-  → RETENU · [P81] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
-  → RETENU · [P82] ⬜ 🔴 docs/strategies/ / mémoire — tâche [RECOMMANDEE] : 1545
+  → RETENU · [P81] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P82] ✅ 🔴 docs/strategies/ / mémoire — tâche [RECOMMANDEE] : 1545
   ✗ ÉCARTÉ · [P83] Process — Vérifié : oui, la cascade est actionnée. Le point est effectivement dépassé, rien à faire.
-  → RETENU · [P84] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
-  → RETENU · [P85] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
-  → RETENU · [P86] ⬜ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
-  → RETENU · [P87] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P84] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
+  → RETENU · [P85] ✅ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
+  → RETENU · [P86] ✅ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
+  → RETENU · [P87] ✅ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
   → RETENU · [P88] ✅ 🟠 safe-export — tâche [RECOMMANDEE] : 1551
   → RETENU · [P89] ✅ 🟠 règles de travail — tâche [RECOMMANDEE] : 1552
   → RETENU · [P90] ✅ 🟠 Mesure du 2026-10-02 par le garde-fou `findReglesSansDomicile()` de SAFE-…
@@ -1228,7 +1232,7 @@ Plan d'action
   → RETENU · [P92] ✅ 🔴 Sa demande ⑥ : « quel est le standard de livraison d'un code, pour que l'…
        + ⬜ 🟠 Sortie du dossier licence du 2026-10-02 — deux décisions qui se referment… — tâche [RECOMMANDEE] : 1368
   ✗ ÉCARTÉ · [P93] Licence — Noté : #1494 reste inscrite, non prioritaire.
-  → RETENU · [P94] ⬜ 🟠 #1127 / grand changement — tâche [RECOMMANDEE] : 1554
+  → RETENU · [P94] ✅ 🟠 #1127 / grand changement — tâche [RECOMMANDEE] : 1554
   → RETENU · [P95] ⬜ 🟠 Sa question du 2026-10-02 : « si aucune fusion d'outil n'est possible, es… — tâche [RECOMMANDEE] : 1479
   → RETENU · [P96] ✅ 🟠 Sortie de la revue #1479 : le groupe qui ne demande aucune fusion, seulem…
        + ✅ 🟠 SAFE-EXPORT / kits d'export — tâche [RECOMMANDEE] : 1496

@@ -23,7 +23,8 @@
 // aucun outil de ce dépôt. Une saisine est une liste de points ; n'importe quel projet piloté par
 // IA peut réutiliser ce fichier tel quel.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { buildReportFrame, renderTextReport, buildPlanDaction, ETATS_CONSTAT } from "./report-template.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import * as ctd from "./check-tasks-details.mjs";
@@ -204,13 +205,85 @@ export function tachesCitees(points = []) {
   return [...new Set(points.flatMap((p) => p?.taches ?? []))].sort((a, b) => a - b);
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// L'ÉTAT RÉEL DE CHAQUE POINT, LU DANS LE SUIVI (2026-10-03, sa demande du soir)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE DÉFAUT QUE ÇA CORRIGE EST CELUI D'UN INSTANTANÉ : ce rapport a été écrit à 10h31, il annonce
+// « RETENU → tâche #1533 », et à 19h la tâche est faite et poussée. Le document dit donc vrai sur
+// la DÉCISION et faux sur l'ÉTAT, sans qu'une ligne ne distingue les deux. Il va s'en servir pour
+// répondre point par point : lui laisser croire qu'il reste 83 chantiers ouverts quand huit sont
+// livrés lui ferait perdre exactement le temps que ce rapport existe pour lui épargner.
+//
+// L'ÉTAT SE LIT, IL NE SE RECOPIE PAS (Article 24) : on va le chercher dans `docs/suivi/` à chaque
+// régénération. Un rapport régénéré demain dira l'état de demain sans qu'on touche à ce fichier.
+export function etatDesTachesCitees(points = [], { lireLesLignes = null, root = "." } = {}) {
+  const numeros = [...new Set(points.flatMap((p) => (p?.taches ?? []).map((t) => String(t).replace(/^#/, ""))))];
+  if (!numeros.length) return { mesurable: false, pourquoi: "aucun point ne cite de tâche : il n'y a rien dont on puisse lire l'état" };
+  let lignes;
+  try { lignes = lireLesLignes ? lireLesLignes() : lireLesLignesDuSuivi({ root }); }
+  catch (e) { return { mesurable: false, pourquoi: `le suivi n'a pas pu être lu (${e.message}) — « je n'ai pas regardé » et « rien n'a bougé » ne s'écrivent jamais pareil (leçons L5/L11)` }; }
+  const etats = new Map();
+  for (const l of lignes) if (numeros.includes(l.numero)) etats.set(l.numero, l.statut);
+  const absentes = numeros.filter((n) => !etats.has(n));
+  return { mesurable: true, etats, absentes, lues: lignes.length };
+}
+
+// LE LECTEUR DU SUIVI, VOLONTAIREMENT MINUSCULE : on ne veut que deux cases par ligne, le numéro
+// et le statut. Importer le lecteur canonique entier ferait dépendre la production d'un rapport
+// de tout l'outillage de tâches, pour deux colonnes.
+export function lireLesLignesDuSuivi({ root = ".", listDirImpl = null, readFileImpl = null } = {}) {
+  const ls = listDirImpl ?? ((d) => readdirSync(d));
+  const lire = readFileImpl ?? ((f) => readFileSync(f, "utf8"));
+  const out = [];
+  for (const dossier of ["docs/suivi/sessions", "docs/suivi/archives"]) {
+    let noms = [];
+    try { noms = ls(join(root, dossier)); } catch { continue; }
+    for (const n of noms.filter((x) => String(x).endsWith(".md"))) {
+      let texte = "";
+      try { texte = lire(join(root, dossier, n)); } catch { continue; }
+      for (const ligne of texte.split("\n")) {
+        if (!ligne.startsWith("| ")) continue;
+        const cases = ligne.split(/(?<!\\)\|/);
+        if (cases.length < 4) continue;
+        const numero = cases[1].trim();
+        if (!/^\d{1,5}$/.test(numero)) continue;
+        out.push({ numero, statut: cases[cases.length - 2].trim() });
+      }
+    }
+  }
+  return out;
+}
+
+export const MOTIF_STATUT_FAIT = /^(termin|clos|fait)/i;
+
+export function etatLisible(statut = "") {
+  if (!statut) return { fait: false, texte: "état introuvable dans le suivi" };
+  if (MOTIF_STATUT_FAIT.test(statut)) return { fait: true, texte: statut.split(/[—:]/)[0].trim() || "terminée" };
+  return { fait: false, texte: statut.split(/[—:]/)[0].trim() || statut };
+}
+
 const ICONE = { retenu: "🟢", ecarte: "⚪", "a-trancher": "🟠" };
 const LIBELLE = { retenu: "RETENU", ecarte: "ÉCARTÉ", "a-trancher": "À TRANCHER" };
 
-export function blocsDuRapport(saisine) {
+export function blocsDuRapport(saisine, { etat = null } = {}) {
   const points = saisine.points ?? [];
   const compte = compterParSort(points);
   const blocs = [];
+  // L'ÉTAT EST LU AU MOMENT DU RENDU, jamais figé dans le JSON : le JSON porte la DÉCISION prise
+  // sur chaque point, le suivi porte l'ÉTAT de ce qui en a découlé, et les deux n'ont pas la même
+  // durée de vie. Les mélanger ferait vieillir la décision avec l'état.
+  const e = etat ?? etatDesTachesCitees(points, {});
+  if (e.mesurable) {
+    const faites = [...e.etats.values()].filter((st) => etatLisible(st).fait).length;
+    blocs.push({ type: "note", text:
+      `OÙ EN SONT LES TÂCHES DE CE RAPPORT, à l'instant où tu le lis — lu dans docs/suivi/, jamais recopié :\n` +
+      `${faites} tâche(s) sur ${e.etats.size} sont FAITES, ${e.etats.size - faites} restent ouvertes.\n` +
+      `Chaque point ci-dessous porte l'état réel de ses tâches à côté de leur numéro.` +
+      (e.absentes.length ? `\n🚨 ${e.absentes.length} tâche(s) citée(s) et INTROUVABLE(S) dans le suivi : ${e.absentes.join(", ")} — une référence morte ressemble à un lien, ce qui est pire qu'une absence.` : "") });
+  } else {
+    blocs.push({ type: "note", text: `OÙ EN SONT LES TÂCHES : PAS MESURÉ — ${e.pourquoi}` });
+  }
 
   blocs.push({ type: "note", text:
     `Ton prompt du ${saisine.dateDuPrompt} contient ${points.length} point(s) distinct(s). Ils sont repris ci-dessous ` +
@@ -238,7 +311,13 @@ export function blocsDuRapport(saisine) {
   for (const [sujet, liste] of parSujet) {
     blocs.push({ type: "heading", text: sujet });
     for (const p of liste) {
-      const taches = (p.taches ?? []).map((t) => `#${t}`).join(", ");
+      const taches = (p.taches ?? []).map((t) => {
+        const n = String(t).replace(/^#/, "");
+        if (!e.mesurable) return `#${n}`;
+        const st = e.etats.get(n);
+        const l = etatLisible(st);
+        return `#${n} ${l.fait ? "✅ faite" : `⏳ ${l.texte}`}`;
+      }).join(", ");
       blocs.push({ type: "note", text:
         `${ICONE[p.sort]} [${p.id}] ${LIBELLE[p.sort]}${taches ? ` — ${taches}` : ""}\n` +
         `   TA DEMANDE : « ${p.citation} »\n` +

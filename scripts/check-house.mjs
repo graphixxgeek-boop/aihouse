@@ -27401,3 +27401,62 @@ async function testLesDeuxAlertesDEzechiel() {
   console.log('Passed: les deux alertes qu\'aucun geste ne pouvait éteindre (2026-10-03, tâche #1566). JESUS les signalait depuis quatre et six jours en posant la bonne question : « à ce stade la question n\'est plus *que dit-elle* mais *pourquoi personne ne peut l\'éteindre* ». LA PREMIÈRE ÉTAIT UN RAISONNEMENT APPLIQUÉ À MOITIÉ, et c\'est ce qui la rend instructive : le 2026-09-28 on avait cessé de compter DEUX FOIS l\'avertissement de `node:sqlite`, avec la bonne raison écrite ce jour-là — « il vient du moteur, il dit vrai, et aucune action légitime ne peut l\'éteindre ». Mais on l\'avait retiré du compte du BRUIT en le laissant compter comme ANOMALIE : la suite ne pouvait donc structurellement JAMAIS être déclarée verte, et un voyant qui ne peut pas virer au vert cesse d\'être lu (leçon L6). Un avertissement DÉCLARÉ est désormais compté, affiché avec sa raison et sa date, et ne compte plus comme un travail à faire. CE N\'EST PAS UN SILENCE, ET LE CONTRE-TEST EST CE QUI LE PROUVE : un avertissement du même GENRE mais d\'une autre origine reste une anomalie, et un déclaré n\'absout jamais un inconnu assis à côté de lui — sans ça, déclarer « experimental » aurait rendu le détecteur aveugle à toute future API expérimentale. LA SECONDE ÉTAIT UNE CAPACITÉ RÉELLE BRANCHÉE SUR RIEN (leçon L2) : les trois durées qui disent d\'où vient le temps venaient de TROIS VARIABLES D\'ENVIRONNEMENT que personne n\'a jamais posées. Aucun geste n\'existait pour traiter l\'alerte, donc elle ne pouvait que brûler. L\'outil sait maintenant les mesurer lui-même — trois passages réels, dix minutes, c\'est cher et c\'est la seule réponse honnête — et il REFUSE d\'enregistrer une durée issue d\'un passage rouge, qui décrirait un filet partiel.');
 }
 await testLesDeuxAlertesDEzechiel();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1567 — LE RUNNER PARALLÈLE ÉTAIT CASSÉ, ET SON PLAFOND EST UN CHIFFRE
+async function testLeFiletEnPartsRepare() {
+  const F = await import('../scripts/filet-en-parts.mjs');
+
+  // ── 1. LE DÉFAUT QUI L'AVAIT TUÉ EN SILENCE : le filet importe ses voisins de deux façons
+  // mélangées. `../scripts/x.mjs` survit au déplacement de la copie dans `.sites-runtime/`,
+  // `./x.mjs` ne survit pas. Vingt-huit imports de la seconde forme ont été ajoutés APRÈS
+  // l'écriture du runner, et personne ne l'a vu parce que le runner n'a plus jamais tourné.
+  // Un outil qu'on n'utilise pas ne signale jamais qu'il est cassé.
+  assert.strictEqual(F.reecrireLesImportsFreres('import x from "./the-king.mjs";'), 'import x from "../scripts/the-king.mjs";', 'a sibling static import is rewritten so the copy can resolve it');
+  assert.strictEqual(F.reecrireLesImportsFreres('const y = await import("./a-b.mjs");'), 'const y = await import("../scripts/a-b.mjs");', 'and a dynamic one too');
+  assert.strictEqual(F.reecrireLesImportsFreres('import z from "../scripts/deja.mjs";'), 'import z from "../scripts/deja.mjs";', 'one that already works is left alone');
+
+  // ── 2. ET LE CONTRE-TEST EST CELUI QUI COMPTE, parce que la première version a échoué dessus
+  // EN UNE SEULE EXÉCUTION : elle réécrivait par motif sur tout le texte, et elle a modifié un
+  // chemin CITÉ DANS UNE CHAÎNE, à l'intérieur d'une éprouvette qui vérifie justement comment on
+  // détecte les dépendances internes. Le runner cassait le test qu'il lançait, pour la seconde
+  // fois de sa vie. La distinction qui tranche : le CHEMIN d'un vrai import est toujours dans une
+  // chaîne — c'est le MOT-CLÉ qu'il faut regarder.
+  const citation = `assert.deepStrictEqual(dependances('import a from "./lib-shell.mjs";'), ['scripts/lib-shell.mjs']);`;
+  assert.strictEqual(F.reecrireLesImportsFreres(citation), citation, 'MUST NOT TOUCH: a path cited inside a string is not an import, and rewriting it broke the very test that checks dependency detection');
+  const melange = 'import vrai from "./a.mjs"; // cite "./b.mjs" dans un commentaire';
+  assert.match(F.reecrireLesImportsFreres(melange), /\.\.\/scripts\/a\.mjs/, 'a real import on a line that also mentions another path is still rewritten');
+
+  // ── 3. LE PLAFOND EST UN CHIFFRE, ET IL EST CORROBORÉ PAR DEUX CHEMINS INDÉPENDANTS.
+  // L'ÉPINE — le code écrit au niveau du fichier — se rejoue dans CHAQUE part. Elle pesait 18,6 s
+  // le 2026-09-29 et 120,4 s aujourd'hui : multipliée par 6,5 en quatre jours, sans que personne
+  // le mesure, parce que le runner était mort.
+  const plancherVide = F.plancherDuParallelisme({ src: 'const x = 1;' });
+  assert.strictEqual(plancherVide.mesurable, false, 'no timing means no floor: a floor is a sharing of TIME, and without durations there is nothing to share');
+  assert.strictEqual(F.plancherDuParallelisme({ mesures: [{ ligne: 1, ms: 1 }] }).mesurable, false, 'and no net to read either');
+  const E = await import('../scripts/ezechiel-les-tests.mjs');
+  const src = (await import('node:fs')).readFileSync('scripts/check-house.mjs', 'utf8');
+  const mes = E.mesuresEnregistrees({ root: '.' });
+  if (mes.presentes && mes.mesures.length) {
+    const p = F.plancherDuParallelisme({ src, mesures: mes.mesures });
+    assert.strictEqual(p.mesurable, true, 'against the real net the floor is measurable');
+    assert.ok(p.msEpine > 0 && p.partDeLEpine > 0.2, `and the spine really is the ceiling (${Math.round(p.partDeLEpine * 100)} % of the total) — this is what no number of parts can divide`);
+    assert.ok(p.projection.every((x, i, t) => i === 0 || x.msTheorique <= t[i - 1].msTheorique), 'more parts never costs more time, and the projection shows where the gain stops');
+    assert.ok(p.projection[p.projection.length - 1].msTheorique > p.plancher, 'and no projection ever dips below the floor — which is the whole point of computing it');
+    assert.ok(typeof p.horsPortee === 'string' && p.horsPortee.length > 40, 'the limit is declared with the result: the line→duration attribution rests on a pairing that declares itself incomplete');
+  }
+
+  // ── 4. LE DÉTECTEUR DE COUPLAGES REFUSE DE CONCLURE, ET LE REFUS EST LE RÉSULTAT. Deux versions
+  // ont été essayées : l'une rendait 7 couplages en ratant le cas connu, l'autre 45 dont « a »,
+  // « n » et « t ». Distinguer une variable de portée fichier d'une locale homonyme demande un
+  // analyseur de portées. Livrer la liste courte aurait été le pire des deux résultats : courte,
+  // rassurante, et fausse.
+  const c = F.couplagesAvecLEpine({ src });
+  assert.strictEqual(c.mesurable, false, 'the coupling detector refuses rather than shipping a list it cannot vouch for');
+  assert.match(c.pourquoi, /PORTÉE FICHIER/, 'and it says exactly what it lacks, so nobody re-attempts it blind');
+  assert.match(c.pourquoi, /BLOC → BLOC/, 'including the diagnosis the attempt CORRECTED: the coupling that fells the parts is block→block, never spine→block — which is a different hole from the one we thought we were opening');
+  assert.deepStrictEqual(F.nomsDeclares('response=await post(x);const perceptionEpoch=result.epoch;'), ['perceptionEpoch'], 'the widened pattern does read a mid-line declaration, which is why the first version missed the one case we already knew');
+
+  console.log('Passed: le runner parallèle était CASSÉ, et son plafond est désormais un chiffre (2026-10-03, tâche #1567). IL NE DÉMARRAIT PLUS DEPUIS QUATRE JOURS : le filet importe ses voisins de deux façons mélangées, et les vingt-huit imports en `./x.mjs` ajoutés après l\'écriture du runner ne se résolvent pas depuis la copie. **Un outil qu\'on n\'utilise pas ne signale jamais qu\'il est cassé** — c\'est la leçon L2 par son autre bout, et elle a coûté quatre jours pendant lesquels le seul levier connu contre le temps du filet était mort sans que personne le sache. RÉPARÉ ET VÉRIFIÉ EN VRAI : 4 parts vertes, 266 s → 169 s, soit 37 % de moins. LA RÉÉCRITURE A DÛ DEVENIR CHIRURGICALE EN COURS DE ROUTE, et l\'erreur était instructive : la première version a modifié un chemin CITÉ DANS UNE CHAÎNE, dans l\'éprouvette qui vérifie justement la détection de dépendances — le runner cassait le test qu\'il lançait, pour la seconde fois de sa vie. La distinction qui tranche est que le CHEMIN d\'un vrai import est toujours dans une chaîne : c\'est le MOT-CLÉ qu\'il faut regarder, et le détecteur de chaînes existait déjà chez Ezechiel. LE PLAFOND EST MAINTENANT CHIFFRÉ ET CORROBORÉ DEUX FOIS : l\'épine — le code écrit au niveau du fichier, rejoué dans chaque part — pèse 120,4 s sur 247,8, soit 49 %. Elle pesait 18,6 s le 29 septembre : multipliée par 6,5 en quatre jours. Le plancher est à 121 s, et huit parts ne descendraient qu\'à 137 s. Le calcul par plages de lignes et le lancement réel à quatre parts se rejoignent à 3 s près. ET LE DÉTECTEUR DE COUPLAGES REFUSE DE CONCLURE, ce qui est le résultat le plus utile de la session : deux versions essayées, l\'une rendant 7 couplages en ratant le cas connu, l\'autre 45 dont « a » et « n ». Séparer une variable de portée fichier d\'une locale homonyme demande un analyseur de portées. ET L\'ESSAI A CORRIGÉ LE DIAGNOSTIC : la variable qui fait tomber trois parts sur quatre est déclarée DANS UN BLOC, pas dans l\'épine — le couplage est BLOC → BLOC, et le détecteur de socle ne voit que les blocs qui touchent `post`, `db` ou `world`. Le trou est ailleurs que là où on allait creuser.');
+}
+await testLeFiletEnPartsRepare();
