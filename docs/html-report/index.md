@@ -32,7 +32,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/gabarits/philosophie-et-politique-gabarit-cas-2.html` | `docs/gabarits/philosophie-et-politique-gabarit-cas-2.md` | 13499 | 2026-10-02 03:59Z |
 | `docs/the-king/versions-cas-2/philosophie-et-politique-cas-2-2026-10-02.html` | `docs/the-king/versions-cas-2/philosophie-et-politique-cas-2-2026-10-02.md` | 16366 | 2026-10-02 03:59Z |
 | `docs/referentiel/document-de-gouvernance.html` | `docs/referentiel/document-de-gouvernance.md` | 18092 | 2026-10-02 03:59Z |
-| `docs/modules/module-gestion-des-taches.html` | `docs/modules/module-gestion-des-taches.md` | 17880 | 2026-10-02 07:14Z |
 | `docs/livrables/les-11-destinations-dune-note.html` | `docs/livrables/les-11-destinations-dune-note.md` | 11113 | 2026-10-02 08:05Z |
 | `docs/livrables/reponse-au-prompt-word-du-1er-octobre.html` | `docs/livrables/reponse-au-prompt-word-du-1er-octobre.md` | 17380 | 2026-10-02 12:35Z |
 | `docs/rapports-de-nuit/nuit-2026-10-02.html` | `docs/rapports-de-nuit/nuit-2026-10-02.md` | 12840 | 2026-10-02 14:01Z |
@@ -107,3 +106,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/grands-axes-de-depart.html` | `docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md` | 20781 | 2026-10-03 08:43Z |
 | `docs/grand-projet/html/la-route-vers-50-obligations.html` | `docs/grand-projet/02-strategie/la-route-vers-50-obligations.md` | 20637 | 2026-10-03 08:43Z |
 | `docs/grand-projet/html/le-chemin.html` | `docs/grand-projet/02-strategie/le-chemin-2026-09-29.md` | 21111 | 2026-10-03 08:43Z |
+| `docs/modules/module-gestion-des-taches.html` | `docs/modules/module-gestion-des-taches.md` | 29050 | 2026-10-03 08:58Z |
+| `docs/modules/GABARIT-fiche-de-module.html` | `docs/modules/GABARIT-fiche-de-module.md` | 12414 | 2026-10-03 08:58Z |

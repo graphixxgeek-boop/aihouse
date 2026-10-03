@@ -30,7 +30,7 @@ import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage, horizonDuJournal, formatHorizonLine } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
 import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, regimeDEcriture, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage, lireLesScriptsDuDepot, sh } from "./lib-shell.mjs";
-import { parseToolsTable, slugifyAgentName, primaryToolName } from "./le-coordinateur.mjs";
+import { parseToolsTable, slugifyAgentName, primaryToolName, PRESTATIONS, normaliserNomDOutil } from "./le-coordinateur.mjs";
 import { findFamillesNonCorroborees, formatFamillesNonCorroboreesLines } from "./le-classificateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
@@ -535,6 +535,140 @@ export const HORS_PORTEE_SCHEMAS = [
   { motif: /\/archives?\//, pourquoi: "une archive garde l'état du jour où elle a été faite : la corriger détruirait ce qu'elle existe pour préserver" },
   { motif: /^docs\/simulations\//, pourquoi: "transcripts de parties : ce sont des conversations enregistrées, pas des documents que nous rédigeons" },
 ];
+
+// ============================================================================
+// UNE FICHE DE MODULE INCOMPLÈTE — son format validé, et ses six ajouts (tâche #1541)
+// ============================================================================
+// SA DEMANDE P42/P45/P48 : le format de la fiche de module lui convient, et il veut six ajouts —
+// le PÉRIMÈTRE mis en avant, « ce qu'il refuse » mieux détaillé, les DÉPENDANCES distinguées des
+// simples interactions, la CLASSE (détachable ou non), la question « pourrait-il être vendu
+// seul ? », et un tableau EXHAUSTIF des scripts du module.
+//
+// POURQUOI UN GARDE-FOU PLUTÔT QU'UN GABARIT SEUL : la première fiche disait « elle est reprise
+// telle quelle pour le module suivant ». C'est la copie à la main que l'Article 24 interdit — le
+// format n'existait qu'en un exemplaire, et chaque amélioration aurait dû être recopiée partout.
+// Un gabarit que rien ne fait respecter est une intention (leçon L1).
+//
+// LE GABARIT EST LA SOURCE DES SECTIONS ATTENDUES, jamais une liste recopiée ici : ajouter une
+// section au gabarit suffit, et le contrôle l'exige dès le lendemain (Article 24).
+export const GABARIT_FICHE_MODULE = "docs/modules/GABARIT-fiche-de-module.md";
+export const DOSSIER_MODULES = "docs/modules";
+export const MOTIF_SECTION_DU_GABARIT = /^### (\d) · ([^\n]+)$/gm;
+
+export function sectionsAttenduesDuGabarit(texte = "") {
+  return [...String(texte).matchAll(MOTIF_SECTION_DU_GABARIT)]
+    .map((m) => ({ numero: Number(m[1]), titre: m[2].replace(/\s*—.*$/, "").trim() }));
+}
+
+// LE TABLEAU EXHAUSTIF DES SCRIPTS D'UN MODULE — sa demande P48, et il se GÉNÈRE
+// ─────────────────────────────────────────────────────────────────────────────
+// SA DEMANDE : « un tableau exhaustif des scripts qui lisent, pourquoi, leur utilité, et
+// produisent-ils un rapport ». Trente-trois scripts lisent le suivi : écrire ce tableau à la main
+// serait trente-trois lignes à tenir à jour, c'est-à-dire périmées au prochain outil (Article 24).
+//
+// TROIS DES QUATRE COLONNES SE DÉRIVENT DU DÉPÔT : ce qu'il LIT (les chemins qu'il cite), s'il
+// produit un rapport (son registre existe-t-il), et son nom. La quatrième — à quoi il SERT — se
+// lit dans le catalogue des prestations plutôt que de s'inventer : la prestation est déjà la
+// phrase que l'équipe a écrite pour dire à quoi un outil sert, et en écrire une seconde ici
+// créerait deux porteurs de la même idée (leçon L29).
+//
+// UN OUTIL SANS PRESTATION LE DIT, et c'est une information : il lit le suivi sans qu'aucune
+// offre du catalogue ne le mentionne, donc personne ne sait le demander.
+export function tableauDesScriptsQuiLisent(motif, { root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, existsImpl = existsSync, prestations = null } = {}) {
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch {
+    return { mesurable: false, pourquoi: "le dossier scripts/ est illisible : zéro lecteur trouvé n'est pas zéro lecteur réel (leçons L5/L11)" };
+  }
+  if (!fichiers.length) return { mesurable: false, pourquoi: "aucun script lu : ce zéro mesure le silence du parcours, pas le dépôt" };
+  const offres = prestations ?? PRESTATIONS;
+  const parOutil = new Map();
+  for (const p of offres ?? []) for (const o of p.outils ?? []) {
+    const cle = normaliserNomDOutil(o);
+    if (!parOutil.has(cle)) parOutil.set(cle, []);
+    parOutil.get(cle).push(p.demande ?? p.nom);
+  }
+  const lignes = [];
+  for (const f of fichiers) {
+    let src = "";
+    try { src = String(readFileImpl(join(root, "scripts", f), "utf8")); } catch { continue; }
+    const chemins = [...new Set([...src.matchAll(new RegExp(`["'\`](${motif}[\\w./-]*)["'\`]`, "g"))].map((m) => m[1]))];
+    if (!chemins.length) continue;
+    const slug = f.replace(/\.mjs$/, "");
+    lignes.push({
+      script: slug,
+      lit: chemins.slice(0, 3),
+      cheminsEnPlus: Math.max(0, chemins.length - 3),
+      sert: parOutil.get(normaliserNomDOutil(slug))?.[0] ?? null,
+      rapport: (() => { try { return existsImpl(join(root, "docs", slug)); } catch { return false; } })(),
+    });
+  }
+  lignes.sort((a, b) => a.script.localeCompare(b.script));
+  return {
+    mesurable: true,
+    motif,
+    total: lignes.length,
+    sansPrestation: lignes.filter((l) => !l.sert).map((l) => l.script),
+    avecRapport: lignes.filter((l) => l.rapport).length,
+    lignes,
+  };
+}
+
+export function formatTableauDesScriptsLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  const out = [`**${r.total} scripts lisent \`${r.motif}\`**, dont ${r.avecRapport} déposent un rapport dans leur propre registre.`, "",
+    "| Script | Ce qu'il LIT | À quoi il sert | Produit-il un rapport ? |", "|---|---|---|---|"];
+  for (const l of r.lignes) {
+    const lit = l.lit.map((c) => `\`${c}\``).join(" · ") + (l.cheminsEnPlus ? ` · +${l.cheminsEnPlus}` : "");
+    out.push(`| \`${l.script}\` | ${lit} | ${l.sert ?? "**aucune prestation ne le mentionne**"} | ${l.rapport ? `oui, \`docs/${l.script}/\`` : "non"} |`);
+  }
+  if (r.sansPrestation.length) {
+    out.push("");
+    out.push(`⚠️ ${r.sansPrestation.length} script(s) lisent cette donnée sans qu'aucune offre du catalogue ne les mentionne : ${r.sansPrestation.map((s) => `\`${s}\``).join(" · ")}. Personne ne sait donc les demander.`);
+  }
+  return out;
+}
+
+export function findFichesIncompletes({ root = ROOT, dossier = DOSSIER_MODULES, gabarit = GABARIT_FICHE_MODULE, listDirImpl = readdirSync, readFileImpl = lireFichierPartage } = {}) {
+  let texteGabarit = "";
+  try { texteGabarit = String(readFileImpl(join(root, gabarit), "utf8")); } catch {
+    return { mesurable: false, pourquoi: `le gabarit ${gabarit} est illisible : sans lui on ne sait pas quelles sections sont attendues, et « aucune section manquante » serait un verdict rendu sur rien (leçons L5/L11)` };
+  }
+  const attendues = sectionsAttenduesDuGabarit(texteGabarit);
+  if (!attendues.length) {
+    return { mesurable: false, pourquoi: "le gabarit ne déclare aucune section numérotée : soit sa forme a changé, soit il n'a pas été lu — les deux appellent l'inverse d'un feu vert" };
+  }
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, dossier)).filter((f) => f.endsWith(".md") && f !== "index.md" && !f.startsWith("GABARIT")); } catch {
+    return { mesurable: false, pourquoi: `le dossier ${dossier} est illisible : zéro fiche lue n'est pas zéro fiche incomplète` };
+  }
+  const fiches = [];
+  for (const f of fichiers) {
+    let texte = "";
+    try { texte = String(readFileImpl(join(root, `${dossier}/${f}`), "utf8")); } catch { continue; }
+    // LE RAPPROCHEMENT SE FAIT SUR LE NUMÉRO DE SECTION, jamais sur le libellé : une fiche peut
+    // légitimement nommer sa section 6 « SA CLASSE — détachable ou non » ou « DÉTACHABILITÉ »,
+    // et comparer des titres rendrait le contrôle faux au premier synonyme.
+    const presents = new Set([...texte.matchAll(/^##+ (\d+) ?·/gm)].map((m) => Number(m[1])));
+    const manquantes = attendues.filter((a) => !presents.has(a.numero));
+    fiches.push({ fiche: `${dossier}/${f}`, manquantes, complete: manquantes.length === 0 });
+  }
+  if (!fiches.length) {
+    return { mesurable: true, attendues: attendues.length, fiches: [], completes: 0, aucuneFiche: true };
+  }
+  return { mesurable: true, attendues: attendues.length, fiches, completes: fiches.filter((f) => f.complete).length };
+}
+
+export function formatFichesIncompletesLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  if (r.aucuneFiche) return [`FICHES DE MODULE — le gabarit déclare ${r.attendues} sections obligatoires, et aucune fiche n'existe encore. Ce n'est pas « tout est complet » : c'est qu'il n'y a rien à vérifier.`];
+  const out = [`FICHES DE MODULE — ${r.completes} complète(s) sur ${r.fiches.length}, contre les ${r.attendues} sections que le gabarit déclare.`];
+  for (const f of r.fiches.filter((x) => !x.complete)) {
+    out.push(`   ⚠️ ${f.fiche} — ${f.manquantes.length} section(s) manquante(s) : ${f.manquantes.map((m) => `${m.numero} · ${m.titre}`).join(" · ")}`);
+  }
+  if (r.completes === r.fiches.length) out.push("   ✅ Chaque fiche porte toutes les sections du gabarit.");
+  out.push("   HORS PORTÉE : la PRÉSENCE d'une section se vérifie, pas ce qu'on y a écrit. Qu'un tableau de scripts soit vraiment exhaustif ou qu'un périmètre dise vraiment où le module s'arrête ne se lit par aucune mécanique (Article 27).");
+  return out;
+}
 
 export function findSchemasSansTitre({ root = ROOT, racine = "docs", listDirImpl = readdirSync, readFileImpl = lireFichierPartage, horsPortee = HORS_PORTEE_SCHEMAS } = {}) {
   const fichiers = [];
@@ -1191,6 +1325,13 @@ function main() {
   // vit ici parce que doc-report est déjà le lieu où la FORME des documents se vérifie — page
   // périmée, document jumeau, famille corroborée. Un quarantième outil pour une règle de forme
   // aurait ajouté un rendez-vous de plus pour une ligne (Article 31 : étendre plutôt qu'ajouter).
+  // UNE FICHE DE MODULE INCOMPLÈTE (2026-10-03, tâche #1541, ses ajouts P42/P45/P48).
+  const fichesModules = findFichesIncompletes();
+  for (const l of formatFichesIncompletesLines(fichesModules)) console.log(l);
+  for (const f of (fichesModules?.fiches ?? []).filter((x) => !x.complete)) {
+    ecartsMuets.push({ fichier: f.fiche, defaut: `${f.manquantes.length} section(s) du gabarit manquent : ${f.manquantes.map((m) => m.titre).join(", ")}`, tache: `compléter ${f.fiche} avec les sections que le gabarit déclare obligatoires`, fausseUneMesure: false });
+  }
+
   const schemas = findSchemasSansTitre();
   for (const l of formatSchemasSansTitreLines(schemas)) console.log(l);
   for (const x of schemas?.sansTitre ?? []) ecartsMuets.push({ fichier: `${x.chemin}:${x.ligne}`, defaut: "un schéma qui arrive sans titre : il faut le déchiffrer avant de savoir ce qu'on regarde", tache: `poser un titre (section ou ligne en gras) juste au-dessus du bloc dessiné de ${x.chemin}`, fausseUneMesure: false });

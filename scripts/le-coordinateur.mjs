@@ -2843,6 +2843,14 @@ export function schemaDeLaCarteActuelle(c, { maxParFamille = 6 } = {}) {
 // LA RÈGLE DE REGROUPEMENT EST LA SIENNE, pas la mienne : « un ensemble d'agents qui œuvrent dans
 // un sens commun pour produire UNE PRESTATION ». Les modules ci-dessous regroupent donc par
 // QUESTION POSÉE, jamais par parenté de rôle — c'est ce qui les distingue des familles.
+// ⚠️ IL EXISTE UNE AUTRE CARTE CIBLE, ET ELLE EST ANTÉRIEURE (2026-10-02, tâche #1420) :
+// `docs/referentiel/carte-cible-des-modules.md`, bâtie sur les 7 FAMILLES de l'organigramme et
+// mesurée par `node scripts/cassandra-rh.mjs carte-cible`. Celle-ci est bâtie sur les 76
+// PRESTATIONS, parce que c'est l'axe de sa définition du 2026-10-03. Les deux ne répondent pas à
+// la même question et aucune n'annule l'autre à cette heure — mais deux porteurs de la même
+// intention finissent par diverger (leçon L29), donc le choix lui revient et il est ouvert.
+// Le rapprochement complet est écrit dans l'autre document, pas ici : une seule des deux doit
+// porter la comparaison, sinon elle aussi existera en double.
 export const MODULES_CIBLES = [
   { cle: "gouvernance", titre: "GOUVERNANCE", quoi: "la loi du projet : la charte, la philosophie, les règles, et ce qui les allège",
     prestations: ["Pack Tables de Loi", "Pack Références", "Pack Régence", "Pack Classification", "Pack Diète", "Pack Espion", "Pack Criticité"] },

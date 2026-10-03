@@ -21,6 +21,27 @@ c'est d'abord établir son périmètre** — et ce sera vrai de la plupart des m
 
 ---
 
+## 0 · LE PÉRIMÈTRE — ce que ce module couvre, et où il s'arrête
+
+*(Section ajoutée le 2026-10-03, tâche #1541, sur sa demande P48 : le périmètre se lit AVANT les
+fonctionnalités — après, le lecteur s'est déjà fait une idée.)*
+
+**DEDANS, et c'est exhaustif** : le dossier `docs/suivi/` (sessions, index, archives) · la ligne de
+tâche et ses onze colonnes · la numérotation durable · les statuts et leur normalisation · la
+criticité à six paliers · les contrôles de fidélité du suivi · la file ordonnée et sa restitution.
+
+**DEHORS, avec la raison** :
+
+| Ce qui est dehors | Pourquoi |
+|---|---|
+| Le gestionnaire de tâches de la session | il est propre à l'éditeur et meurt avec la session : ce n'est jamais une source de vérité durable |
+| Les fils de discussion | un fil porte une QUESTION dans la durée, une tâche porte un TRAVAIL ; les confondre perd l'un des deux |
+| Le registre des idées à trancher | une idée n'est pas encore une tâche, et la transformer trop tôt fabrique du travail non décidé |
+| Les plans de nuit et les rapports | ils RACONTENT ce qui a été fait, le suivi ENREGISTRE ce qui est à faire |
+| Le KPI et les objectifs chiffrés | ils comptent au-dessus de la file, ils ne la tiennent pas |
+
+---
+
 ## 1 · CE QUE LE MODULE FAIT — ses fonctionnalités
 
 | # | Fonctionnalité | Ce qu'elle garantit |
@@ -146,7 +167,83 @@ ce qu'il laisse derrière lui — or c'est ce qu'il laisse qui sert aux autres.*
 
 ---
 
-## 6 · CE QUI NE VA PAS, ET QUI SE MESURE
+## 6 · SA CLASSE — détachable, ou non
+
+*(Section ajoutée le 2026-10-03, tâche #1541, sur sa demande P48, et elle découle de sa définition
+du même jour : la partie INDÉTACHABLE est ce que toute prestation réclame quoi qu'il arrive.)*
+
+**Verdict : INDÉTACHABLE.** Et ce n'est pas un avis, c'est une mesure : 22 scripts du dépôt lisent
+`docs/suivi/`, soit un sur quatre de tout l'outillage. Les retirer tous pour détacher ce module
+reviendrait à démonter l'Agence ; le retirer en le laissant reviendrait à casser 22 outils d'un
+coup. C'est la définition même d'une pièce qu'on ne détache pas.
+
+**CE QUE ÇA IMPOSE POUR L'EXPORT** : ce module part toujours, même dans la plus petite version de
+l'Agence. Il appartient au CŒUR au sens de sa définition — le centre de la partie indétachable.
+
+---
+
+## 7 · POURRAIT-IL ÊTRE VENDU SEUL ?
+
+*(Section ajoutée le 2026-10-03, tâche #1541, sur sa demande P48. Distincte de la précédente : un
+module détachable n'est pas forcément vendable seul, et l'inverse est vrai aussi.)*
+
+**Réponse : OUI, et c'est le candidat le plus crédible du parc.** Ce qu'il vend n'est pas un
+logiciel mais une DISCIPLINE — un format de ligne à onze colonnes, une numérotation qui ne se
+casse pas, seize contrôles qui refusent une clôture incomplète, et une file ordonnée par coût
+d'attente. Rien là-dedans ne connaît Lia, Noé, ni ce projet.
+
+**QUI L'ACHÈTERAIT** : quiconque fait travailler une IA sur la durée et perd la trace de ce qui a
+été décidé. C'est exactement le problème que ce projet a rencontré le 30 septembre en perdant une
+session.
+
+**CE QUI MANQUE AUJOURD'HUI POUR LE VENDRE** : rien n'assiste la SAISIE (voir section 9), et c'est
+la seule chose qu'un acheteur verrait en premier.
+
+---
+
+## 8 · LE TABLEAU EXHAUSTIF DES SCRIPTS
+
+*(Section ajoutée le 2026-10-03, tâche #1541, sur sa demande P48. **Ce tableau est GÉNÉRÉ** par
+`node -e "import('./scripts/doc-report.mjs').then(d => console.log(d.formatTableauDesScriptsLines(d.tableauDesScriptsQuiLisent('docs/suivi')).join('\n')))"`
+— l'écrire à la main serait vingt-deux lignes périmées au prochain outil, Article 24.)*
+
+**UNE CORRECTION AU PASSAGE, ET ELLE PORTE SUR CE DOCUMENT** : la section 3 annonçait « 34
+scripts ». La mesure réelle en donne **22**. Les douze autres citent `docs/suivi/` dans un
+COMMENTAIRE ou un message, jamais dans une lecture — et une mention n'est pas un lien. Le chiffre
+de 34 venait d'une recherche textuelle, pas d'une mesure.
+
+**22 scripts lisent `docs/suivi`**, dont 20 déposent un rapport dans leur propre registre.
+
+| Script | Ce qu'il LIT | À quoi il sert | Produit-il un rapport ? |
+|---|---|---|---|
+| `agent-des-noms` | `docs/suivi/` | Renommer un outil, un process, une constante ou un rapport, préparer un renommage et traiter une collision de noms homonymes, sans casser le code ni falsifier l'histoire | oui, `docs/agent-des-noms/` |
+| `angel-of-ia-process` | `docs/suivi/sessions` | Savoir si les règles de travail ont été respectées, et par qui | oui, `docs/angel-of-ia-process/` |
+| `cassandra-rh` | `docs/suivi/sessions` | Savoir quels outils stagnent, échouent ou n'ont jamais servi, et qui doit en répondre | oui, `docs/cassandra-rh/` |
+| `check-house` | `docs/suivi/sessions/x.md` · `docs/suivi/sessions/s.md` · `docs/suivi/sessions` · +7 | **aucune prestation ne le mentionne** | oui, `docs/check-house/` |
+| `check-suivi-fidelity` | `docs/suivi/sessions` · `docs/suivi/archives` · `docs/suivi/` | Vérifier que le suivi des tâches dit la vérité — clôtures incomplètes, fichiers fantômes, dates impossibles | oui, `docs/check-suivi-fidelity/` |
+| `check-tasks-details` | `docs/suivi/sessions` · `docs/suivi/relectures-lourdes/` · `docs/suivi/archives` · +1 | Savoir si une tâche est trop grosse et doit être découpée en plusieurs avant d'être lancée, et d'où vient le travail en file | oui, `docs/check-tasks-details/` |
+| `circle-tasks` | `docs/suivi/` · `docs/suivi/relectures-lourdes/` · `docs/suivi-open-tasks/` · +1 | Lancer la ronde périodique des tâches gratuites mal automatisées | oui, `docs/circle-tasks/` |
+| `data-archangel` | `docs/suivi/sessions` · `docs/suivi` · `docs/suivi/` | Savoir ce que l'équipe sait déjà sur un sujet, ou repérer une donnée produite que rien n'exploite | oui, `docs/data-archangel/` |
+| `doc-report` | `docs/suivi/` · `docs/suivi/relectures-lourdes/` · `docs/suivi-open-tasks/` · +1 | Vérifier que chaque outil livre ses rapports comme prévu (décision HTML/texte, fraîcheur, usage réel) | oui, `docs/doc-report/` |
+| `ecotoken` | `docs/suivi/sessions` | Mesurer et réduire le poids et le coût en tokens de la charte CLAUDE.md, le seul document rechargé à chaque message | oui, `docs/ecotoken/` |
+| `fils-de-discussion` | `docs/suivi` | Savoir si je suis à jour sur tous ses sujets, et ce qui attend une réponse de qui | non |
+| `god-of-all-process` | `docs/suivi/index.md` · `docs/suivi/sessions/` · `docs/suivi/sessions` | Savoir quel process encadre ce que je m'apprête à faire, et où on en est dedans | oui, `docs/god-of-all-process/` |
+| `hyper-scan-checkpoint` | `docs/suivi/index.md` · `docs/suivi/` | Chasse aux bugs cachés avant une étape importante | oui, `docs/hyper-scan-checkpoint/` |
+| `jesus-le-sauveur` | `docs/suivi/sessions` · `docs/suivi` | Savoir pourquoi le projet ralentit, avant un gros chantier ou quand quelque chose traîne sans qu'on sache quoi | oui, `docs/jesus-le-sauveur/` |
+| `le-classificateur` | `docs/suivi/` | Savoir ce qu'est un fichier de l'outillage, quel rang il porte et ce qu'il doit — ou régénérer le document officiel de classification | oui, `docs/le-classificateur/` |
+| `le-coordinateur` | `docs/suivi/relectures-lourdes/index.md` | Lancer d'un coup toutes les vérifications gratuites du dépôt et voir le réseau d'un seul coup d'œil | oui, `docs/le-coordinateur/` |
+| `lib-shell` | `docs/suivi/sessions` | **aucune prestation ne le mentionne** | non |
+| `moise-tables-de-loi` | `docs/suivi/sessions` | Analyser la charte du projet en profondeur, ou préparer une décision qui la touche | oui, `docs/moise-tables-de-loi/` |
+| `ou-on-en-est` | `docs/suivi/` · `docs/suivi/sessions` | Savoir où on en est | oui, `docs/ou-on-en-est/` |
+| `smart-conso-token` | `docs/suivi/relectures-lourdes/index.md` | Réguler ma propre consommation de tokens avant une action coûteuse | oui, `docs/smart-conso-token/` |
+| `the-king` | `docs/suivi/sessions` | Vérifier qu'une décision de fond respecte la philosophie et la politique du projet | oui, `docs/the-king/` |
+| `tool-learning` | `docs/suivi/sessions` · `docs/suivi/` | Apprentissage réel de l'outillage, et mon apport à cet apprentissage | oui, `docs/tool-learning/` |
+
+⚠️ 2 script(s) lisent cette donnée sans qu'aucune offre du catalogue ne les mentionne : `check-house` · `lib-shell`. Personne ne sait donc les demander.
+
+---
+
+## 9 · CE QUI NE VA PAS, ET QUI SE MESURE
 
 | Constat | Mesure | Gravité |
 |---|---|---|

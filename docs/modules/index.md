@@ -15,6 +15,7 @@ fait, rarement par ce qu'il laisse derrière lui, or c'est ce qu'il laisse qui s
 
 | Module | Décrit le | Ce que la description a fait apparaître |
 |---|---|---|
+| [`GABARIT-fiche-de-module.md`](GABARIT-fiche-de-module.md) · [page lisible](GABARIT-fiche-de-module.html) | 2026-10-03 | **le format n'existait qu'en un exemplaire** : la première fiche disait « elle est reprise telle quelle pour le module suivant », donc la septième serait repartie du vieux format. Le gabarit porte ses six ajouts du 2026-10-03 (périmètre en tête, refus détaillé, dépendances, classe détachable, vendable seul, tableau exhaustif des scripts) et `findFichesIncompletes()` les exige |
 | [`module-gestion-des-taches.md`](module-gestion-des-taches.md) · [page lisible](module-gestion-des-taches.html) | 2026-10-02 | **aucun script n'écrit dans le suivi** : une seule porte d'entrée manuelle pour trente-quatre sorties — ce qui explique que tous ses défauts soient des défauts de saisie, jamais de traitement |
 
 **ET UNE TROISIÈME PIÈCE, DEPUIS LE 2026-10-02 : LA CARTE CIBLE** (`docs/referentiel/carte-cible-des-modules.md`,

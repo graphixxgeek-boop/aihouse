@@ -1,4 +1,4 @@
-=== LE SYSTÈME DES INDEX — 99 dossiers, 1258 fichiers déposés ===
+=== LE SYSTÈME DES INDEX — 99 dossiers, 1262 fichiers déposés ===
 
   TROIS CONTRATS, JAMAIS UN SEUL SEUIL POUR TOUT LE MONDE — le même chiffre veut dire l'inverse selon la nature de l'index :
     📇 catalogue — il NOMME les fichiers de son dossier — un fichier absent de la liste est un vrai trou
@@ -6,12 +6,8 @@
     📄 prose — AUCUN — il explique le dossier sans rien dire de son contenu, donc il ne peut ni être à jour ni être en retard
     🚫 absent — aucun index du tout : les fichiers du dossier ne sont annoncés nulle part
 
-  à jour : 69 dossier(s)
+  à jour : 70 dossier(s)
   sans objet : 29 dossier(s)
-  incomplet : 1 dossier(s)
-
-  LES 1 À TRAITER, du plus gros écart au plus petit :
-      · docs/le-coordinateur-catalogue — catalogue : 9/11 fichiers nommés, 2 absent(s) de la liste qu'il promet de tenir
 
   1 index délègue(nt) leur catalogue, et c'est DÉCLARÉ chez eux, jamais deviné :
       · docs/grand-projet → docs/grand-projet/01-absorption/inventaire.md
@@ -19,4 +15,4 @@
   HORS PORTÉE : elle mesure si un fichier est ANNONCÉ par son index, jamais si ce que l'index en dit est juste. Un index qui nomme tous ses fichiers en les décrivant de travers sort « à jour » — ça, c'est une lecture.
 
 Plan d'action
-  → RETENU · 1 catalogue(s) ne nomment pas tous leurs fichiers — tâche [RECOMMANDEE] : traiter dossier par dossier — compléter un catalogue, rattraper un journal, ou CHOISIR une nature pour un index qui n'en a pas ; jamais un remplacement en masse, la prose qui explique un dossier valant mieux qu'une liste
+Aucun constat retenu : ce passage n'a rien trouvé qui appelle une action.

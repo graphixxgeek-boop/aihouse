@@ -25,6 +25,36 @@ nommée ici et disparue du dépôt — ou l'inverse.
 
 ---
 
+## IL EXISTE UNE SECONDE CARTE CIBLE DEPUIS LE 2026-10-03, ET ELLES NE RÉPONDENT PAS À LA MÊME QUESTION
+
+**À lire avant tout le reste, sans quoi on croira que l'une remplace l'autre.** Le 2026-10-03,
+l'utilisateur a donné une définition nouvelle du mot module — « un ensemble d'agents qui œuvrent
+dans un sens commun pour produire UNE PRESTATION de l'Agence » — et demandé, dans le même message,
+d'**oublier les familles qu'il avait créées**. `node scripts/le-coordinateur.mjs carte` produit
+depuis ce jour-là une seconde paire de cartes, bâtie sur les PRESTATIONS et non sur les familles
+(`docs/livrables/carte-des-modules-<date>.md`, tâche #1536).
+
+| | Cette carte-ci (#1420) | La carte par prestations (#1536) |
+|---|---|---|
+| **Son axe** | les 7 FAMILLES de l'organigramme | les 76 PRESTATIONS du catalogue |
+| **Ce qu'elle fixe** | effectif visé, détachabilité, ce que la famille doit porter | quels outils forment un module, et lesquels n'en forment pas |
+| **Son statut** | proposition non validée, tenue à la main | proposition non validée, partie actuelle dérivée |
+| **Ce qui la mesure** | `cassandra-rh carte-cible` | `le-coordinateur carte` |
+
+**AUCUNE DES DEUX N'ANNULE L'AUTRE AUJOURD'HUI, et c'est une situation à trancher plutôt qu'un
+équilibre.** Sa consigne d'oublier les familles vise le TABLEAU qui accompagne le schéma, pas
+nécessairement ce document-ci ; mais tant que les deux cartes cibles coexistent, un lecteur ne
+peut pas savoir laquelle fait foi — et deux porteurs de la même intention finissent toujours par
+diverger (leçon L29). **La question lui revient**, et elle est ouverte.
+
+**COMMENT CE DOUBLON A ÉTÉ CRÉÉ, parce que la cause vaut plus que le constat** : la reprise des
+notes (Article 30) a été faite sur « carte des modules » et a rendu DEUX fichiers. Deux, ce n'est
+pas zéro — ça ressemble donc à une recherche réussie, et la seconde tentative que l'Article 30
+prescrit après un zéro n'a pas eu lieu. La même commande sur « carte cible » rend vingt-trois
+fichiers.
+
+---
+
 ## CE QUE CETTE CARTE FIXE, ET CE QU'ELLE NE FIXE PAS
 
 **Elle fixe trois choses par famille**, et seulement trois, parce que ce sont les seules qui se

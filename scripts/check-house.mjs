@@ -22573,6 +22573,65 @@ async function testContraintesDeSession() {
 }
 await testContraintesDeSession();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// #1541 — LE GABARIT DE FICHE DE MODULE, ET LE TABLEAU QUI SE GÉNÈRE
+// ─────────────────────────────────────────────────────────────────────────────
+// SES DEMANDES P42/P45/P48/P49 : le format lui convient, et il veut six ajouts — le PÉRIMÈTRE mis
+// en avant, « ce qu'il refuse » mieux détaillé, les DÉPENDANCES distinguées des interactions, la
+// CLASSE détachable ou non, « pourrait-il être vendu seul ? », et un tableau EXHAUSTIF des
+// scripts. Sa consigne porte sur le GABARIT, jamais sur les fiches une par une.
+//
+// LE DÉFAUT QU'ELLE FERME : la première fiche disait « elle est reprise telle quelle pour le
+// module suivant ». Le format n'existait donc qu'en un exemplaire, et la septième fiche serait
+// repartie du vieux — la copie à la main que l'Article 24 interdit.
+async function testGabaritFicheDeModule() {
+  const DR = await import('../scripts/doc-report.mjs');
+
+  // LE GABARIT EST LA SOURCE DES SECTIONS, jamais une liste recopiée dans le code (Article 24) :
+  // ajouter une section au gabarit doit suffire à ce que le contrôle l'exige.
+  const sections = DR.sectionsAttenduesDuGabarit('### 0 · UN\n### 7 · DEUX — avec un tiret\ntexte\n### 9 · TROIS\n');
+  assert.equal(sections.length, 3, 'the expected sections are READ from the template');
+  assert.equal(sections[1].titre, 'DEUX', 'and the title stops at the dash: the part after it is a gloss, not the name');
+  assert.deepEqual(sections.map((x) => x.numero), [0, 7, 9]);
+
+  // SANS GABARIT LISIBLE, ON REFUSE : « aucune section manquante » serait un verdict rendu sur rien.
+  assert.equal(DR.findFichesIncompletes({ readFileImpl: () => { throw new Error('nope'); } }).mesurable, false, 'an unreadable template must refuse, never green-light every fiche (L11)');
+  assert.equal(DR.findFichesIncompletes({ readFileImpl: () => 'un gabarit sans aucune section numérotée' }).mesurable, false, 'and a template declaring no section means its shape changed or it was not read — both call for the opposite of a green light');
+
+  // LE RAPPROCHEMENT SE FAIT SUR LE NUMÉRO, jamais sur le libellé : une fiche peut légitimement
+  // nommer sa section autrement, et comparer des titres rendrait le contrôle faux au premier
+  // synonyme.
+  const faux = DR.findFichesIncompletes({
+    listDirImpl: () => ['fiche.md'],
+    readFileImpl: (c) => (String(c).includes('GABARIT') ? '### 0 · PÉRIMÈTRE\n### 1 · CE QU\'IL FAIT\n' : '## 0 · UN AUTRE NOM POUR LE PÉRIMÈTRE\n\ndu texte\n'),
+  });
+  assert.equal(faux.fiches[0].manquantes.length, 1, 'MUST BITE: section 1 is genuinely missing');
+  assert.equal(faux.fiches[0].manquantes[0].numero, 1, 'and section 0 passes under a different wording — matching on titles would break at the first synonym');
+
+  // EN DIRECT (Article 25) : la fiche réelle doit être à jour du gabarit réel.
+  const reel = DR.findFichesIncompletes();
+  assert.equal(reel.mesurable, true);
+  assert.ok(reel.attendues >= 9, `the real template must declare the nine sections and more (currently ${reel.attendues})`);
+  assert.equal(reel.completes, reel.fiches.length, `every real fiche carries every section of the template (${reel.completes}/${reel.fiches.length})`);
+
+  // LE TABLEAU EXHAUSTIF SE GÉNÈRE, et c'est le cœur de sa demande P48 : vingt-deux lignes
+  // écrites à la main seraient périmées au prochain outil.
+  const t = DR.tableauDesScriptsQuiLisent('docs/suivi');
+  assert.equal(t.mesurable, true);
+  assert.ok(t.total > 10, `the real readers must be found (currently ${t.total})`);
+  assert.ok(t.lignes.every((l) => l.lit.length), 'each row names what the script actually reads, never a bare name');
+  // ET IL EST PLUS PRÉCIS QU'UNE RECHERCHE TEXTUELLE, ce qui est tout son intérêt : une mention
+  // dans un commentaire n'est pas une lecture. La fiche annonçait 34 lecteurs ; il y en a 22.
+  const mentions = fs.readdirSync('scripts').filter((f) => f.endsWith('.mjs') && fs.readFileSync(`scripts/${f}`, 'utf8').includes('docs/suivi')).length;
+  assert.ok(t.total < mentions, `a grep counts mentions (${mentions}), the generator counts READS (${t.total}) — and a mention in a comment is not a link`);
+  assert.equal(DR.tableauDesScriptsQuiLisent('docs/suivi', { listDirImpl: () => [] }).mesurable, false, 'an empty scripts folder refuses rather than reporting no readers');
+  const sansOffre = DR.tableauDesScriptsQuiLisent('docs/suivi', { prestations: [] });
+  assert.ok(sansOffre.sansPrestation.length === sansOffre.total, 'with no catalogue, every script is reported as unmentioned — the absence is named, never filled with a sentence I would have invented (L29)');
+
+  console.log(`Passed: le gabarit de fiche de module, et le tableau qui se génère (2026-10-03, tâche #1541). Ses demandes P42/P45/P48/P49 : le format lui convient, et il veut six ajouts — le PÉRIMÈTRE en tête, « ce qu'il refuse » détaillé, les DÉPENDANCES distinguées des interactions, la CLASSE détachable ou non, « pourrait-il être vendu seul ? », et un tableau EXHAUSTIF des scripts. LE DÉFAUT QUE ÇA FERME : la première fiche disait « elle est reprise telle quelle pour le module suivant » — le format n'existait qu'en un exemplaire, donc la septième fiche serait repartie du vieux, la copie à la main que l'Article 24 interdit. Le gabarit déclare ${reel.attendues} sections, et le contrôle les LIT chez lui plutôt que de les recopier : en ajouter une suffit à ce qu'elle soit exigée. Le rapprochement se fait sur le NUMÉRO et jamais sur le libellé, sinon le contrôle casserait au premier synonyme. LE TABLEAU EXHAUSTIF SE GÉNÈRE, et il est plus précis qu'une recherche textuelle : ${mentions} scripts CITENT docs/suivi, ${t.total} le LISENT vraiment — la fiche annonçait 34, un chiffre venu d'un grep et non d'une mesure, corrigé dans le même passage. La colonne « à quoi il sert » est LUE dans le catalogue des prestations plutôt qu'inventée, et un outil qu'aucune offre ne mentionne est nommé comme tel : personne ne sait le demander.`);
+}
+await testGabaritFicheDeModule();
+
 // =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
 // =============================================================================================

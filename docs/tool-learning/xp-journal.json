@@ -596,5 +596,16 @@
     "declencheur": "garde-fou-bloque",
     "rienARetenir": false,
     "date": "2026-10-03T02:17:13.863Z"
+  },
+  {
+    "nature": "captation",
+    "titre": "Une reprise des notes qui rend DEUX fichiers est plus dangereuse quune qui en rend zero",
+    "quoi": "En ouvrant le chantier de la carte des modules (#1536), jai lance `data-archangel notes \"carte des modules\"` : 2 fichiers. Jai conclu que le sujet etait quasi vierge et jai construit deux cartes. Il existait deja `docs/referentiel/carte-cible-des-modules.md`, une carte CIBLE tenue a la main depuis le 2026-10-02, avec sa mesure decart (`cassandra-rh carte-cible`). La requete « carte cible » rend 23 fichiers. LARTICLE 30 PREVIENT CONTRE LE ZERO — « un zero nest jamais la preuve quil ny a rien a savoir » — et le piege reel est pire : un petit resultat NON NUL ressemble a une recherche reussie, donc il na meme pas declenche la deuxieme tentative que le zero aurait declenchee. La regle a tirer : la reprise des notes se fait avec AU MOINS deux formulations du sujet, et un resultat sous une poignee de fichiers se traite comme un zero, jamais comme une reponse.",
+    "terrain": [
+      "docs/referentiel/carte-cible-des-modules.md",
+      "scripts/data-archangel.mjs",
+      "docs/regles-de-travail.md"
+    ],
+    "date": "2026-10-03T08:54:09.142Z"
   }
 ]
