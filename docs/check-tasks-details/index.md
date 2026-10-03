@@ -232,3 +232,9 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | 2026-10-02T14:18:05.875Z | en_cours | liste | 125 | 1382 | 0 | 116 | /home/user/aihouse/docs/check-tasks-details/1790950685855-en_cours-liste.html |
 | 2026-10-02T16:27:34.436Z | en_cours | liste | 125 | 1384 | 1 | 125 | /home/user/aihouse/docs/check-tasks-details/1790958454424-en_cours-liste.html |
 | 2026-10-02T16:30:37.577Z | projet_entier | arborescence | 1384 | 1384 | 0 | 125 | /home/user/aihouse/docs/check-tasks-details/1790958637571-projet_entier-arborescence.html |
+| 2026-10-03T04:59:20.800Z | en_cours | liste | 152 | 1453 | 0 | 123 | /home/user/aihouse/docs/check-tasks-details/1791003560784-en_cours-liste.html |
+| 2026-10-03T04:59:23.474Z | elargi | liste | 171 | 1453 | 0 | 123 | /home/user/aihouse/docs/check-tasks-details/1791003563470-elargi-liste.html |
+| 2026-10-03T04:59:26.336Z | projet_entier | liste | 1453 | 1453 | 0 | 123 | /home/user/aihouse/docs/check-tasks-details/1791003566329-projet_entier-liste.html |
+| 2026-10-03T04:59:39.023Z | en_cours | liste | 152 | 1453 | 0 | 123 | /home/user/aihouse/docs/check-tasks-details/1791003579019-en_cours-liste.html |
+| 2026-10-03T04:59:41.676Z | elargi | liste | 171 | 1453 | 0 | 123 | /home/user/aihouse/docs/check-tasks-details/1791003581671-elargi-liste.html |
+| 2026-10-03T04:59:44.440Z | projet_entier | liste | 1453 | 1453 | 0 | 123 | /home/user/aihouse/docs/check-tasks-details/1791003584431-projet_entier-liste.html |

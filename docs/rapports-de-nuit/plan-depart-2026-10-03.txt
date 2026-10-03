@@ -1,0 +1,163 @@
+PLAN DE DÉPART — nuit du 2026-10-03 (mode ENDURANCE)
+Figé le 2026-10-03T05:00Z (06h58 Paris) — heure LUE, jamais tapée (Article 32).
+Sa consigne : « enchaine sans jamais t arreter, jusqu à l epuisement complet des taches possibles ».
+
+157 tâche(s) ouverte(s) au départ, sur 1453 lues.
+
+  624 | EN COURS               | Charte / CLAUDE.md (chantier #208) | Le avant/après complet de l'Article 19, produit et prêt — EN ATTENTE D
+ 1110 | En cours               | Projet / l'arborescence du GRAND P | Sa consigne : « prépare une arborescence souple prête à recevoir de no
+  492 | à faire                | Ronde / plan d'action R3           | Classer les actions SMART-CONSO-TOKEN au moment où elles ont lieu
+  603 | à faire — nécessite sa présence | Process / conduite                 | Consolider ensemble le process des modes auto / semi-auto
+  612 | À FAIRE                | Outillage / CIRCLE-TASKS           | La Ronde produit trop de rapports : trouver ce qui est doublon, fusion
+  636 | En attente — après le GRAND CHANTIER (#1100) | Organisation / vocabulaire (chanti | Les 67 fichiers citant les trois noms `*-process-guardian` n'ont pas é
+  677 | Ouverte                | Coordination / Deux packs du catal | Trouvé par la mesure du chantier 7, laissé ouvert parce que reformuler
+  679 | Ouverte                | XP / Leçon L23 sans porteur — forc | Constat le plus dur d'EVAL-IA du 2026-09-23, jamais transformé en tâch
+  681 | Ouverte                | XP / Une erreur répétée la même nu | Le garde-fou a refusé deux fois la même faute : la répétition EST déte
+  696 | Ouverte                | Organisation / Harmoniser le modèl | Sa consigne : « ce n'est pas une consigne à appliquer, c'est un exempl
+  699 | Ouverte                | Suivi / chaîne mesure → suite      | Trier les 35 constats sans suite trouvés par la chaîne « mesure → suit
+  700 | Ouverte                | Sauvegarde / coffre et notice      | Process « docs de sauvegarde » chez INES — un zip + un livre, 3 dernie
+  703 | Ouverte                | Conduite / mots d'ordre permanents | FIABILISER / OPTIMISER / HARMONISER — trois questions obligatoires à l
+  704 | Ouverte                | Conso / tokens                     | Proposer le fichier texte dès qu'une réponse devient longue, et l'insc
+  705 | Ouverte                | Outillage / découpe                | Scinder l'outil des tâches en deux : « Où on en est » et « Qu'est-ce q
+  708 | Ouverte                | Suivi / fiche de tâche             | La fiche de tâche : une mini-fiche immédiate dans la conversation, une
+  710 | Ouverte                | Organisation / document total      | La page web où TOUT le fonctionnement de l'Agence est consigné, régéné
+  717 | Ouverte                | Profil utilisateur / les deux sens | Le profil utilisateur dans les DEUX sens : il se déclare, l'agent obse
+  721 | Ouverte                | Ronde / suites                     | Les suites de la Ronde : écarts process ↔ gardien, données sans lecteu
+  733 | En attente — après le GRAND CHANTIER (#1100) | Nommage / les séries d'hommages    | Son idée : « je veux rendre des hommages » — séries « grands codeurs »
+  740 | En attente — après le GRAND CHANTIER (#1100) | Nommage / booster l'agent des noms | « quels sont TOUS les impacts, meme indirectes d'un changement de noms
+  747 | En attente — après le GRAND CHANTIER (#1100) | Nommage / la nomenclature : un cod | « avant le nom il y a un code qui est inseré selon la nomenclature de 
+  767 | Ouverte                | Charte / quelles autres règles à f | « est-ce que tu vois d'autres types de règles qui manquent de ce type 
+  768 | En attente — après le GRAND CHANTIER (#1100) | Nommage / l'outil de renommage PUI | « fais des recherches sur le web [...] anticipe TOUTES les conséquence
+  775 | En attente — après le GRAND CHANTIER (#1100) | Nommage / les deux collisions réel | Découlent de #756 — Article 28 : un constat RETENU devient une tâche q
+  790 | Ouverte                | Charte / les treize Articles muets | Découle de #789 — treize décisions Article par Article, et la charte e
+  793 | Ouverte                | Agence / check-house pèse un quart | Mesuré par `cassandra-rh iceberg` (#744), et ça donne enfin un chiffre
+  814 | Ouverte                | Données / les registres restants : | Découle de #813 — le lecteur de la fiche couvre la question « quand a-
+  823 | Ouverte                | Compteur d'usage / la cause racine | Découle de #822 (Article 3 : corriger la cause, jamais le symptôme). L
+  830 | En attente             | Idées / « un outil qui vérifie la  | CLÔTURE du constat DEEP-READER 3 (TaskList #228). Sa demande du 2026-0
+  842 | En attente             | Ronde / « rentabiliser les trouvai | Instruction de TaskList #235. Question posée à l'outil dont c'est le m
+  845 | Ouverte                | File / les 5 plus anciennes tâches | CLÔTURE du constat TaskList #209 (« les 5 tâches en stagnation : les p
+  861 | En attente — après le GRAND CHANTIER (#1100) | Refonte graphique / son idée SQUID | Signalé par le garde-fou de fraîcheur des fichiers de chantier pendant
+  902 | Ouverte                | Agence / EXPORT ET COMMERCIALISATI | Son gros prompt du 2026-09-26 : huit points distincts sur l'export (bl
+  929 | En attente — après le GRAND CHANTIER (#1100) | Nommage / un seul script, DEUX ide | Trouvé en corrigeant les 4 outils muets du compteur d'usage, Ronde du 
+  988 | En attente — après le GRAND CHANTIER (#1100) | Nommage / le registre des baptêmes | Sa demande : « cree le registre des baptêmes ». Après reprise des note
+  994 | OUVERTE                | Agence / élargir le périmètre d'AX | Sa décision du 2026-09-27, après que je lui ai chiffré les enjeux : « 
+  997 | OUVERTE                | Agence / les 18 constats CLONE-HUN | Son arbitrage du 2026-09-27 : « Tout, jusqu'à zéro » — puis « on va la
+ 1005 | Ouverte                | Agence / deux fonctions `chargerLe | Trouvé en réparant #1004 — c'est la cause racine de ce défaut-là, isol
+ 1019 | Ouverte                | Process / recalibrer le seuil en C | Dépendance découverte en construisant #724 : son second seuil ne PEUT 
+ 1020 | En attente — après le GRAND CHANTIER (#1100) | Process / présenter les 75 noms en | Reste mesuré de #706 une fois le registre des baptêmes semé : la dette
+ 1053 | Ouverte                | Données / compacter les récits des | Seconde moitié de #1024 : garder le constat, la décision et sa raison 
+ 1067 | Ouverte                | Charte / Articles 18 et 26 se reco | Trouvé par Abraham à la Ronde du 2026-09-28
+ 1079 | Ouverte                | Suivi / un commit de SUITE compte- | Veille hebdomadaire du réseau de vigilance (routine du 09:07), constat
+ 1092 | Ouverte                | Conso / personne n'enregistre le t | Ouverte par le constat de la ligne n°1091, comme l'Article 28 l'exige 
+ 1100 | Ouverte                | Projet / ACCUEILLIR L'ENORME PROMP | Sa demande du 2026-09-28 : « arrivée prochaine d'un ENORME PROMPT [...
+ 1101 | Ouverte                | Projet / s'assurer EN AMONT que to | Sa demande 3bis du 2026-09-28, et sa précision : « liste de tâches ouv
+ 1102 | Ouverte                | Conduite / enregistrer le réglage  | Sa demande du 2026-09-28 : « il faudrait REPRENDRE LES PARAMETRES SUIV
+ 1104 | En attente             | Agence / le trou de couverture doc | Il l'a trouvé en posant une AUTRE question, sur trois dossiers lourds 
+ 1105 | En attente             | Agence / le RETENU oublié de ma pr | Sa question : « est-ce que jesus est bien fini à 100 % ? qu'est-ce qu'
+ 1114 | Ouverte                | Projet / rien ne relie une tâche à | Trouvé par moi en mesurant la file face au grand projet : 45 tâches ac
+ 1117 | Ouverte                | Projet / le dixième axe de classem | Fil A1 du plan #1116. Sa réponse en fenêtre dédiée le 2026-09-28 : « l
+ 1118 | Ouverte                | Projet / le BUILD MAP — le documen | Fil A2 du plan #1116. Constat de la vue globale #1115 : c'est le seul 
+ 1119 | Ouverte                | Projet / ramener le coût d'entrée  | Fil C1 du plan #1116. Mesuré par JESUS (#1103) et confirmé indépendamm
+ 1120 | Ouverte                | Projet / le Transaction Engine — l | Constat de la vue globale #1115 : cinq des six composants conseillés e
+ 1121 | Ouverte                | Projet / le positionnement commerc | Constat 7 du plan #1116, à TRANCHER : c'est une décision commerciale, 
+ 1125 | À TRANCHER             | Projet / la COUVERTURE de sa deman | Sa consigne avant de dormir : « te demander si tous les sujets couvert
+ 1126 | À TRANCHER             | Projet / le BUDGET D'OBLIGATIONS — | Auto-critique du plan : le constat unanime des sept audits est que la 
+ 1127 | À TRANCHER             | Projet / le DOCUMENT MAÎTRE de str | Sa commande : « un document maître : chaque élément du projet est en a
+ 1128 | À TRANCHER             | Projet / l'axe STRATÉGIE sur les t | Sa commande : « chaque TÂCHE devrait porter une classe / un signe de s
+ 1129 | À TRANCHER             | Projet / les DEUX règles de travai | Sa commande, mot pour mot : « REGLE DE TRAVAIL VALABLE ICI ET A AJOUTE
+ 1130 | À TRANCHER             | Projet / la DYNAMIQUE D'ESCALADE t | Sa commande : « les stratégies de tâches alimentent par escalade la st
+ 1131 | À TRANCHER             | Projet / l'outil qui RÉAGIT quand  | Sa commande : « avoir une stratégie globale, une direction, de grands 
+ 1132 | À TRANCHER             | Projet / les TROIS BORNES qui diro | Sa commande : « quand pourra-t-on statuer que l'agence est terminée ? 
+ 1133 | À TRANCHER             | Projet / la PASSE GÉNÉRALE : objec | Sa commande : « il y a donc une passe générale à faire dans ce cadre :
+ 1134 | À TRANCHER             | Projet / adapter la CHARTE, les RÈ | Sa commande, posée en conséquence directe : « La Charte Claude.md doit
+ 1135 | À TRANCHER             | Projet / réorganiser les fichiers  | Sa commande : « compte tenu de la formalisation de ces parties, tu doi
+ 1136 | À TRANCHER             | Projet / le PACK DÉCOUVERTE, dériv | Sa commande complémentaire : le pack, ses deux versions, et « ATTENDU 
+ 1137 | À TRANCHER             | Projet / la STRATÉGIE DU JEU — la  | Sa commande en 3 parties A/B/C : stratégie AGENCE, stratégie JEU, stra
+ 1138 | À TRANCHER             | Projet / les DEUX stratégies globa | Sa commande : « me donner à moi une stratégie globale qui inclut deux 
+ 1139 | À TRANCHER             | Projet / le CHANTIER FINALISATION  | Sa commande : « ATTENTION, je parle d'une étape clairement DANGEREUSE 
+ 1140 | À TRANCHER             | Projet / la version de l'Agence AV | Sa commande : « nous devons prévoir une version de l'agence qui conser
+ 1141 | À TRANCHER             | Projet / l'ORDRE remis d'aplomb :  | Son rappel du 2026-09-28 : « pour moi les tâches devaient venir après 
+ 1143 | Ouverte                | Projet / la CHAÎNE DE DÉCISION du  | Sa question du 2026-09-28 : « 3 qui dépendent de philo et politique co
+ 1144 | À TRANCHER             | Projet / le BUT ULTIME porté par P | Sa commande, mot pour mot : « Quel est le but ultime du projet porté p
+ 1149 | À TRANCHER             | Projet / LE CHEMIN : sept étapes o | Sa méthode, énoncée deux fois : « on se met d'accord sur le chemin à p
+ 1150 | À TRANCHER             | Suivi / 109 tâches ouvertes sur 97 | Mesuré en construisant le chemin (#1149) : le plus gros groupe de thèm
+ 1151 | Ouverte                | Projet / les 50 questions de calib | Sa demande avant de dormir : « on reprend tout demain avec 50 question
+ 1154 | À TRANCHER             | Agence / le CONTRAT DE RÉCEPTACLE  | Sa question C31 : « comment l'agence se plugge-t-elle avec les agents 
+ 1156 | À TRANCHER             | Charte / deux Articles proposés —  | Sa phrase avant de dormir : « fais le nécessaire dans la charte et les
+ 1163 | Ouverte                | Projet / les décisions qui l'atten | JESUS, vue 360 : « 13 décisions attendent en même temps [...] les lui 
+ 1165 | À TRANCHER             | Process / un réveil qui ment, pend | Trouvé en vidant la file de notifications : l'ancien filet horaire ann
+ 1169 | À TRANCHER             | Documentation / cinq frontières de | Constaté en réparant la dette de fiches : chaque ajout déclenchait une
+ 1170 | À TRANCHER             | Suivi / le garde-fou des statuts n | Trouvé en fermant #691 : sa ligne archivée portait le statut « Fait » 
+ 1175 | À trancher             | Outillage / deux motifs de numéro  | Première trouvaille de l'outil #1174, et c'est la forme exacte de #117
+ 1192 | À trancher             | Données / faut-il SUIVRE dans le t | La mesure existe depuis #1189 et se voit dans la bannière depuis #1191
+ 1193 | À trancher             | Outillage / le détecteur de docume | Observé en direct : écrire la note qui explique le faux rapprochement 
+ 1197 | À trancher             | Process / l'estimation de la Ronde | Deux lignes d'estimation pour six Rondes — et la question ne pouvait m
+ 1252 | ouverte                | Jeu / le quatrième axe qu'il a nom | Il a demandé ce qui ralentit le codage ET l'IA ET le jeu ET l'agence —
+ 1257 | ouverte                | Données / le savoir est LU mais pa | La quatrième question de sa consigne est la seule qui mesure quelque c
+ 1309 | ouverte                | Agence / refaire la plaquette du p | Sa consigne : « mets tout ça de côté, prends des notes, crée une tâche
+ 1318 | ouverte                | Organisation / l'organigramme de l | Constat du fil 03, 2026-09-30
+ 1319 | ouverte                | Suivi / veiller en permanence à ce | Sa consigne explicite : « le fil de conversation ne sert pas à archive
+ 1320 | ouverte                | Exportabilité / faire dire à un ou | Axe transverse ouvert par lui le 2026-09-30 (fil 05)
+ 1321 | ouverte                | Jeu / vérifier que le tri création | Sa borne permanente
+ 1323 | ouverte                | Exportabilité / rendre réglables l | Mesure du fil 06 : 38 fichiers sur 40 ont au moins une ancre écrite en
+ 1324 | ouverte                | Agence / compter les 🔴 FICTION de | Article 28 pris en défaut sur mon propre document
+ 1325 | ouverte                | Agence / écrire ce qu'un acheteur  | Sa critique de la plaquette, 2026-09-30
+ 1327 | ouverte                | check-spirit / relancer check-spir | Article 0, et le constat du fil 10
+ 1328 | ouverte                | Projet / préparer ce qu'on montrer | Constat du fil 11
+ 1329 | ouverte                | Suivi / rien ne capte ce qui chang | Sa question Q12.1 : « comment tu intègres le fruit de notre réflexion 
+ 1336 | ouverte                | Projet / préparer l'alimentation d | Sa demande : « prépare-toi à alimenter la cascade, pas maintenant mais
+ 1341 | ouverte                | Exportabilité / les deux scénarios | Sa question ① : « que penses-tu de ce fonctionnement ? à toi de me dir
+ 1342 | ouverte                | Exportabilité / nos SOLUTIONS doiv | Sa demande ② : « je voudrais que tu stockes tes solutions [...] la fut
+ 1343 | ouverte                | Organisation / il ne sait pas comm | Sa demande ③ : « moi-même aujourd'hui je ne sais pas très bien comment
+ 1344 | ouverte                | Projet / sa proposition centrale : | Sa demande ④ : « il faut partir sur un nouveau code totalement propre,
+ 1345 | ouverte                | Suivi / l'état d'avancement comple | Sa demande ⑤ : « redis-moi à quel moment intervient la rationalisation
+ 1346 | ouverte                | Agence / quel est le standard de l | Sa demande ⑥, mot pour mot
+ 1347 | ouverte                | Agence / d'autres produits injecta | Sa demande ⑦ : « est-ce que ça ouvre un nouveau marché ? comment domin
+ 1348 | ouverte                | Données / le tableau de bord KPI n | Trouvé en relisant l'historique complet de la conversation à sa demand
+ 1352 | ouverte                | Outillage / CASSANDRA signale deux | Trouvé dans le rapport RH complet, lu en vérifiant son intuition sur C
+ 1359 | Ouverte                | Article 0 / « désolée » 5 fois sur | Trouvé en mesurant l'ESPRIT (#1358) : j'ai écrit que check-spirit n'av
+ 1362 | Ouverte                | Projet / les TROIS BORNES de « l'a | Sa commande : « quand pourra-t-on statuer que l'agence est terminée ? 
+ 1409 | À TRANCHER             | Outillage / 33 preuves d'étape sur | Trouvé en vérifiant qu'un constat du contrôleur appartenait bien à une
+ 1417 | ouverte                | Projet / les 30 questions de cadra | Sa demande, en tête de tout le reste : « reprends toutes les datas dis
+ 1419 | ouverte                | Projet / la philosophie du projet  | Sa commande en quatre axes : « 1/ la revelation 2/ le format standart 
+ 1420 | ouverte                | Organisation / la CARTE CIBLE de l | Sa demande dans le Word : « j'aimerais qu'elle coure vers une CARTE CI
+ 1421 | ouverte                | Organisation / qui PORTE chaque st | Sa demande dans le Word : il se demande qui porte chaque stratégie glo
+ 1422 | ouverte                | Projet / faire REDESCENDRE les règ | Sa consigne : « on doit arriver à faire redescndre les regles fondamen
+ 1423 | ouverte                | Projet / la SECONDE révélation, et | Sa demande : « on devra aussi faire cet exercice de REVELER à nouveau,
+ 1425 | ouverte                | Projet / les 30 questions réécrite | Sa consigne : « tu me poses les 30 questions quand tu as preparé le do
+ 1440 | ouverte                | Projet / lui répondre sur son prom | Sa demande avant d'aller dormir : « Notes toi comme tache de me repond
+ 1455 | Ouverte                | Outillage / la fiche de find-boost | Constat du test à l'aveugle de la Ronde GOAT du 2026-10-02 (7 % de bru
+ 1456 | Ouverte                | Outillage / aucune rubrique du gab | Constat SYSTÉMIQUE du test à l'aveugle, et il vaut bien plus que l'éca
+ 1457 | Ouverte                | Outillage / huit zones d'ombre du  | Relevées par l'évaluateur à l'aveugle, qui n'avait que les documents s
+ 1458 | Ouverte                | Outillage / six paires de document | Constat du détecteur de documents jumeaux, Ronde GOAT du 2026-10-02
+ 1468 | Ouverte                | Outillage / les trois contrôles le | Son arbitrage du 2026-10-02, après que j'aie dû lui reposer la questio
+ 1476 | À TRANCHER             | Projet / le PACK DÉCOUVERTE : fair | Sa demande du 2026-10-02 : « faisons le point (créé une tache) sur le 
+ 1477 | Ouverte                | Rationalisation / regrouper les do | Son idée du 2026-10-02, lancée pour le chantier rationalisation
+ 1478 | Ouverte                | Projet / l'arborescence des tâches | Son constat du 2026-10-02 : « #1110 l'arborescence du GRAND PROJET — T
+ 1479 | Ouverte                | Outillage / quels outils peuvent d | Sa question du 2026-10-02 : « si aucune fusion d'outil n'est possible,
+ 1480 | Ouverte                | Process / une formule « ronde auto | Sa demande du 2026-10-02 : « je voudrais que tu puisses lancer une ou 
+ 1481 | Ouverte                | Export / `the-king fonder` n'a jam | Sa question du 2026-10-02 : « tu as fait un test sur un depot exterieu
+ 1482 | Ouverte                | Stratégie / les trois stratégies g | Sa demande du 2026-10-02 : « Je veux 3 belles stratégies globales, liv
+ 1483 | Ouverte                | Process / le système de fils : il  | Son chantier du 2026-10-02 : « Il faut qu'on refasse une passe sur le 
+ 1484 | Ouverte                | Export / quelles règles sont les m | Sa question du 2026-10-02 : « Quelles sont les regles que tu as toi et
+ 1485 | Ouverte                | Export / le filet de sécurité est- | Ses quatre questions du 2026-10-02 sur le filet, et la liste « pas rat
+ 1486 | Ouverte                | Process / travailler ensemble depu | Sa demande du 2026-10-02 : « Tu dois retrouver : je t'ai posé une ques
+ 1487 | Ouverte                | Charte / le quatrième mot d'ordre  | Sa question du 2026-10-02 : « dans doc PHILO il fallait ajouter ces no
+ 1488 | À TRANCHER             | Outillage / détecter l'ORDRE des é | Sa question du 2026-10-02 : « système capable de détecter l'ordre des 
+ 1489 | À TRANCHER             | Outillage / `the-king tension` ne  | Sa question du 2026-10-02 : « the-king tension : est-ce que cet outil 
+ 1490 | Ouverte                | Export / l'Agence ne teste PAS le  | Mesure du 2026-10-02 : 534 références du filet vers l'outillage contre
+ 1491 | Ouverte                | Export / les garde-fous qui lisent | Mesure du 2026-10-02, en répondant à sa question « est-ce que l'utilis
+ 1492 | À TRANCHER             | Export / « verrouiller le code » : | Sa question du 2026-10-02 : « comment isoler/proteger l'agence, verrou
+ 1493 | À TRANCHER             | Export / trois règles de conduite  | Mesure du 2026-10-02 par le garde-fou `findReglesSansDomicile()` de SA
+ 1494 | Ouverte                | Propriété / la double licence, et  | Sortie du dossier licence du 2026-10-02 — deux décisions qui se referm
+ 1495 | À TRANCHER             | Projet / le jeu pèse 3 % de la fil | Mesure sortie de l état des lieux du GRAND CHANGEMENT, 2026-10-02
+ 1496 | À TRANCHER             | Outillage / six bibliothèques et q | Sortie de la revue #1479 : le groupe qui ne demande aucune fusion, seu
+ 1498 | Ouverte                | Circulation / 26 documents écrits  | Inventaire du 2026-10-02, en réponse à son reproche « le projet M ECHA
+ 1499 | Ouverte                | Process / les 5 Routines sont atta | Trouvé le 2026-10-02 en répondant à sa question sur le travail à dista
+ 1521 | Ouverte                | Projet                             | Livrables / docs à livrer à son réveil
+  390 | en attente de décision | Outillage / badge                  | Imprécision résiduelle consignée : ARGUS et CLONE-HUNTER sont mesurés 
+ 1042 | Écartée — décision de l'utilisateur | Outillage / Le socle est le plafon | constat mesuré pendant #1041 — ARBITRAGE DE L'UTILISATEUR, 2026-09-28,
+ 1505 | Écartée                | Outillage / doc-report n a rien éc | Trouvé le 2026-10-02 en construisant le dossier de #814
+  279 | reportée — décision explicite de l'utilisateur, aucune régression | Méthode de travail / Feuille de ro | Tâche #171 (passe manuelle d'allègement CLAUDE.md) : reportée explicit
+  562 | écartée — décision explicite de l'utilisateur, raison ci-dessus | Organisation / vocabulaire         | Tâche #200 (renommage des trois noms `*-process-guardian`) : FERMÉE su
+  734 | Sortie de la file      | Refonte graphique / thème SQUID GA | Sa proposition : « je veux que le theme graphique soit SQUID GAME, qu'
