@@ -587,5 +587,14 @@
     "declencheur": "resultat-vert-qui-detonne",
     "rienARetenir": false,
     "date": "2026-10-03T01:35:00.988Z"
+  },
+  {
+    "nature": "captation",
+    "titre": "Deux motifs morts en silence dans un seul garde-fou, et le pire est celui qui a l air juste",
+    "quoi": "En écrivant la chaîne qui lit les registres (#1513) : (1) \\b ne matche jamais devant une lettre accentuée en JavaScript, donc quatre alternatives commençant par « à » — dont « à trancher », le mot le plus fréquent du corpus visé — étaient mortes ; (2) restent? à veut dire « resten » + t facultatif et ne matche pas « reste à ». Les deux rendaient une mesure fausse PAR LE BAS, donc rassurante.",
+    "pourquoi": "Une erreur qui fait trouver TROP se voit tout de suite ; une erreur qui fait trouver TROP PEU ressemble à un dépôt en bon état. Les deux motifs avaient l air de dire ce qu on voulait, et seule l écriture du test les a tués. Conduite à tenir : tout motif qui contient une lettre accentuée ou un quantificateur sur une fin de mot se teste sur une chaîne POSITIVE avant d être cru, et un détecteur neuf qui rend un petit chiffre est plus suspect qu un qui en rend un gros. Corollaire du même chantier : mon banc d essai accusait 4 références mortes qui existaient toutes dans docs/suivi/archives/ — vérifier les numéros un par un au lieu de croire ma propre sortie a évité de republier le défaut #1461.",
+    "declencheur": "garde-fou-bloque",
+    "rienARetenir": false,
+    "date": "2026-10-03T02:17:13.863Z"
   }
 ]

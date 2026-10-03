@@ -157,3 +157,66 @@ hérité. La correction **relaie** `listerLesFichiersDeTaches()` au lieu de reco
 aucun crochet, aucun document de process. Il faut le taper à la main, et rien ne dit de le taper
 (**L2**). Lui donner un item de Ronde n'a de sens qu'**après** cette correction, sinon on branche
 119 fausses alarmes dans la Ronde (**L4**).
+
+---
+
+## La chaîne apprend à lire une table de registre (2026-10-03, tâche #1464)
+
+**Le trou était une collision entre deux règles du projet, jamais une négligence.** La charte impose
+à chaque outil un registre avec son `index.md`, et ces index écrivent leurs constats dans une TABLE
+markdown datée. L'Article 28, lui, ne savait reconnaître qu'une section `## Plan d'action`. **La
+mémoire durable de chaque outil partait donc, par construction, dans le seul format que la chaîne ne
+lit pas.**
+
+**Le cas d'école, et il est vérifié** : le constat de `x-port-blindtest` du 2026-09-26 (« aucune
+rubrique du gabarit ne demande ce que l'outil EXPOSE ») n'avait pas été oublié — il était
+**structurellement illisible**, et il a été re-trouvé à l'identique six jours plus tard. Il ressort
+désormais dans la liste, ce qui est la seule preuve qui compte que le mécanisme sert.
+
+**Son arbitrage du 2026-10-02, en fenêtre dédiée** : la chaîne apprend à lire une table de registre.
+Un seul endroit à changer, et les 99 registres deviennent visibles sans qu'on retouche une ligne ;
+l'inverse aurait demandé de reformater des centaines de lignes à la main.
+
+**La commande** : `node scripts/god-of-all-process.mjs plans` — la même qui porte déjà la chaîne des
+documents, parce que le suivi durable y est déjà lu, **archives comprises**, et que le relire
+ailleurs garantirait qu'un des deux lecteurs rediverge (Article 24).
+
+### Trois sources de bruit, toutes trouvées en LANÇANT, toutes écartées après mesure
+
+| Ce qui faisait du bruit | Combien | Pourquoi ce n'est pas un constat |
+|---|---|---|
+| le **sommaire généré** en fin d'index | ~460 lignes | c'est une liste de fichiers : un nom contenant « decisions-qui-**attend**ent » déclenchait la détection |
+| une ligne dont la **première cellule est un lien** | — | c'est une entrée de catalogue, jamais une trouvaille |
+| un **marqueur qui qualifie plus de la moitié des lignes** | 34 d'un coup | c'est une COLONNE de la table : `docs/ecotoken/index.md` est un journal dont une colonne s'intitule « à trancher » |
+
+Le troisième est le plus instructif : **34 des 50 accusations venaient d'un seul fichier et étaient
+toutes fausses.** Un garde-fou dont les deux tiers des accusations relèvent d'un malentendu de format
+cesse d'être lu (leçon L4). La règle retenue est générale et non taillée sur ce fichier (Article 24) :
+un mot qui qualifie plus de la moitié des lignes d'une table ne qualifie plus rien, il décrit la
+table. Un plancher de 4 lignes empêche la règle de neutraliser un petit registre honnête.
+**L'écartement est DIT, jamais tu** : un écartement silencieux est indiscernable d'un trou de
+détection.
+
+### Deux pièges d'écriture, dans un seul motif
+
+Les deux ont été trouvés en écrivant le test, jamais à la relecture, et les deux ont la même forme —
+un motif qui a l'air de dire ce qu'on voulait :
+
+- **`\b` ne marche pas devant une lettre accentuée en JavaScript.** `\bà trancher` ne peut JAMAIS
+  matcher, parce que `à` n'est pas un caractère de mot au sens ASCII de `\b`. Quatre alternatives
+  commençaient par « à » et les quatre étaient mortes — la mesure était fausse par le bas, en
+  silence, alors que #1464 annonçait justement 47 constats citant « à trancher ».
+- **`restent? à`** veut dire « resten » suivi d'un « t » facultatif : il ne matche pas « reste à ».
+
+### Ce qu'il rend aujourd'hui, et sa limite
+
+**416 lignes de constat réelles dans 99 index · 25 déclarent un état non clos · 9 nomment une tâche
+vivante · 16 n'en nomment aucune.** Parmi elles, plusieurs vraies : « les 10 provocations bloquées
+restent à rejouer » (check-spirit, porteur de l'Article 0), « les 5 autres restent à vérifier »
+(argus), « la lecture de fond reste à faire avec l'utilisateur » (simulations).
+
+**Hors portée, écrit dans le rapport lui-même** : il lit ce qu'une ligne DÉCLARE, par des mots —
+jamais si le travail est réellement en suspens. Une ligne de création d'outil disant « aucun constat
+encore produit » y ressort alors qu'elle ne doit rien à personne. C'est un **signal à relire**,
+jamais un verdict, et l'extrait est **centré sur la marque** pour que la relecture prenne trois
+secondes au lieu d'obliger à ouvrir le fichier.

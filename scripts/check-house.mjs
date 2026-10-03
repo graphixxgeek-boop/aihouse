@@ -4302,6 +4302,42 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.equal(auditPlansDeDocuments(docsPlans,null).mesurable,false,'without the suivi text it must declare NOT MEASURED: it could see that a plan announces nothing, never that an announced task truly exists');
   assert.equal(auditPlansDeDocuments([],'x').mesurable,false,'and an empty document list reads NOT MEASURED rather than "every plan is chained" — a green returned on zero files read is the defect this whole landscape exists against');
   assert.ok(plansDeDocumentsLines({mesurable:false,pourquoi:'rien'})[0].includes('PAS MESURÉ'),'a refusal renders as PAS MESURÉ, never as an empty section that would read like a clean bill of health');
+
+  // LA CHAÎNE APPREND À LIRE UNE TABLE DE REGISTRE (2026-10-03, tâche #1464, son arbitrage du
+  // 2026-10-02). Le trou était une collision entre deux règles du projet : la charte impose à chaque
+  // outil un registre avec son index, ces index écrivent leurs constats dans une TABLE, et l'Article
+  // 28 ne savait reconnaître qu'une section « ## Plan d'action ». 978 lignes de constat réelles
+  // étaient donc hors de vue par construction — dont le constat de x-port-blindtest, qui n'avait pas
+  // été oublié mais était ILLISIBLE, et a été re-trouvé à l'identique six jours plus tard.
+  const {auditConstatsDeRegistre,constatsDeRegistreLines}=await import('../scripts/god-of-all-process.mjs');
+  const registres=[
+    {chemin:'docs/a/index.md',texte:'# a\n\n| Date | Constat |\n|---|---|\n| 2026-09-26 | reste à trancher, voir #818 |\n| 2026-09-27 | tout est clos |\n'},
+    {chemin:'docs/b/index.md',texte:'# b\n\n| Date | Constat |\n|---|---|\n| 2026-09-26 | **pas encore** décidé, personne ne le porte |\n'},
+    {chemin:'docs/c/index.md',texte:'# c\n\n| Date | Constat |\n|---|---|\n| 2026-09-26 | à instruire, annoncé en #9999 |\n'},
+    {chemin:'docs/d/index.md',texte:'# d\n\n<!-- SOMMAIRE GÉNÉRÉ -->\n| Fichier | Note |\n|---|---|\n| [decisions-qui-attendent.md](x.md) | — |\n'},
+  ];
+  const ar=auditConstatsDeRegistre(registres,suiviFictif);
+  assert.equal(ar.chaines,1,'a registry row declaring an unresolved state AND naming a task that really exists is a sound link — the 95 existing registries become visible without a single line being reformatted, which is exactly why he arbitrated for changing the reader rather than the 978 rows');
+  assert.deepEqual(ar.sansTache.map(c=>c.registre),['docs/b/index.md'],'a row that says "pas encore" and names nobody is the broken link this chain exists to surface');
+  assert.deepEqual(ar.referencesMortes.map(c=>c.registre),['docs/c/index.md'],'and a row announcing a task absent from the durable suivi is flagged as a dead reference, same doctrine as the document chain');
+  assert.ok(!constatsDeRegistreLines(ar).join('\n').includes('decisions-qui-attendent'),'COUNTER-TEST: the GENERATED file listing at the end of every index is never read as a constat — a filename containing "decisions-qui-attendent" was triggering "attend", and a guard that accuses the normal gesture stops being read (L4)');
+  assert.equal(auditConstatsDeRegistre([{chemin:'docs/e/index.md',texte:'| Fichier | Note |\n|---|---|\n| [`scan.txt`](scan.txt) | en attente |\n'}],suiviFictif).nonClos,0,'COUNTER-TEST: a row whose FIRST cell is a link or a path is a catalogue entry, never a finding — measured before being excluded, the two noise sources together doubled the accusation count');
+  assert.equal(auditConstatsDeRegistre(registres,null).mesurable,false,'without the suivi text it declares NOT MEASURED, like its two neighbours: it can see that a finding names nobody, never that a named task exists');
+  assert.equal(auditConstatsDeRegistre([],'x').mesurable,false,'and zero registries read is NOT MEASURED, never "every finding is chained" (L5)');
+  assert.ok(constatsDeRegistreLines(ar).join('\n').includes('SIGNAL À RELIRE') || constatsDeRegistreLines(ar).join('\n').includes('signal'),'the section states its own limit: it reads what a line DECLARES, never whether the work is truly pending — a tool-creation row saying "aucun constat encore produit" surfaces here while owing nobody anything');
+
+  // UN MARQUEUR QUI QUALIFIE LA MOITIÉ DES LIGNES EST UNE COLONNE (même jour, trouvé en LISANT la
+  // sortie groupée). docs/ecotoken/index.md est un journal de mesure dont une colonne s'intitule
+  // « à trancher » : ses 34 lignes ressortaient comme 34 constats que rien ne porte — 34 des 50
+  // accusations, toutes fausses, dans un seul fichier. Un garde-fou dont les deux tiers des
+  // accusations viennent d'un malentendu de format cesse d'être lu (L4). La règle est générale,
+  // jamais taillée sur ce fichier (Article 24).
+  const colonne={chemin:'docs/journal/index.md',texte:'| Date | État | Note |\n|---|---|---|\n| 1 | à trancher | a |\n| 2 | à trancher | b |\n| 3 | à trancher | c |\n| 4 | à trancher | d |\n| 5 | à trancher | e |\n'};
+  const acol=auditConstatsDeRegistre([colonne],suiviFictif);
+  assert.equal(acol.nonClos,0,'a marker qualifying more than half a table\'s rows describes the TABLE, not its rows: it is excluded rather than turned into one accusation per line');
+  assert.deepEqual(acol.marqueursStructurels.map(m=>m.marqueur),['à trancher'],'and the exclusion is SAID, never silent — a silent exclusion is indistinguishable from a detection hole, which is half of what this file reproaches other tools for');
+  const petit=auditConstatsDeRegistre([{chemin:'docs/petit/index.md',texte:'| Date | Constat |\n|---|---|\n| 1 | reste à faire ceci |\n| 2 | reste à faire cela |\n| 3 | clos |\n'}],suiviFictif);
+  assert.equal(petit.nonClos,2,'COUNTER-TEST: a small registry where two of three rows are genuinely unresolved keeps both — the 4-row floor exists so the majority rule cannot neutralise a short, honest registry');
   // LE MOTIF EXIGEAIT UN MOT QUE LE DÉPÔT N'ÉCRIT PAS TOUJOURS (2026-09-30, tâche #1250).
   // MESURÉ sur les 188 constats RETENU de docs/ : l'ancien motif, qui réclamait « tâche » juste
   // avant le numéro, en voyait 47 — alors que 89 portent réellement un numéro. Il en manquait 42.

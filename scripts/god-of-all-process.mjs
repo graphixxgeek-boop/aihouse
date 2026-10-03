@@ -35,6 +35,7 @@ import { dernierPlanDeDepart } from "./check-tasks-details.mjs";
 import { recentCommits, findCommitsMissingSuiviUpdate, listerLesFichiersDeTaches } from "./check-suivi-fidelity.mjs";
 import { adviseToolBrain } from "./tool-brain.mjs";
 import { normaliserNomDOutil } from "./le-coordinateur.mjs";
+import { dataRows } from "./lib-markdown-table.mjs";
 // LE RELAIS D'ANGEL, RENDU RÉEL (2026-09-23). Il existait depuis le 2026-09-22 comme un PARAMÈTRE
 // (`sectionAngel`) que god attendait qu'on lui tende — et personne ne le lui tendait jamais :
 // `grep sectionAngel` ne trouvait aucun appelant. L'Article 26 promet « une seule voix, jamais une
@@ -2635,6 +2636,156 @@ export function plansDeDocumentsLines(a) {
   return L;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA CHAÎNE NE LISAIT PAS LES REGISTRES — 978 CONSTATS HORS DE SA VUE (2026-10-03, tâche #1464)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE TROU EST UNE COLLISION ENTRE DEUX RÈGLES DU PROJET, jamais une négligence. La charte impose à
+// chaque outil un registre avec son `index.md` ; ces index écrivent leurs constats dans une TABLE
+// markdown datée. L'Article 28, lui, ne savait reconnaître qu'une section « ## Plan d'action ».
+// La mémoire durable de chaque outil partait donc, par construction, dans le seul format que la
+// chaîne ne lit pas.
+//
+// LE CAS D'ÉCOLE, ET IL EST VÉRIFIÉ ICI : le constat de `x-port-blindtest` du 2026-09-26 (« aucune
+// rubrique du gabarit ne demande ce que l'outil EXPOSE ») n'avait pas été oublié — il était
+// structurellement ILLISIBLE, et il a été re-trouvé à l'identique six jours plus tard. Il ressort
+// désormais dans cette liste, ce qui est la seule preuve qui compte que le mécanisme sert.
+//
+// SON ARBITRAGE, en fenêtre dédiée le 2026-10-02 : la chaîne apprend à lire une table de registre.
+// Un seul endroit à changer, et les 95 registres existants deviennent visibles sans qu'on retouche
+// une ligne ; l'inverse aurait demandé de reformater des centaines de lignes à la main.
+//
+// DEUX SOURCES DE BRUIT, ÉCARTÉES APRÈS MESURE et non par principe. Sans elles le contrôle accusait
+// 29 lignes dont une bonne moitié n'étaient pas des constats du tout — et un garde-fou qui accuse
+// le geste normal cesse d'être lu (L4). (1) Le SOMMAIRE GÉNÉRÉ en fin d'index est une liste de
+// fichiers : un nom de fichier contenant « decisions-qui-attendent » déclenchait « attend ».
+// (2) Une ligne dont la première cellule est un lien ou un chemin est une entrée de catalogue,
+// jamais un constat. Mesure après écartement : 978 lignes de constat réelles dans 95 index,
+// 18 déclarant un état non clos, dont 8 nomment une tâche.
+export const MARQUEUR_SOMMAIRE_GENERE = "<!-- SOMMAIRE";
+// DEUX PIÈGES DANS CE SEUL MOTIF, TOUS DEUX TROUVÉS EN ÉCRIVANT SON TEST, jamais à la relecture.
+// (1) `\b` NE MARCHE PAS DEVANT UNE LETTRE ACCENTUÉE en JavaScript : `\bà trancher` ne peut JAMAIS
+// matcher, parce que `à` n'est pas un caractère de mot au sens ASCII de `\b`. La première version
+// portait quatre alternatives commençant par « à » — « à trancher », « à instruire », « à décider »
+// — et les quatre étaient mortes. La mesure qu'elle rendait était donc fausse par le bas, en
+// silence, et la tâche #1464 annonçait justement 47 constats citant « à trancher ».
+// (2) `restent? à` veut dire « resten » + un « t » facultatif, donc il ne matche PAS « reste à ».
+// Les deux pièges ont la même forme : un motif qui a l'air de dire ce qu'on voulait.
+export const MOTIF_CONSTAT_NON_CLOS = /(?:reste|restent) à |reste ouvert|pas encore|à trancher|à instruire|non trait[ée]|laissé pour|en attente|à décider|attend(?:ent)? (?:une|sa|la) /iu;
+export const MOTIF_PREMIERE_CELLULE_CATALOGUE = /^[`\[]/;
+
+export function auditConstatsDeRegistre(registres = [], suiviText = null, { lireLignes = null } = {}) {
+  if (!registres.length) {
+    return { mesurable: false, pourquoi: "aucun index de registre fourni : répondre « tous les constats sont chaînés » sur zéro fichier lu serait exactement le faux vert que cette chaîne existe pour empêcher" };
+  }
+  // LA LIGNE D'EN-TÊTE EST ÉCARTÉE ICI, PAS DANS dataRows() : le lecteur partagé ne sait l'écarter
+  // que si on lui donne le nom d'une colonne, or ces 99 index n'ont pas deux fois les mêmes
+  // colonnes. On l'écarte donc par sa POSITION — une ligne suivie d'un séparateur `|---|` est un
+  // en-tête, quelle que soit sa langue. Sans ça, 99 en-têtes étaient comptés comme des constats.
+  const decouper = lireLignes ?? ((texte) => {
+    const coupe = texte.indexOf(MARQUEUR_SOMMAIRE_GENERE);
+    const utile = (coupe > 0 ? texte.slice(0, coupe) : texte).split("\n");
+    const enTetes = new Set();
+    for (let i = 0; i < utile.length - 1; i++) if (/^\|\s*-+\s*\|/.test(utile[i + 1])) enTetes.add(utile[i]);
+    return dataRows(utile.join("\n")).filter((l) => !enTetes.has(l));
+  });
+  // UN MARQUEUR QUI REVIENT SUR LA MOITIÉ DES LIGNES D'UN REGISTRE EST UNE COLONNE, PAS UN CONSTAT.
+  // Trouvé en lisant la sortie groupée, jamais à la relecture : `docs/ecotoken/index.md` est un
+  // journal de mesure dont une COLONNE s'intitule « à trancher ». Ses 34 lignes ressortaient donc
+  // comme 34 constats que rien ne porte — 34 des 50 accusations, toutes fausses, dans un seul
+  // fichier. Un garde-fou dont les deux tiers des accusations viennent d'un malentendu de format
+  // cesse d'être lu (L4).
+  //
+  // LA RÈGLE EST GÉNÉRALE, jamais taillée sur ce fichier (Article 24) : un mot qui qualifie
+  // plus de la moitié des lignes d'une table ne qualifie plus rien — il décrit la table. Le
+  // plancher de 4 lignes évite de neutraliser un petit registre où deux constats sur trois
+  // seraient réellement non clos.
+  const PLANCHER_COLONNE = 4;
+  let lignesLues = 0;
+  const nonClos = [];
+  const marqueursStructurels = [];
+  for (const r of registres) {
+    const lignesDuRegistre = decouper(String(r?.texte ?? ""));
+    const frequence = new Map();
+    for (const row of lignesDuRegistre) {
+      const t = (Array.isArray(row) ? row.join(" ") : String(row)).replace(/\s+/g, " ");
+      const m = t.match(MOTIF_CONSTAT_NON_CLOS);
+      if (m) frequence.set(m[0].trim().toLowerCase(), (frequence.get(m[0].trim().toLowerCase()) ?? 0) + 1);
+    }
+    const structurels = new Set();
+    for (const [mot, n] of frequence) {
+      if (n >= PLANCHER_COLONNE && n > lignesDuRegistre.length / 2) {
+        structurels.add(mot);
+        marqueursStructurels.push({ registre: r.chemin, marqueur: mot, lignes: n, surTotal: lignesDuRegistre.length });
+      }
+    }
+    for (const row of lignesDuRegistre) {
+      const texte = (Array.isArray(row) ? row.join(" ") : String(row)).replace(/\s+/g, " ");
+      const cellules = texte.split("|").map((c) => c.trim()).filter(Boolean);
+      if (cellules.length && MOTIF_PREMIERE_CELLULE_CATALOGUE.test(cellules[0])) continue;
+      lignesLues++;
+      const marque = texte.match(MOTIF_CONSTAT_NON_CLOS);
+      if (!marque) continue;
+      if (structurels.has(marque[0].trim().toLowerCase())) continue;
+      const numeros = [...texte.matchAll(MOTIF_TACHE_ANNONCEE)].map((m) => m[1]);
+      // L'EXTRAIT EST CENTRÉ SUR LA MARQUE, jamais pris au début de la ligne. Une ligne de registre
+      // fait souvent 400 caractères et la marque est au milieu : couper au début montre la moitié
+      // qui ne contient pas la raison, ce qui oblige à ouvrir le fichier pour comprendre une ligne
+      // écrite pour éviter de l'ouvrir. (Même défaut corrigé le même jour dans safe-export.)
+      const pos = marque.index ?? 0;
+      nonClos.push({ registre: r.chemin, marqueur: marque[0].trim(), numeros: [...new Set(numeros)],
+        extrait: (pos > 45 ? "…" : "") + texte.slice(Math.max(0, pos - 45), pos + 95).trim() });
+    }
+  }
+  if (suiviText == null) {
+    return { mesurable: false, registresLus: registres.length, lignesLues, nonClos, marqueursStructurels,
+      pourquoi: "texte du suivi non fourni — on peut voir qu'un constat n'annonce aucune tâche, jamais vérifier qu'une tâche annoncée existe pour de vrai" };
+  }
+  const sansTache = []; const referencesMortes = []; const chaines = [];
+  for (const c of nonClos) {
+    if (!c.numeros.length) { sansTache.push(c); continue; }
+    const mortes = c.numeros.filter((n) => !new RegExp(`\\|\\s*${n}\\s*\\|`).test(suiviText));
+    if (mortes.length) referencesMortes.push({ ...c, mortes });
+    else chaines.push(c);
+  }
+  return {
+    mesurable: true, registresLus: registres.length, lignesLues,
+    nonClos: nonClos.length, sansTache, referencesMortes, chaines: chaines.length, marqueursStructurels,
+    horsPortee: "Il lit ce qu'une ligne DÉCLARE, par des mots (« reste à », « à trancher », « pas encore ») — jamais si le travail est réellement en suspens. Une ligne de création d'outil qui dit « aucun constat encore produit » ressort donc ici alors qu'elle ne doit rien à personne. C'est un SIGNAL À RELIRE, jamais un verdict, et l'extrait est affiché pour que la relecture prenne trois secondes.",
+  };
+}
+
+export function constatsDeRegistreLines(a) {
+  if (!a?.mesurable) return [`— Chaîne registre → tâches — PAS MESURÉ : ${a?.pourquoi ?? "aucune donnée"}`];
+  const L = [`— Chaîne registre d'outil → tâches (${a.lignesLues} ligne(s) de constat dans ${a.registresLus} index) —`];
+  if (!a.sansTache.length && !a.referencesMortes.length) {
+    L.push(`✅ Les ${a.nonClos} constat(s) déclarant un état non clos nomment tous une tâche qui existe dans le suivi.`);
+  } else {
+    L.push(`${a.nonClos} constat(s) déclarent un état non clos ; ${a.chaines} nomment une tâche vivante.`);
+    // GROUPÉ PAR REGISTRE, parce que cinquante lignes à plat ne se lisent pas (L4) et parce que
+    // l'information utile est autant « lesquels » que « lequel en accumule le plus ».
+    const parRegistre = new Map();
+    for (const c of [...a.sansTache, ...a.referencesMortes]) {
+      if (!parRegistre.has(c.registre)) parRegistre.set(c.registre, []);
+      parRegistre.get(c.registre).push(c);
+    }
+    for (const [registre, constats] of [...parRegistre.entries()].sort((x, y) => y[1].length - x[1].length)) {
+      L.push(`  ✗ ${registre} — ${constats.length} constat(s) non clos que rien ne porte :`);
+      for (const c of constats) {
+        const quoi = c.mortes ? `annonce ${c.mortes.map((t) => `#${t}`).join(", ")}, introuvable(s) dans le suivi durable` : `« ${c.marqueur} », aucune tâche nommée`;
+        L.push(`      · ${quoi} : « ${c.extrait} »`);
+      }
+    }
+  }
+  // CE QUI A ÉTÉ ÉCARTÉ SE DIT, JAMAIS NE SE TAIT : un écartement silencieux est indiscernable
+  // d'un trou de détection, et c'est la moitié de ce que ce fichier reproche aux autres.
+  for (const m of a.marqueursStructurels ?? []) {
+    L.push(`  ⚪ ${m.registre} — « ${m.marqueur} » écarté : il qualifie ${m.lignes} de ses ${m.surTotal} lignes, c'est donc une COLONNE de sa table, pas un constat`);
+  }
+  L.push(`  HORS PORTÉE : ${a.horsPortee}`);
+  return L;
+}
+
 export function buildProcessComplianceReport({ processes = PROCESSES, root = ROOT, verdictsSecondaires = [], sectionAngel, chainesAction = [], plansDeDocuments = null } = {}) {
   const lignes = [];
   const manquements = [];
@@ -3139,6 +3290,20 @@ function main() {
       if (!fichiers.length) suivi = null;   // rien lu n'est jamais « rien à trouver » (L5)
     } catch { /* absent : l'audit dira PAS MESURÉ plutôt que d'accuser */ }
     for (const l of plansDeDocumentsLines(auditPlansDeDocuments(lireDossier("docs/plans"), suivi))) console.log(l);
+    // LA TROISIÈME MOITIÉ DU TERRAIN (2026-10-03, tâche #1464, son arbitrage du 2026-10-02). Les
+    // registres d'outils écrivent leurs constats dans une TABLE, pas sous un titre « Plan
+    // d'action » — 978 lignes de constat étaient donc hors de vue des deux audits ci-dessus. Elle
+    // vit dans la MÊME sous-commande, et c'est délibéré : le suivi durable y est déjà lu, archives
+    // comprises, et le relire ailleurs garantirait qu'un des deux lecteurs rediverge (Article 24).
+    const registres = [];
+    try {
+      for (const d of readdirSync(join(ROOT, "docs"))) {
+        const chemin = join(ROOT, "docs", d, "index.md");
+        if (existsSync(chemin)) registres.push({ chemin: `docs/${d}/index.md`, texte: readFileSync(chemin, "utf8") });
+      }
+    } catch { /* absent : l'audit dira PAS MESURÉ plutôt que d'accuser */ }
+    console.log("");
+    for (const l of constatsDeRegistreLines(auditConstatsDeRegistre(registres, suivi))) console.log(l);
     return;
   }
   if (tache) {
