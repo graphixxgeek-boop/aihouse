@@ -65,6 +65,9 @@ import { checkWeightBudget } from "./ecotoken.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { loadJson, recordCliUsage, loadToolUsageHistory } from "./tool-usage.mjs";
 import { buildPlanDaction, imprimerPlanDaction } from "./report-template.mjs";
+import { BLOCS_GENERES } from "./lib-shell.mjs";
+const MARQUEUR_GENERE_DEBUT = BLOCS_GENERES.at(-1).debut;
+const MARQUEUR_GENERE_FIN = BLOCS_GENERES.at(-1).fin;
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const BADGE_CEREMONY_HISTORY_PATH = join(ROOT, ".badge-ceremony-history.json");
@@ -2789,7 +2792,10 @@ export function schemaDeLaCarteActuelle(c, { maxParFamille = 6 } = {}) {
     parFamille.get(cle).push(m);
   }
   const ordonne = [...parFamille.entries()].sort((a, b) => b[1].length - a[1].length);
-  const out = ["```", "              L'AGENCE CODEX — CARTE ACTUELLE DES MODULES", "              (un module = les outils qui rendent UNE prestation)", ""];
+  // LE TITRE EST HORS DU BLOC, pas dedans (règle de format du 2026-10-03, tâche #1537) : un titre
+  // à l'intérieur du dessin ne peut pas être lu par un sommaire, et un dessin qui arrive sans
+  // annonce oblige à le déchiffrer avant de savoir ce qu'on regarde.
+  const out = ["**Carte ACTUELLE des modules de l'Agence** — un module = les outils qui rendent UNE prestation.", "", "```"];
   out.push(`   ${c.total} prestations  ·  ${c.ensembles} portées par PLUSIEURS outils  ·  ${c.solitaires} par UN SEUL`);
   out.push("");
   for (const [famille, liste] of ordonne) {
@@ -2909,7 +2915,7 @@ export function findPrestationsHomonymes({ prestations = PRESTATIONS } = {}) {
 export function schemaDeLaCarteCible(r, { prestations = PRESTATIONS, modules = MODULES_CIBLES } = {}) {
   if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
   const parNom = new Map(prestations.map((p) => [p.nom, p]));
-  const out = ["```", "              L'AGENCE CODEX — CARTE CIBLE DES MODULES", "              (PROPOSITION — regroupée par QUESTION POSÉE, jamais par parenté de rôle)", ""];
+  const out = ["**Carte CIBLE des modules — une PROPOSITION**, regroupée par QUESTION POSÉE et jamais par parenté de rôle.", "", "```"];
   out.push(`   ${modules.length} modules proposés pour ${r.total} prestations`);
   out.push("");
   out.push("                        ┌───────────────────────────┐");
@@ -3008,7 +3014,10 @@ function main() {
     try { mkdirSync(dossier, { recursive: true }); } catch { /* déjà là */ }
     const jour = new Date().toISOString().slice(0, 10);
     const sortie = join(dossier, `carte-des-modules-${jour}.md`);
-    writeFileSync(sortie, ["# La carte des modules de l'Agence", "", ...lignes, ""].join("\n"), "utf8");
+    // LES MARQUEURS DISENT « CECI EST UNE SORTIE D'OUTIL » (voir BLOCS_GENERES, lib-shell) : sans
+    // eux, ce document — qui énumère 76 prestations et 9 modules — ressemble forcément à un index
+    // du dépôt, et le détecteur de documents jumeaux l'a signalé le jour même de son premier dépôt.
+    writeFileSync(sortie, ["# La carte des modules de l'Agence", "", MARQUEUR_GENERE_DEBUT, "", ...lignes, "", MARQUEUR_GENERE_FIN, ""].join("\n"), "utf8");
     console.log(`\nRapport déposé : docs/livrables/carte-des-modules-${jour}.md`);
     const constats = [];
     if (actuelle.mesurable && actuelle.solitaires > actuelle.ensembles) {

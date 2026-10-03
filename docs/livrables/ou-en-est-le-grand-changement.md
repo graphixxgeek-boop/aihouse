@@ -56,6 +56,8 @@ alarmant en soi — mais elles bloquent tout l'étage en dessous.
 Le GRAND PROJET n'est pas une liste : c'est une **cascade**. Chaque étage suppose le précédent
 tranché.
 
+**Les quatre étages du GRAND PROJET** — chacun suppose le précédent tranché.
+
 ```
 ÉTAGE 0 — LE BUT ULTIME                ✅ validé le 30/09, reste philo et politique
    │

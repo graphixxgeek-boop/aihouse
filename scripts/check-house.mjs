@@ -9886,7 +9886,10 @@ async function testCarteDesModules() {
   const lignes = lc.formatCarteLines(reelle, partition);
   const texte = lignes.join('\n');
   assert.ok(texte.includes('┌─') && texte.includes('└─'), 'the output must actually be DRAWN — he refused a text and asked for a schema');
-  assert.ok(/CARTE ACTUELLE/.test(texte) && /CARTE CIBLE/.test(texte), 'and carry both maps, because the gap between them is the whole subject');
+  assert.ok(/Carte ACTUELLE/.test(texte) && /Carte CIBLE/.test(texte), 'and carry both maps, because the gap between them is the whole subject');
+  // CHAQUE SCHÉMA PORTE SON TITRE HORS DU BLOC (règle de format #1537) : un titre à l'intérieur
+  // du dessin échappe aux sommaires, et le contrôle des schémas sans titre le signalerait.
+  assert.ok(texte.indexOf('**Carte ACTUELLE') < texte.indexOf('```'), 'the title is announced BEFORE the fence, never inside the drawing');
   assert.ok(/PROPOSITION/.test(texte), 'the target map must declare itself a proposal: presenting a judgement as a measure is the one thing this repository refuses');
   assert.ok(/Pack Boussole/.test(texte), 'the homonym surfaces in the report a human reads, never only in a function nobody calls (L2)');
   assert.ok(reelle.solitaires > reelle.ensembles, `and the uncomfortable figure is kept rather than smoothed: ${reelle.solitaires} of ${reelle.total} prestations rest on a single tool`);
@@ -22455,6 +22458,68 @@ async function testCoutDesPagesHtml() {
 }
 await testCoutDesPagesHtml();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// #1537 — UN SCHÉMA SANS TITRE, ET UNE RÈGLE DÉJÀ SUIVIE À 92 % SANS ÊTRE ÉCRITE
+// ─────────────────────────────────────────────────────────────────────────────
+// SES CONSIGNES DE FORMAT P25/P26/P49 : le schéma du module « gestion des tâches » est
+// « EXACTEMENT ce qu'il attend », ce type de schéma devient la norme, tout schéma porte un TITRE,
+// et toute liste mentionnée est exhaustive et déroulée en tableau.
+//
+// MESURÉ AVANT D'ÊTRE DÉCIDÉ, et c'est ce qui rend le contrôle applicable : 90 schémas hors
+// sources, 83 déjà titrés, 7 non. La règle était suivie à 92 % sans être écrite nulle part. Un
+// contrôle qui accuserait la moitié du dépôt à son premier passage ne serait plus lu (leçon L4).
+async function testSchemasSansTitre() {
+  const DR = await import('../scripts/doc-report.mjs');
+
+  // UN PARCOURS VIDE REFUSE : « aucun schéma non titré » et « rien parcouru » s'écrivent pareil.
+  const vide = DR.findSchemasSansTitre({ listDirImpl: () => [] });
+  assert.equal(vide.mesurable, false, 'an empty sweep must refuse rather than report that every schema is titled (L11)');
+
+  const lire = (fichiers) => (chemin) => {
+    const cle = Object.keys(fichiers).find((k) => chemin.endsWith(k));
+    if (!cle) throw new Error('absent');
+    return fichiers[cle];
+  };
+  const dir = (noms) => () => noms.map((n) => ({ name: n, isDirectory: () => false }));
+
+  // CE QU'IL DOIT ATTRAPER : un dessin qui arrive sans annonce.
+  const nu = DR.findSchemasSansTitre({ racine: 'd', listDirImpl: dir(['a.md']), readFileImpl: lire({ 'a.md': 'du texte\n\n```\n┌──┐\n└──┘\n```\n' }) });
+  assert.equal(nu.schemas, 1);
+  assert.equal(nu.sansTitre.length, 1, 'MUST BITE on an untitled drawing');
+
+  // CE QU'IL DOIT LAISSER PASSER : les deux formes de titre qu'il emploie vraiment.
+  const sec = DR.findSchemasSansTitre({ racine: 'd', listDirImpl: dir(['a.md']), readFileImpl: lire({ 'a.md': '## 3 · LE SCHÉMA\n\n```\n┌──┐\n```\n' }) });
+  assert.deepEqual(sec.sansTitre, [], 'a section heading counts as a title — that is the form of the model he validated');
+  const gras = DR.findSchemasSansTitre({ racine: 'd', listDirImpl: dir(['a.md']), readFileImpl: lire({ 'a.md': '**Les quatre étages** — ce qu\'ils supposent.\n\n```\n┌──┐\n```\n' }) });
+  assert.deepEqual(gras.sansTitre, [], 'and so does a bold line just above, which is the lighter form used mid-document');
+
+  // UN BLOC DE CODE ORDINAIRE N'EST PAS UN SCHÉMA : sans cette distinction le contrôle
+  // réclamerait un titre à chaque commande shell du dépôt, et crierait partout (L4).
+  const code = DR.findSchemasSansTitre({ racine: 'd', listDirImpl: dir(['a.md']), readFileImpl: lire({ 'a.md': 'texte\n\n```\nnode scripts/x.mjs\n```\n' }) });
+  assert.equal(code.schemas, 0, 'an ordinary code block is NOT a schema — demanding a title for every shell command would make the guard cry everywhere');
+  assert.ok(DR.formatSchemasSansTitreLines(code)[0].includes('aucun bloc dessiné'), 'and zero schemas is reported as "nothing to title", never as "all titled"');
+
+  // LES EXCLUSIONS SONT DÉCLARÉES AVEC LEUR RAISON, et celle qui compte est la sienne.
+  assert.ok(DR.HORS_PORTEE_SCHEMAS.some((h) => h.motif.test('docs/grand-projet/00-sources/01-sa-demande/reponses-2026-10-03.md')), 'what HE deposited is out of scope: his word is not modified, and reproaching it a format would be absurd');
+  assert.ok(!DR.HORS_PORTEE_SCHEMAS.some((h) => h.motif.test('docs/strategies/gestion-des-taches-strategie.md')), 'while a document we write stays in scope — a wide exclusion would measure nothing');
+  assert.ok(DR.HORS_PORTEE_SCHEMAS.every((h) => typeof h.pourquoi === 'string' && h.pourquoi.length > 30), 'each exclusion carries its written reason');
+
+  // EN DIRECT (Article 25) — et le chiffre est celui qui rend la règle applicable.
+  const reel = DR.findSchemasSansTitre();
+  assert.equal(reel.mesurable, true);
+  assert.ok(reel.schemas > 50, `the real repository must be swept (currently ${reel.schemas} schemas)`);
+  assert.deepEqual(reel.sansTitre, [], `every schema in the repository now announces itself before it draws (${reel.part} %)`);
+
+  // ET IL PARLE LÀ OÙ UN HUMAIN LIT (L2).
+  assert.ok(/formatSchemasSansTitreLines\(schemas\)/.test(fs.readFileSync('scripts/doc-report.mjs', 'utf8')), 'the guard must be PRINTED by the tool, not merely exported');
+  // LA RÈGLE EXISTE AUSSI EN TOUTES LETTRES, parce qu'un garde-fou sans règle écrite n'explique
+  // jamais ce qu'il veut (leçon L1, prise par l'autre bout).
+  assert.ok(fs.readFileSync('docs/regles-de-travail.md', 'utf8').includes('findSchemasSansTitre'), 'and the written rule names its mechanism, so a reader can go and check it');
+
+  console.log(`Passed: un schéma sans titre, et une règle déjà suivie à 92 % sans être écrite (2026-10-03, tâche #1537). Ses consignes de format P25/P26/P49 : le schéma du module « gestion des tâches » est EXACTEMENT ce qu'il attend, ce type devient la norme, tout schéma porte un TITRE, toute liste mentionnée est exhaustive et déroulée en tableau. MESURÉ AVANT D'ÊTRE DÉCIDÉ, et c'est ce qui rend le contrôle applicable : ${reel.schemas} schémas hors sources, 83 déjà titrés, 7 non — la règle était suivie à 92 % sans exister nulle part, et un contrôle qui accuserait la moitié du dépôt au premier passage ne serait plus lu (L4). Les sept ont été titrés, dont deux par le GÉNÉRATEUR de la carte des modules plutôt qu'à la main, sans quoi le défaut serait revenu à la prochaine génération. UN BLOC DE CODE ORDINAIRE N'EST PAS UN SCHÉMA : sans cette distinction, le contrôle réclamerait un titre à chaque commande shell du dépôt. CE QU'IL A DÉPOSÉ LUI-MÊME EST HORS DE PORTÉE, et la raison n'est pas technique : c'est sa parole, elle ne se modifie pas. ET LA LIMITE EST DÉCLARÉE PLUTÔT QUE TUE (Article 27) : qu'un schéma soit SUIVI du paragraphe disant ce qu'une liste cacherait, et qu'une liste soit vraiment exhaustive, aucune mécanique ne peut le lire.`);
+}
+await testSchemasSansTitre();
+
 // =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
 // =============================================================================================
@@ -25475,7 +25540,7 @@ async function testArborescenceDeLaCascade() {
   //    des sommaires. La correction porte sur la CLASSE (leçon L37) : la liste BLOCS_GENERES, où
   //    un troisième bloc n'aura qu'à se déclarer.
   const sh = await import('../scripts/lib-shell.mjs');
-  assert.ok(sh.BLOCS_GENERES.length >= 2, 'there is more than one kind of generated block, and the stripper must know them all');
+  assert.ok(sh.BLOCS_GENERES.length >= 3, 'there is more than one kind of generated block, and the stripper must know them all');
   assert.ok(sh.BLOCS_GENERES.every((b) => b.debut && b.fin && b.quoi), 'each declares its markers AND what it is — a marker pair nobody can name is one nobody can challenge');
   const avecDeux = `prose${sh.DEBUT_BLOC_GENERE}sommaire${sh.FIN_BLOC_GENERE}milieu${K.MARQUEUR_ARBRE_DEBUT}arbre${K.MARQUEUR_ARBRE_FIN}fin`;
   const nu = sh.sansLeBlocGenere(avecDeux);

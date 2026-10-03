@@ -507,6 +507,87 @@ export function trouverLaSource(base, { root = ROOT, listerImpl = listerLesFichi
 // ne lit jamais. Un dossier d'archive qui grossit seul n'est pas une livraison.
 export const SEUIL_DOSSIER_LOURD_MO = 1;
 
+// ============================================================================
+// UN SCHÉMA SANS TITRE — ses consignes de format P25/P26/P49 (tâche #1537)
+// ============================================================================
+// SA CONSIGNE, ET ELLE DÉSIGNE UN MODÈLE PLUTÔT QUE DE DÉCRIRE UN FORMAT : le schéma du module
+// « gestion des tâches » est « EXACTEMENT ce qu'il attend », et « ce type de schéma doit être
+// utilisé DÉSORMAIS DE FAÇON RÉCURRENTE dans tous les docs pertinents ». Il ajoute : tout schéma
+// porte un TITRE, et toute liste mentionnée est exhaustive et déroulée en tableau.
+//
+// CE QUI SE VÉRIFIE MÉCANIQUEMENT EST LE TITRE, ET LUI SEUL. Qu'un paragraphe dise vraiment « ce
+// que le schéma montre et qu'une liste cacherait », ou qu'une liste soit vraiment exhaustive,
+// aucune mécanique ne peut le lire — c'est déclaré dans la règle plutôt que tu (Article 27).
+//
+// MESURÉ AVANT D'ÊTRE DÉCIDÉ, et c'est ce qui rend le contrôle applicable : 89 schémas dans le
+// dépôt hors sources, 82 déjà titrés, 7 non. La règle était suivie à 92 % sans être écrite. Un
+// contrôle qui accuserait la moitié du dépôt à son premier passage ne serait plus lu (leçon L4).
+export const MOTIF_CARACTERE_DE_DESSIN = /[┌┐└┘├┤┬┴┼─│▼▲►◄╔╗╚╝║═]/;
+export const LIGNES_AVANT_POUR_UN_TITRE = 4;
+
+// LES DOCUMENTS QU'IL A DÉPOSÉS SONT HORS DE PORTÉE, et la raison n'est pas technique : c'est SA
+// parole, elle ne se modifie pas, et lui reprocher un format de schéma serait absurde. Les
+// journaux et les archives le sont pour la raison déjà écrite ailleurs — on ne réécrit pas une
+// archive pour lui faire respecter une règle née après elle.
+export const HORS_PORTEE_SCHEMAS = [
+  { motif: /^docs\/grand-projet\/00-sources\//, pourquoi: "ce qu'il a déposé lui-même : sa parole ne se modifie pas, et lui reprocher un format serait absurde" },
+  { motif: /^docs\/suivi\//, pourquoi: "journal de tâches : ses lignes ne portent pas de schéma, et une ligne de tableau n'est pas un dessin" },
+  { motif: /\/archives?\//, pourquoi: "une archive garde l'état du jour où elle a été faite : la corriger détruirait ce qu'elle existe pour préserver" },
+  { motif: /^docs\/simulations\//, pourquoi: "transcripts de parties : ce sont des conversations enregistrées, pas des documents que nous rédigeons" },
+];
+
+export function findSchemasSansTitre({ root = ROOT, racine = "docs", listDirImpl = readdirSync, readFileImpl = lireFichierPartage, horsPortee = HORS_PORTEE_SCHEMAS } = {}) {
+  const fichiers = [];
+  const pile = [racine];
+  while (pile.length) {
+    const d = pile.pop();
+    let entrees = [];
+    try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
+    for (const e of entrees) {
+      const chemin = `${d}/${e.name}`;
+      if (e.isDirectory()) { pile.push(chemin); continue; }
+      if (e.name.endsWith(".md") && !horsPortee.some((h) => h.motif.test(chemin))) fichiers.push(chemin);
+    }
+  }
+  if (!fichiers.length) {
+    return { mesurable: false, pourquoi: "aucun document lu : ce zéro dit qu'on n'a rien parcouru, jamais que tous les schémas sont titrés (leçons L5/L11)" };
+  }
+  let schemas = 0;
+  const sansTitre = [];
+  for (const chemin of fichiers) {
+    let lignes = [];
+    try { lignes = String(readFileImpl(join(root, chemin), "utf8")).split("\n"); } catch { continue; }
+    let dans = false; let debut = -1; let corps = [];
+    for (let i = 0; i < lignes.length; i += 1) {
+      if (/^```/.test(lignes[i])) {
+        if (!dans) { dans = true; debut = i; corps = []; continue; }
+        dans = false;
+        if (!corps.some((l) => MOTIF_CARACTERE_DE_DESSIN.test(l))) continue;
+        schemas += 1;
+        // LE TITRE SE CHERCHE EN REMONTANT, parce qu'une ligne vide ou une italique de légende
+        // peut séparer le titre de son bloc sans que le titre manque pour autant.
+        const avant = lignes.slice(Math.max(0, debut - LIGNES_AVANT_POUR_UN_TITRE), debut).filter((l) => l.trim()).reverse();
+        if (!avant.find((l) => /^#{1,6}\s/.test(l) || /^\*\*.+\*\*/.test(l.trim()))) {
+          sansTitre.push({ chemin, ligne: debut + 1 });
+        }
+      } else if (dans) corps.push(lignes[i]);
+    }
+  }
+  return { mesurable: true, documents: fichiers.length, schemas, sansTitre, titres: schemas - sansTitre.length,
+    part: schemas ? Math.round(((schemas - sansTitre.length) / schemas) * 100) : null };
+}
+
+export function formatSchemasSansTitreLines(r, { combien = 10 } = {}) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  if (!r.schemas) return ["SCHÉMAS — aucun bloc dessiné trouvé dans les documents parcourus. Ce n'est pas « tout est titré » : c'est qu'il n'y a rien à titrer."];
+  const out = [`SCHÉMAS — ${r.titres} titré(s) sur ${r.schemas} (${r.part} %), dans ${r.documents} document(s).`];
+  for (const s of r.sansTitre.slice(0, combien)) out.push(`   ⚠️ ${s.chemin}:${s.ligne} — un dessin sans titre oblige à le déchiffrer avant de savoir ce qu'on regarde.`);
+  if (r.sansTitre.length > combien) out.push(`   … et ${r.sansTitre.length - combien} autre(s)`);
+  if (!r.sansTitre.length) out.push("   ✅ Chaque schéma s'annonce avant de se dessiner.");
+  out.push("   HORS PORTÉE : qu'un schéma soit SUIVI du paragraphe qui dit ce qu'une liste cacherait, et qu'une liste soit vraiment exhaustive, aucune mécanique ne peut le lire — c'est écrit dans la règle plutôt que tu (Article 27).");
+  return out;
+}
+
 export function coutDesPagesHtml({ root = ROOT, racine = "docs", listDirImpl = readdirSync, statImpl = statSync, existsImpl = existsSync } = {}) {
   const pages = [];
   const pile = [racine];
@@ -1106,6 +1187,14 @@ function main() {
   // parce que c'est doc-report qui porte la décision de rendu de chaque registre
   // (`texte` / `archived_html` / `delivery_html`) : le coût d'une décision se lit là où la
   // décision se prend.
+  // UN SCHÉMA SANS TITRE (2026-10-03, tâche #1537, ses consignes de format P25/P26). Le contrôle
+  // vit ici parce que doc-report est déjà le lieu où la FORME des documents se vérifie — page
+  // périmée, document jumeau, famille corroborée. Un quarantième outil pour une règle de forme
+  // aurait ajouté un rendez-vous de plus pour une ligne (Article 31 : étendre plutôt qu'ajouter).
+  const schemas = findSchemasSansTitre();
+  for (const l of formatSchemasSansTitreLines(schemas)) console.log(l);
+  for (const x of schemas?.sansTitre ?? []) ecartsMuets.push({ fichier: `${x.chemin}:${x.ligne}`, defaut: "un schéma qui arrive sans titre : il faut le déchiffrer avant de savoir ce qu'on regarde", tache: `poser un titre (section ou ligne en gras) juste au-dessus du bloc dessiné de ${x.chemin}`, fausseUneMesure: false });
+
   const coutHtml = coutDesPagesHtml();
   for (const l of formatCoutDesPagesHtmlLines(coutHtml)) console.log(l);
   for (const d of (coutHtml?.dossiers ?? []).filter((x) => x.octets / 1024 / 1024 >= SEUIL_DOSSIER_LOURD_MO)) {

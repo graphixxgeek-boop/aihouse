@@ -3377,6 +3377,53 @@ l'utilisateur et l'agent, et ils se lisent au moment où on livre, jamais à cha
 **Aucun mot n'est changé, aucune obligation n'est retirée** : la charte garde l'obligation de suivre
 ces étapes sans en sauter une (Article 18), ce document dit lesquelles.
 
+## Le format d'un SCHÉMA, et celui d'une LISTE (2026-10-03, tâche #1537)
+
+*(Ses trois consignes du 3 octobre, points P25, P26 et P49 de son fichier de réponses.)*
+
+**IL A DÉSIGNÉ UN MODÈLE PLUTÔT QUE DE DÉCRIRE UN FORMAT, et c'est ce qui rend la règle
+applicable.** Ses mots : le schéma du module « gestion des tâches »
+(`docs/modules/module-gestion-des-taches.md`, section 3) est « EXACTEMENT ce qu'il attend », et
+« ce type de schéma doit être utilisé DÉSORMAIS DE FAÇON RÉCURRENTE dans tous les docs
+pertinents ».
+
+### Les trois obligations
+
+1. **TOUT SCHÉMA PORTE UN TITRE.** Un dessin qui arrive sans annonce oblige à le déchiffrer avant
+   de savoir ce qu'on regarde. Le titre est un titre de section (`## 3 · LE SCHÉMA`) ou une ligne
+   en gras juste au-dessus du bloc — jamais rien.
+2. **CE TYPE DE SCHÉMA DEVIENT LA NORME** dans tout document où une structure, une circulation ou
+   une hiérarchie se décrit. Le modèle est celui qu'il a validé : dessiné en caractères (donc
+   régénérable et lisible partout), des boîtes reliées par des flèches, et — c'est la partie la
+   plus importante — **suivi d'un paragraphe qui dit CE QUE LE SCHÉMA MONTRE ET QU'UNE LISTE
+   CACHERAIT**. Sans ce paragraphe, le dessin est une décoration.
+3. **UNE LISTE MENTIONNÉE EST EXHAUSTIVE, ET DÉROULÉE EN TABLEAU EXPLICATIF.** Ses mots : « quand
+   une fiche mentionne une liste, elle doit être EXHAUSTIVE et déroulée en tableau explicatif ».
+   Jamais « … et quelques autres », jamais des pointillés. Si la liste est trop longue pour le
+   document, c'est le document qui doit changer de forme, pas la liste qui doit être tronquée.
+
+### Pourquoi un dessin en caractères plutôt qu'une image
+
+Une image devrait être redessinée à la main au premier changement — exactement la copie que
+l'Article 24 interdit. Un dessin en caractères se **génère** depuis l'état réel, se lit dans un
+terminal comme dans un navigateur, et ne peut pas se périmer sans que son générateur le sache.
+
+### Ce que le garde-fou vérifie, et ce qu'il ne peut pas vérifier
+
+`findSchemasSansTitre()` (`scripts/doc-report.mjs`) repère mécaniquement un bloc de code contenant
+des caractères de dessin qui n'est précédé d'aucun titre. **Mesuré le jour de la règle : 89 schémas
+dans le dépôt, 82 déjà titrés, 7 non.** La règle était donc déjà suivie à 92 % sans être écrite —
+ce qui la rend applicable plutôt qu'écrasante (leçon L4 : un contrôle qui accuse la moitié du dépôt
+au premier passage n'est plus lu).
+
+**Ce qu'aucune mécanique ne peut lire** : si le paragraphe qui suit le schéma dit vraiment ce
+qu'une liste cacherait, et si une liste est vraiment exhaustive. Ces deux-là se déclarent ici
+plutôt qu'elles ne se taisent (Article 27) — les écrire EST la protection.
+
+**Les documents qu'il a déposés lui-même (`docs/grand-projet/00-sources/`) sont hors de portée du
+contrôle** : c'est sa parole, elle ne se modifie pas, et lui reprocher un format serait absurde.
+
+
 ## La livraison des transcriptions complètes
 
 **Préférence de livraison des transcriptions complètes.** Depuis le 2026-09-18, l'utilisateur a

@@ -102,6 +102,8 @@ famille COLLABORATION — il ne compte pas dans tes 93)*.
 | **21** — HYPER-SCAN-CHECKPOINT | 2 |
 | **TOTAL** | **47** |
 
+**Le compte des obligations, de 93 à l'objectif** — ce qui part, ce qui reste, ce qui s'ajoute.
+
 ```
    93 obligations AGENCE aujourd'hui
  – 47 portées par les neuf « modes d'emploi »

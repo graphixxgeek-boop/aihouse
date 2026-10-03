@@ -54,7 +54,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/reponses/reponses-gros-prompt-2026-10-02.html` | `docs/reponses/reponses-gros-prompt-2026-10-02.md` | 55864 | 2026-10-02 20:39Z |
 | `docs/livrables/l-agence-ailleurs.html` | `docs/livrables/l-agence-ailleurs.md` | 19557 | 2026-10-02 21:07Z |
 | `docs/livrables/choisir-une-licence.html` | `docs/livrables/choisir-une-licence.md` | 18254 | 2026-10-02 21:11Z |
-| `docs/livrables/ou-en-est-le-grand-changement.html` | `docs/livrables/ou-en-est-le-grand-changement.md` | 13857 | 2026-10-02 21:14Z |
 | `docs/livrables/outils-reductibles-en-extension.html` | `docs/livrables/outils-reductibles-en-extension.md` | 16117 | 2026-10-02 21:18Z |
 | `docs/grand-projet/02-strategie/reponses-a-ses-49-questions.html` | `docs/grand-projet/02-strategie/reponses-a-ses-49-questions.md` | 48606 | 2026-10-02 21:23Z |
 | `docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.html` | `docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.md` | 19953 | 2026-10-02 21:25Z |
@@ -71,7 +70,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/livrables/article-33-honnetete-texte-propose.html` | `docs/livrables/article-33-honnetete-texte-propose.md` | 13546 | 2026-10-03 06:44Z |
 | `docs/the-king/tableau-des-convictions-2026-10-03.html` | `docs/the-king/tableau-des-convictions-2026-10-03.md` | 54025 | 2026-10-03 07:04Z |
 | `docs/le-coordinateur-catalogue/carte-des-modules-2026-10-03.html` | `docs/le-coordinateur-catalogue/carte-des-modules-2026-10-03.md` | 13698 | 2026-10-03 07:23Z |
-| `docs/livrables/carte-des-modules-2026-10-03.html` | `docs/livrables/carte-des-modules-2026-10-03.md` | 13682 | 2026-10-03 07:25Z |
 | `docs/strategies/les-deux-scenarios-par-zip.html` | `docs/strategies/les-deux-scenarios-par-zip.md` | 15899 | 2026-10-03 07:50Z |
 | `docs/strategies/strategie-globale-de-l-agence.html` | `docs/strategies/strategie-globale-de-l-agence.md` | 17146 | 2026-10-03 07:50Z |
 | `docs/strategies/strategie-globale-du-jeu.html` | `docs/strategies/strategie-globale-du-jeu.md` | 16991 | 2026-10-03 07:50Z |
@@ -106,3 +104,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/seance-objectif-ultime.html` | `docs/grand-projet/02-strategie/seance-objectif-ultime.md` | 17386 | 2026-10-03 08:11Z |
 | `docs/grand-projet/html/trois-familles-de-la-charte.html` | `docs/grand-projet/02-strategie/trois-familles-de-la-charte.md` | 19467 | 2026-10-03 08:11Z |
 | `docs/grand-projet/html/vue-globale.html` | `docs/grand-projet/02-strategie/vue-globale-2026-09-28.md` | 27354 | 2026-10-03 08:11Z |
+| `docs/livrables/ou-en-est-le-grand-changement.html` | `docs/livrables/ou-en-est-le-grand-changement.md` | 14921 | 2026-10-03 08:24Z |
+| `docs/livrables/carte-des-modules-2026-10-03.html` | `docs/livrables/carte-des-modules-2026-10-03.md` | 13607 | 2026-10-03 08:25Z |

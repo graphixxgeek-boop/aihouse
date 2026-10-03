@@ -1,9 +1,10 @@
 # La carte des modules de l'Agence
 
-```
-              L'AGENCE CODEX — CARTE ACTUELLE DES MODULES
-              (un module = les outils qui rendent UNE prestation)
+<!-- DOCUMENT GÉNÉRÉ — produit intégralement par un outil, aucune ligne n'est écrite à la main -->
 
+**Carte ACTUELLE des modules de l'Agence** — un module = les outils qui rendent UNE prestation.
+
+```
    76 prestations  ·  5 portées par PLUSIEURS outils  ·  71 par UN SEUL
 
 ┌─ (f) 👼 Les Anges de la coordination
@@ -95,10 +96,9 @@
    ▫ = un seul outil (une prestation, pas encore un module)
 ```
 
-```
-              L'AGENCE CODEX — CARTE CIBLE DES MODULES
-              (PROPOSITION — regroupée par QUESTION POSÉE, jamais par parenté de rôle)
+**Carte CIBLE des modules — une PROPOSITION**, regroupée par QUESTION POSÉE et jamais par parenté de rôle.
 
+```
    9 modules proposés pour 75 prestations
 
                         ┌───────────────────────────┐
@@ -147,3 +147,5 @@
        1. État des lieux des tâches en cours — check-tasks-details
        2. Retrouver rapidement où se trouve une logique précise dans un gros fichier déjà structuré — find-booster
    L'outil ne renomme rien : c'est lui qui nomme, et par séries dans une même famille, jamais au cas par cas.
+
+<!-- /DOCUMENT GÉNÉRÉ -->

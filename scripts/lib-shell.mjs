@@ -1074,6 +1074,13 @@ export const FIN_BLOC_GENERE = "<!-- FIN DU SOMMAIRE GÉNÉRÉ -->";
 export const BLOCS_GENERES = [
   { debut: DEBUT_BLOC_GENERE, fin: FIN_BLOC_GENERE, quoi: "le sommaire généré d'un index (data-archangel)" },
   { debut: "<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->", fin: "<!-- /ARBORESCENCE -->", quoi: "l'arborescence de la cascade (THE-KING)" },
+  // UN DOCUMENT GÉNÉRÉ EN ENTIER, et c'est le troisième cas (2026-10-03, tâche #1537). Un rapport
+  // produit intégralement par un outil — la carte des modules, par exemple — n'a RIEN d'écrit à
+  // la main : le comparer à un autre document comme si quelqu'un l'avait rédigé n'a pas de sens.
+  // Et il ressemble forcément à un index, puisqu'il énumère les mêmes objets : mesuré en vrai, la
+  // carte des modules a créé une paire de jumeaux avec `docs/referentiel/index.md` le jour de son
+  // dépôt. Le marqueur dit « ceci est une sortie d'outil », et la comparaison l'ignore.
+  { debut: "<!-- DOCUMENT GÉNÉRÉ — produit intégralement par un outil, aucune ligne n'est écrite à la main -->", fin: "<!-- /DOCUMENT GÉNÉRÉ -->", quoi: "un rapport produit intégralement par un outil" },
 ];
 
 // Rend le texte SANS ses blocs générés. Un fichier qui n'en porte aucun ressort inchangé — c'est la

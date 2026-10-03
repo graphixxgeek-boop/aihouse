@@ -85,6 +85,8 @@ question amont ne produit pas une réponse, elle produit une supposition déguis
 Le « chemin de décision avant » qu'il nomme existe déjà, écrit dans sa propre commande. Le voici,
 remis dans l'ordre, chaque maillon appuyé sur une de ses phrases :
 
+**Le chemin de décision, tel qu'il l'a écrit lui-même** — chaque maillon appuyé sur une de ses phrases.
+
 ```
    ① LE BUT ULTIME
       « Quel est le but ultime du projet porté par Philo et Politique, est-ce que ce but

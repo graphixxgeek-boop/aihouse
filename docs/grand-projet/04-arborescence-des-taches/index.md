@@ -22,6 +22,8 @@ Le GRAND PROJET n'est pas une liste de tâches : c'est une **cascade**, et chaqu
 précédent tranché. C'est la raison pour laquelle 19 tâches sur 43 attendent une décision plutôt
 qu'un travail.
 
+**Les quatre étages, et les tâches qui les portent** — chacun suppose le précédent tranché.
+
 ```
 ÉTAGE 0 — LE BUT ULTIME                                    #1144, #1143
    « pourquoi ce projet existe » — validé le 2026-09-30, reste philo et politique

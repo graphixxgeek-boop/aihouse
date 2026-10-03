@@ -28,6 +28,8 @@ fin de tout ça, on doit arriver à faire redescndre les regles fondamentales pa
 des tensions. ET verifier que l'ensemble est coherent dans son ensemble : la cascade est fluide,
 meme si on remonte le courant. »*
 
+**Les deux mouvements de la cascade** — remonter le courant, puis faire redescendre.
+
 ```
    ①  REMONTER LE COURANT                      ②  FAIRE REDESCENDRE
    (la révélation — FAIT le 2026-10-01)        (après validation — À FAIRE)
