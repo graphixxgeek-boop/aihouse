@@ -630,6 +630,120 @@ export function loadLivraisons({ root = ROOT, readFileImpl = lireFichierPartage 
   } catch { return { depuis: null, remises: [] }; }   // pas de registre : un RÉSULTAT, jamais une erreur
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LE TRI AVANT LIVRAISON : pas de doublons, pas de versions obsolètes (2026-10-03, tâche #1520)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE, mot pour mot, avant d'aller dormir : « pour la liste des nouveaux docs, fais le tri :
+// juste pas de doublons ou de versions obsoletes stp, si tu peux verifier ca avant livraison
+// demain. tous les docs m'interessent donc pour moi c'est un tresor à explorer ».
+//
+// LES DEUX MOITIÉS DE SA PHRASE SE LISENT ENSEMBLE, et c'est ce qui fixe le réglage : « tous les
+// docs m'intéressent » interdit d'écarter largement. On ne retire donc QUE ce dont on peut dire
+// pourquoi — une version plus ancienne d'une série datée, ou un jumeau avéré — et jamais un
+// document simplement parce qu'il ressemble à un autre.
+//
+// TROIS CAS, ET LE PREMIER EST CELUI QU'IL NE FAUT SURTOUT PAS CONFONDRE AVEC UN DOUBLON :
+// (1) le MÊME document en .md et en .html n'est pas un doublon, ce sont deux formats du même
+//     texte. On livre le HTML — c'est ce qu'il lit — et on ne compte pas le .md comme écarté,
+//     parce qu'il n'a jamais été un candidat séparé.
+// (2) une SÉRIE DATÉE (`x-2026-09-30`, `x-2026-10-01`) : seule la plus récente part, les autres
+//     sont des états antérieurs du même sujet. La date se lit dans le nom, jamais devinée.
+// (3) un JUMEAU AVÉRÉ : deux noms différents, un même propos. Ce cas n'est PAS recalculé ici —
+//     `trouverDocumentsJumeaux()` d'Abraham le fait déjà et porte sa propre histoire de faux
+//     positifs (26 accusations d'un coup après un simple changement de mise en page). Le
+//     recalculer à côté garantirait de rediverger (Article 24, et l'anti-doublon de §7ter).
+export const MOTIF_DATE_DANS_LE_NOM = /(\d{4}-\d{2}-\d{2})/;
+
+export function radicalDuDocument(chemin) {
+  const nom = String(chemin).split("/").pop().replace(/\.(html|md)$/i, "");
+  return nom.replace(MOTIF_DATE_DANS_LE_NOM, "").replace(/[-_]+$/g, "").replace(/^[-_]+/g, "");
+}
+
+// LE GABARIT HTML N'EST PAS DE LA SUBSTANCE, et le mesurer coûte un facteur 200 (2026-10-03,
+// tâche #1520). Le détecteur de jumeaux d'Abraham est calibré sur du MARKDOWN. Lancé tel quel sur
+// 52 livrables HTML — tous rendus par le même gabarit, donc partageant leur CSS, leur en-tête,
+// leur pied et leur avertissement de fiabilité — il a rendu **1126 paires** au-dessus de son
+// seuil. Les mêmes documents comparés sur leur source markdown (13 d'entre eux en ont une) :
+// **ZÉRO paire.** Le signal mesurait le gabarit, pas le propos.
+//
+// C'est exactement le défaut qu'Abraham avait déjà corrigé une fois chez lui — le sommaire généré
+// des index, 1 paire avant, 26 après — et la correction était au bon endroit : retirer ce qui
+// n'aurait jamais dû être compté, jamais relever le seuil. Même geste ici, sur un autre gabarit.
+export function corpsDuDocumentHtml(html = "") {
+  return String(html)
+    .replace(/<head[\s\S]*?<\/head>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&[a-z]+;|&#\d+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function trierLesDocumentsALivrer(chemins = []) {
+  if (!chemins.length) {
+    return { mesurable: false, pourquoi: "aucun document à trier : rendre « rien à écarter » sur une liste vide serait un satisfecit sur du vide (L5)" };
+  }
+  // Les deux formats d'un même document ne sont jamais deux candidats : on garde le HTML.
+  const parRadicalComplet = new Map();
+  for (const c of chemins) {
+    const sansExt = String(c).replace(/\.(html|md)$/i, "");
+    const vu = parRadicalComplet.get(sansExt);
+    if (!vu || /\.html$/i.test(c)) parRadicalComplet.set(sansExt, c);
+  }
+  const candidats = [...parRadicalComplet.values()];
+  const formatsDoubles = chemins.length - candidats.length;
+
+  // Les séries datées : le plus récent part, les autres sont des états antérieurs.
+  const series = new Map();
+  for (const c of candidats) {
+    const d = String(c).match(MOTIF_DATE_DANS_LE_NOM);
+    if (!d) continue;
+    const cle = `${String(c).split("/").slice(0, -1).join("/")}/${radicalDuDocument(c)}`;
+    if (!series.has(cle)) series.set(cle, []);
+    series.get(cle).push({ chemin: c, date: d[1] });
+  }
+  // UNE SÉRIE DATÉE N'EST PAS FORCÉMENT UNE SÉRIE DE VERSIONS, et le premier passage l'a prouvé
+  // AVANT la livraison : le tri écartait `rapport-de-nuit-2026-09-29` au profit du 30, alors que
+  // ce sont DEUX NUITS DIFFÉRENTES — deux rapports distincts, pas deux états d'un même rapport.
+  // Le supprimer aurait retiré de sa liste un document qu'il n'a jamais lu, c'est-à-dire l'exact
+  // contraire de ce qu'il a demandé (« tous les docs m'intéressent »).
+  //
+  // AUCUN NOM NE PERMET DE TRANCHER MÉCANIQUEMENT entre « deux versions d'une proposition » et
+  // « deux rapports de deux périodes ». La règle retenue est donc celle que sa phrase impose :
+  // **on NOMME la série, on ne retire rien**. Le doute se résout en livrant, jamais en écartant —
+  // un document livré en trop coûte une minute de lecture, un document retiré à tort est perdu.
+  const seriesDatees = [];
+  for (const [cle, membres] of series) {
+    if (membres.length < 2) continue;
+    const tries = [...membres].sort((a, b) => (a.date < b.date ? 1 : -1));
+    seriesDatees.push({ radical: cle.split("/").pop(), membres: tries.map((m) => m.chemin), plusRecent: tries[0].chemin });
+  }
+  const perimes = [];
+  const ecartes = new Set(perimes.map((p) => p.chemin));
+  return {
+    mesurable: true, recus: chemins.length, formatsDoubles, seriesDatees,
+    aLivrer: candidats.filter((c) => !ecartes.has(c)), perimes,
+    horsPortee: "il n'écarte QUE ce dont il peut dire pourquoi sans se tromper : un second format du même texte. Une série datée est NOMMÉE et livrée en entier, parce qu'aucun nom ne distingue deux versions d'une proposition de deux rapports de deux périodes — et sa phrase « tous les docs m'intéressent » tranche le doute dans le sens de la livraison. Deux documents de noms différents disant la même chose relèvent du détecteur de jumeaux d'Abraham, jamais recalculé ici.",
+  };
+}
+
+export function triDesDocumentsLines(r) {
+  if (!r?.mesurable) return [`📦 TRI AVANT LIVRAISON : PAS MESURÉ — ${r?.pourquoi ?? "aucune donnée"}`];
+  const L = [`📦 TRI AVANT LIVRAISON — ${r.recus} fichier(s) reçus → ${r.aLivrer.length} à livrer.`];
+  if (r.formatsDoubles) L.push(`   ⚪ ${r.formatsDoubles} fichier(s) .md écarté(s) comme SECOND FORMAT du même document, jamais comme doublon : le HTML part, le markdown reste sur disque.`);
+  for (const p of r.perimes) L.push(`   🕰️  ${p.chemin} — ${p.pourquoi}`);
+  for (const s of r.seriesDatees ?? []) {
+    L.push(`   📅 série « ${s.radical} » — ${s.membres.length} états datés, TOUS livrés : ${s.membres.map((m) => (m.match(MOTIF_DATE_DANS_LE_NOM) ?? ["?"])[0]).join(", ")}`);
+    L.push("        (si ce sont deux versions, la plus ancienne est à écarter À LA LECTURE ; si ce sont deux périodes, les deux comptent — aucun nom ne permet de trancher ça mécaniquement)");
+  }
+  if (!r.perimes.length && !(r.seriesDatees ?? []).length) L.push("   ✅ aucune série datée, aucun état antérieur à signaler.");
+  L.push(`   HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
 export function findDocumentsNonRemis({ root = ROOT, dossiers = DOSSIERS_DE_LIVRAISON, listerImpl = readdirSync, readFileImpl = lireFichierPartage, statImpl = statSync } = {}) {
   const registre = loadLivraisons({ root, readFileImpl });
   const remis = new Set(registre.remises.map((r) => r?.fichier));
@@ -2961,6 +3075,34 @@ function main() {
   if (sub === "strategies") {
     import("./check-tasks-details.mjs").then((CTD) => mainStrategies(CTD));
     return;
+  }
+  // `a-livrer` (2026-10-03, tâche #1520) — LE TRI AVANT DE LIVRER, qu'il a demandé avant d'aller
+  // dormir : « fais le tri : juste pas de doublons ou de versions obsoletes stp, si tu peux
+  // verifier ca avant livraison demain ». Les deux moitiés de sa phrase tiennent ensemble : « tous
+  // les docs m'intéressent » est la borne qui interdit d'écarter largement.
+  if (sub === "a-livrer") {
+    const pool = findDocumentsNonRemis();
+    const chemins = [...(pool.anterieurs ?? []).map((x) => x.fichier), ...(pool.nonRemis ?? []).map((x) => x.fichier)];
+    const tri = trierLesDocumentsALivrer(chemins);
+    for (const l of triDesDocumentsLines(tri)) console.log(l);
+    // LE SECOND CONTRÔLE EST RELAYÉ, JAMAIS RECALCULÉ : le détecteur de jumeaux appartient à
+    // Abraham et porte sa propre histoire de faux positifs. Ce qui est À NOUS ici, c'est de lui
+    // donner la bonne matière — le CORPS du document, jamais le gabarit HTML partagé, qui à lui
+    // seul faisait passer le relevé de 7 paires à 1126.
+    console.log("");
+    // `main()` EST SYNCHRONE dans ce fichier, et c'est pour ça que l'import dynamique passe par
+    // `.then()` plutôt que par `await` : la même contrainte avait déjà imposé de sortir
+    // `mainStrategies()` à part. L'oublier ici a fait échouer le chargement du module entier.
+    recordCliUsage("data-archangel", { origine: "demande" });
+    return import("./abraham-les-references.mjs").then((abr) => {
+      const docs = [];
+      for (const c of tri.aLivrer ?? []) {
+        try { docs.push({ chemin: c, texte: c.endsWith(".html") ? corpsDuDocumentHtml(readFileSync(join(ROOT, c), "utf8")) : readFileSync(join(ROOT, c), "utf8") }); } catch { /* illisible : il reste dans la liste à livrer, jamais écarté en silence */ }
+      }
+      for (const l of abr.formatDocumentsJumeauxLines(abr.trouverDocumentsJumeaux(docs))) console.log(l);
+    }).catch((e) => {
+      console.log(`🚨 PAS MESURÉ — le détecteur de jumeaux n'a pas pu être consulté (${e.message}) : ce n'est jamais « aucun doublon ».`);
+    });
   }
   if (sub === "livraisons") {
     const iRemis = process.argv.indexOf("--remis");

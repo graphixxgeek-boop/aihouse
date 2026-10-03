@@ -13160,6 +13160,30 @@ await testVerrousDOuverture();
     // SANS REGISTRE DU TOUT, rien n'est « remis » et rien n'est excusé — mais le format le DIT.
     const sansRegistre = DA.findDocumentsNonRemis({ dossiers: dossiersLiv, listerImpl: listerLiv, readFileImpl: () => { throw new Error('absent'); }, statImpl: statRecent });
     assert.equal(sansRegistre.nonRemis.length, 2, 'with no register at all, nothing carries a mark');
+
+    // LE TRI AVANT LIVRAISON (2026-10-03, tâche #1520, sa demande avant d'aller dormir : « juste
+    // pas de doublons ou de versions obsoletes »). Les deux moitiés de sa phrase se lisent
+    // ensemble — « tous les docs m'intéressent » interdit d'écarter largement.
+    const tri = DA.trierLesDocumentsALivrer(['docs/a/x.html', 'docs/a/x.md', 'docs/a/rapport-2026-09-29.html', 'docs/a/rapport-2026-09-30.html']);
+    assert.ok(tri.aLivrer.includes('docs/a/x.html') && !tri.aLivrer.includes('docs/a/x.md') && tri.formatsDoubles === 1,
+      'the same document in .md and .html is ONE document in two formats, never a duplicate: the HTML ships, the markdown stays on disk, and it is reported as a format rather than counted as a discard');
+    assert.equal(tri.perimes.length, 0,
+      'COUNTER-TEST, and it was caught on the real pool BEFORE delivery: a dated series is NOT a series of versions — rapport-de-nuit-09-29 and -09-30 are two different NIGHTS, and dropping one would have removed from his list a document he never read, the exact opposite of what he asked');
+    assert.equal(tri.seriesDatees.length, 1,
+      'so the series is NAMED instead, with all its members still shipping: no filename distinguishes "two versions of a proposal" from "two reports on two periods", and the doubt resolves towards delivering');
+    assert.ok(tri.aLivrer.includes('docs/a/rapport-2026-09-29.html') && tri.aLivrer.includes('docs/a/rapport-2026-09-30.html'),
+      'both members of the dated series are delivered — a document shipped in excess costs a minute of reading, a document wrongly withheld is lost');
+    assert.equal(DA.trierLesDocumentsALivrer([]).mesurable, false,
+      'an empty list reports NOT MEASURED rather than "nothing to discard" (L5)');
+
+    // LE GABARIT HTML N'EST PAS DE LA SUBSTANCE, et le mesurer coûtait un facteur 200 : le
+    // détecteur de jumeaux, calibré sur du markdown, rendait 1126 paires sur 52 livrables HTML
+    // partageant tous leur CSS, leur en-tête et leur pied — contre ZÉRO sur leurs sources
+    // markdown, et 7 une fois le gabarit retiré.
+    const corps = DA.corpsDuDocumentHtml('<html><head><style>body{color:red}</style></head><body><h1>Titre</h1><p>Le propos réel.</p><footer>pied partagé</footer></body></html>');
+    assert.ok(corps.includes('Titre') && corps.includes('Le propos réel'), 'the real text survives');
+    assert.ok(!corps.includes('color') && !corps.includes('pied partagé'),
+      'but the shared template does not: the stylesheet and the footer are the same in every report, so counting them turns a vocabulary overlap into a measure of the renderer rather than of the content');
     assert.ok(DA.formatLivraisonsLines(sansRegistre).some((l) => l.includes('ABSENCE DE MESURE')), 'and the output says it is an absence of measurement, never a verdict');
 
     // AUCUN DOSSIER LISIBLE = PAS MESURÉ, jamais « tout a été remis » (leçon L5, encore).
