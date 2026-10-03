@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-03. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**38 fichier(s).**
+**40 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -30,6 +30,8 @@
 | [les-11-destinations-dune-note.md](les-11-destinations-dune-note.md) | — |
 | [les-33-controles-qui-ne-peuvent-pas-echouer.html](les-33-controles-qui-ne-peuvent-pas-echouer.html) | — |
 | [les-33-controles-qui-ne-peuvent-pas-echouer.md](les-33-controles-qui-ne-peuvent-pas-echouer.md) | — |
+| [les-cinq-systemes-de-memoire.html](les-cinq-systemes-de-memoire.html) | — |
+| [les-cinq-systemes-de-memoire.md](les-cinq-systemes-de-memoire.md) | — |
 | [les-decisions-qui-t-attendent.html](les-decisions-qui-t-attendent.html) | — |
 | [les-decisions-qui-t-attendent.md](les-decisions-qui-t-attendent.md) | — |
 | [les-quatre-decisions-anciennes.html](les-quatre-decisions-anciennes.html) | — |

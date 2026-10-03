@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les cinq systèmes qui savent où on en est</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-03T09:38:00.293Z</div>
+    <h1>Les cinq systèmes qui savent où on en est</h1>
+    <p class="sub">Quatre actions pour les rendre cohérents, et trois séries de noms — jamais un nom isolé</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Réponse à ton point <strong>P80</strong>, tâche <strong>#1546</strong>. Produit le 2026-10-03.)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/strategies/strategie-globale-du-projet-entier.md</code>
+<em>nommer et harmoniser les systèmes de mémoire est une décision d'organisation.</em></p></div>
+<hr>
+<h3>TES DEUX QUESTIONS, ET ELLES N'ONT PAS LA MÊME RÉPONSE</h3>
+<p>Tu demandes <strong>(1)</strong> quelles actions rendraient l'ensemble cohérent, et <strong>(2)</strong> comment nommer le groupe. La première se mesure, la seconde t'appartient — je propose, tu nommes.</p>
+<hr>
+<h3>① CE QU'ILS SONT, ET CE QU'AUCUN NE SAIT</h3>
+<p><strong>Les cinq systèmes de mémoire du projet</strong> — chacun dit une vérité, aucun ne dit les autres.</p>
+<table><thead><tr><th>Le système</th><th>Ce qu'il sait dire</th><th>Ce qu'il ignore</th></tr></thead><tbody><tr><td><strong>Le suivi</strong> (<code>docs/suivi/</code>)</td><td>ce qui a été fait, tâche par tâche, daté</td><td>ce qu'on cherche à obtenir</td></tr><tr><td><strong>Les fils</strong> (<code>docs/fils/</code>)</td><td>où en est chaque sujet, qui a la balle</td><td>ce qui a été fait dans le code</td></tr><tr><td><strong>Les stratégies</strong> (<code>docs/strategies/</code>, <code>docs/grand-projet/02-strategie/</code>)</td><td>des analyses de fond, datées</td><td>si elles sont encore vraies</td></tr><tr><td><strong>Les notes de chantier</strong> (<code>docs/plans/</code>)</td><td>ce qui se passe sur un chantier précis</td><td>leur place dans l'ensemble</td></tr><tr><td><strong>Les registres d'outils</strong> (<code>docs/&lt;outil&gt;/</code>)</td><td>ce que chaque outil a mesuré</td><td>ce qu'on en a fait</td></tr></tbody></table>
+<p><strong>Le défaut n'est dans aucune des cinq pièces.</strong> Chacune est propre prise seule, et c'est ce qui le rend invisible : tout contrôle local passe au vert. Ce qui manque est le plan de la maison.</p>
+<hr>
+<h3>② LES QUATRE ACTIONS QUI RENDRAIENT L'ENSEMBLE COHÉRENT</h3>
+<p><strong>Classées par ce qu'elles coûtent, pas par ordre d'envie.</strong> Les deux premières sont déjà faites en partie ; les deux dernières attendent une décision de ta part.</p>
+<table><thead><tr><th>#</th><th>L'action</th><th>Ce qu'elle règle</th><th>État</th></tr></thead><tbody><tr><td><strong>1</strong></td><td><strong>Un POINT DE RENCONTRE unique</strong> — un document qui, pour un sujet donné, dit ce qu'en disent les cinq</td><td>aucun des cinq ne renvoie aux quatre autres</td><td><strong>à moitié fait</strong> : le « Cerveau des fils » (ton P57) en est le candidat</td></tr><tr><td><strong>2</strong></td><td><strong>Un SENS DE LECTURE déclaré</strong> — lequel fait foi quand deux se contredisent</td><td>aujourd'hui rien ne tranche, donc on croit le dernier lu</td><td><strong>à trancher par toi</strong></td></tr><tr><td><strong>3</strong></td><td><strong>Un CHAÎNAGE mécanique</strong> — un constat de registre devient une tâche, une tâche se rattache à un fil, un fil se rattache à une stratégie</td><td>la chaîne existe par endroits et se rompt sans bruit</td><td><strong>fait à deux maillons sur trois</strong> : l'Article 28 relie constat→tâche, et le contrôle de couverture des fils relie tâche→fil</td></tr><tr><td><strong>4</strong></td><td><strong>Une DATE DE PÉREMPTION sur les analyses</strong> — une stratégie datée du 28 septembre ne dit pas si elle est encore vraie</td><td>c'est le seul des cinq défauts que personne ne surveille</td><td><strong>rien n'existe</strong></td></tr></tbody></table>
+<p><strong>L'action 4 est celle que je retiendrais en premier</strong>, et ce n'est pas la plus visible : les quatre autres systèmes portent des faits (ce qui a été fait, qui a la balle, ce qui a été mesuré) qui ne peuvent pas devenir faux. Une ANALYSE, si — elle peut être parfaitement exacte le jour où elle est écrite et complètement fausse une semaine plus tard, sans qu'une seule ligne n'ait bougé.</p>
+<hr>
+<h3>③ LE NOM — trois séries, jamais un nom isolé</h3>
+<p><strong>C'est toi qui nommes, et tu nommes par séries dans une même famille.</strong> Je ne propose donc pas un nom : je propose trois séries complètes, chacune donnant un nom au GROUPE et un nom à chacun des cinq. Tu prends une série entière, ou tu la refuses entière.</p>
+<h4>Série A — la famille MATRIX <em>(déjà déclarée dans le registre des noms)</em></h4>
+<p><em>Pourquoi elle colle : des êtres qui découvrent que leur monde est fabriqué — le sujet du jeu, mot pour mot, et ici le projet qui découvre ce qu'il est vraiment.</em></p>
+<table><thead><tr><th></th><th>Nom proposé</th></tr></thead><tbody><tr><td><strong>LE GROUPE</strong></td><td><strong>LES ORACLES</strong></td></tr><tr><td>Le suivi</td><td>L'ARCHITECTE — il sait ce qui a été construit</td></tr><tr><td>Les fils</td><td>L'ORACLE — elle sait ce qui attend</td></tr><tr><td>Les stratégies</td><td>MORPHEUS — il dit où l'on va</td></tr><tr><td>Les notes de chantier</td><td>LE TRAIN — ce qui se passe entre deux mondes</td></tr><tr><td>Les registres d'outils</td><td>LES SENTINELLES — elles mesurent sans jamais conclure</td></tr></tbody></table>
+<h4>Série B — la famille des PROPHÈTES <em>(déjà déclarée, et déjà employée dans l'Agence)</em></h4>
+<p><em>Pourquoi elle colle : ceux qui annoncent et qu'on n'écoute pas. Le défaut de ces cinq systèmes est exactement celui-là — chacun dit vrai et personne ne les lit ensemble.</em></p>
+<table><thead><tr><th></th><th>Nom proposé</th></tr></thead><tbody><tr><td><strong>LE GROUPE</strong></td><td><strong>LE CONCILE</strong></td></tr><tr><td>Le suivi</td><td>LES CHRONIQUES — ce qui s'est passé</td></tr><tr><td>Les fils</td><td>LES SUPPLIQUES — ce qui attend une réponse</td></tr><tr><td>Les stratégies</td><td>LES RÉVÉLATIONS — ce qui a été vu</td></tr><tr><td>Les notes de chantier</td><td>LES CARNETS — ce qui se fait en ce moment</td></tr><tr><td>Les registres d'outils</td><td>LES TÉMOIGNAGES — ce qui a été constaté</td></tr></tbody></table>
+<h4>Série C — descriptive, sans hommage</h4>
+<p><em>Pourquoi elle existe quand même : une série évocatrice est agréable à employer et coûteuse à expliquer. Si ce groupe doit être compris par quelqu'un d'extérieur au projet — un acheteur, une autre IA — un nom qui se comprend sans glossaire vaut peut-être mieux.</em></p>
+<table><thead><tr><th></th><th>Nom proposé</th></tr></thead><tbody><tr><td><strong>LE GROUPE</strong></td><td><strong>LA MÉMOIRE DU PROJET</strong></td></tr><tr><td>Les cinq</td><td>LA MÉMOIRE DES ACTES · DES SUJETS · DES ANALYSES · DES CHANTIERS · DES MESURES</td></tr></tbody></table>
+<hr>
+<h3>CE QUE JE NE FAIS PAS</h3>
+<p><strong>Je n'en choisis aucune, et je n'en inscris aucune au registre des noms.</strong> Baptiser est ton geste ; un nom que j'aurais posé serait à défaire le jour où tu en voudrais un autre, et les noms de ce projet sont cités dans le code et le suivi — un renommage coûte cher.</p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Suite</th></tr></thead><tbody><tr><td>Les cinq systèmes n'ont aucun point de rencontre</td><td><strong>RETENU</strong></td><td>tâche #1546 — l'action 1, portée par le « Cerveau des fils »</td></tr><tr><td>Aucune analyse ne porte de date de péremption</td><td><strong>RETENU</strong></td><td>tâche #1546 — l'action 4, la seule que personne ne surveille</td></tr><tr><td>Lequel fait foi quand deux se contredisent</td><td><strong>À TRANCHER</strong></td><td>ta décision, pas la mienne</td></tr><tr><td>Le nom du groupe</td><td><strong>À TRANCHER</strong></td><td>trois séries proposées ci-dessus, à prendre ou à refuser entières</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/les-cinq-systemes-de-memoire.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

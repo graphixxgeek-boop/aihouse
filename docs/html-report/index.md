@@ -108,3 +108,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/le-chemin.html` | `docs/grand-projet/02-strategie/le-chemin-2026-09-29.md` | 21111 | 2026-10-03 08:43Z |
 | `docs/modules/module-gestion-des-taches.html` | `docs/modules/module-gestion-des-taches.md` | 29050 | 2026-10-03 08:58Z |
 | `docs/modules/GABARIT-fiche-de-module.html` | `docs/modules/GABARIT-fiche-de-module.md` | 12414 | 2026-10-03 08:58Z |
+| `docs/livrables/les-cinq-systemes-de-memoire.html` | `docs/livrables/les-cinq-systemes-de-memoire.md` | 14971 | 2026-10-03 09:38Z |
