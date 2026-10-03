@@ -19,6 +19,18 @@
        deux constantes au fichier réel à chaque exécution. */
     --lia: #f29bc3; --noe: #55dbe5;
   }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
   * { box-sizing: border-box; }
   /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
      l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
@@ -106,12 +118,24 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-09-29T06:13:58.346Z</div>
+    <div class="date">2026-10-03T08:11:07.651Z</div>
     <h1>LA CIBLE — ce que ce projet cherche à obtenir</h1>
     <p class="sub">Page générée depuis docs/grand-projet/02-strategie/la-cible-2026-09-29.md — jamais écrite à la main.</p>
   </header>
   <div class="divider"></div>
-  <main><p><em>(Nuit du 2026-09-29, 02h15 heure de Paris — heure LUE, source système. Tâches #1144 · #1147. Niveau ② de son escalade : <code>calibrage → LA CIBLE → grandes étapes → sous-étapes → blocs → tâches</code>.)</em></p>
+  <main><p><strong>Où ce document se situe dans la cascade</strong> — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :</p>
+<pre><code>philosophie-et-politique
+    └── ▣ grand-projet/02-strategie/la-cible-2026-09-29   ← CE DOCUMENT
+        ├── grand-projet/02-strategie/couverture-de-sa-demande
+        ├── grand-projet/02-strategie/decisions-qui-attendent
+        ├── grand-projet/02-strategie/grands-axes-de-depart-2026-09-28
+        ├── grand-projet/02-strategie/le-chemin-2026-09-29
+        ├── grand-projet/02-strategie/notes-des-echanges-de-depart
+        ├── grand-projet/02-strategie/questions-en-cours-de-route
+        ├── grand-projet/02-strategie/reponses-a-ses-49-questions
+        ├── grand-projet/02-strategie/vue-globale-2026-09-28
+        └── grand-projet/03-plan-daction/plan-daction-2026-09-28</code></pre>
+<p><em>(Nuit du 2026-09-29, 02h15 heure de Paris — heure LUE, source système. Tâches #1144 · #1147. Niveau ② de son escalade : <code>calibrage → LA CIBLE → grandes étapes → sous-étapes → blocs → tâches</code>.)</em></p>
 <div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/philosophie-et-politique.md</code>
 <em>la boussole du projet, Partie 0 — LE BUT. Cette cible EST une proposition tant qu'il ne l'a pas validée.</em></p></div>
 <div class="highlight"><p><strong>FRONTIÈRE, écrite des deux côtés.</strong> Ce document propose la CIBLE et la mesure qui la rend

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Questions en cours de route</title>
+<title>Ses questions posées en cours de route — et ce qu'elles ont changé</title>
 <style>
   :root {
     --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
@@ -19,6 +19,18 @@
        deux constantes au fichier réel à chaque exécution. */
     --lia: #f29bc3; --noe: #55dbe5;
   }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
   * { box-sizing: border-box; }
   /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
      l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
@@ -106,12 +118,17 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-02T06:28:18.265Z</div>
-    <h1>Questions en cours de route</h1>
-    <p class="sub">Les questions qui surgissent en chemin, rapportées à la cible</p>
+    <div class="date">2026-10-03T08:11:09.058Z</div>
+    <h1>Ses questions posées en cours de route — et ce qu'elles ont changé</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/questions-en-cours-de-route.md — jamais écrite à la main.</p>
   </header>
   <div class="divider"></div>
-  <main><div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/grand-projet/02-strategie/la-cible-2026-09-29.md</code>
+  <main><p><strong>Où ce document se situe dans la cascade</strong> — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :</p>
+<pre><code>philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── ▣ grand-projet/02-strategie/questions-en-cours-de-route   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)</code></pre>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/grand-projet/02-strategie/la-cible-2026-09-29.md</code>
 <em>les questions qui surgissent en chemin se rapportent à la cible qu'on vise : sans elle, une question de route n'a pas d'objet.</em></p></div>
 <p><em>(Sa consigne du 2026-09-28 : « enregistre bien ma question et ta réponse dans les notes du GRAND PROJET pour la prochaine mise à jour de la stratégie de ce chantier ». Puis, quelques minutes plus tard : « je te perturbe avec une question isolée, c'est pas bon : intègre ta réponse aux fichiers que tu vas me livrer ».)</em></p>
 <p><strong>Pourquoi ce fichier existe séparément.</strong> Une question posée entre deux livrables se perd : elle est répondue dans la conversation, la conversation se termine, et la réponse meurt avec elle (Article 27). Or plusieurs de ses questions de passage ont <strong>changé le plan</strong> — ce ne sont pas des apartés, ce sont des décisions. Elles vivent donc ici, datées, avec ce qu'elles ont modifié.</p>

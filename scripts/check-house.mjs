@@ -22394,6 +22394,67 @@ async function testFamillesCorroborees() {
 }
 await testFamillesCorroborees();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// #1544 — CE QUE COÛTENT LES PAGES HTML, ET LA MESURE DÉPLACE SA QUESTION
+// ─────────────────────────────────────────────────────────────────────────────
+// SA QUESTION P56 : « la livraison de docs HTML à cette fréquence est-elle un vrai coût pour moi,
+// ou négligeable ? ». Trois coûts que tout le monde confond, et ils n'ont pas les mêmes réponses :
+// les APPELS API (zéro, la conversion est locale), les TOKENS DE L'AGENT (zéro de plus, le contenu
+// est écrit en Markdown de toute façon et la page en est dérivée), et le POIDS SUR LE DÉPÔT, le
+// seul non nul.
+//
+// ET LA MESURE DÉPLACE SA QUESTION, c'est son principal intérêt : l'essentiel du poids ne vient
+// pas des documents qu'on lui livre, il vient des pages qu'un outil DÉPOSE à chaque passage et que
+// personne ne lit. Un dossier qui grossit seul n'est pas une livraison.
+async function testCoutDesPagesHtml() {
+  const DR = await import('../scripts/doc-report.mjs');
+
+  // UN PARCOURS VIDE REFUSE DE CONCLURE : « zéro page » et « rien parcouru » s'écrivent pareil.
+  const vide = DR.coutDesPagesHtml({ listDirImpl: () => [] });
+  assert.equal(vide.mesurable, false, 'an empty sweep must refuse rather than report that HTML costs nothing (L11)');
+  assert.match(DR.formatCoutDesPagesHtmlLines(vide).join('\n'), /PAS MESURÉ/);
+
+  // SUR UNE FIXTURE : la distinction dérivée / rendue directement est le cœur de la mesure.
+  const faux = DR.coutDesPagesHtml({
+    root: '/r', racine: 'd',
+    listDirImpl: (chemin) => (chemin.endsWith('/d')
+      ? [{ name: 'a.html', isDirectory: () => false }, { name: 'a.md', isDirectory: () => false }, { name: 'b.html', isDirectory: () => false }]
+      : []),
+    statImpl: (c) => ({ size: c.endsWith('a.html') ? 10240 : c.endsWith('a.md') ? 2048 : 4096 }),
+    existsImpl: (c) => c.endsWith('a.md'),
+  });
+  assert.equal(faux.pages, 2);
+  assert.equal(faux.derivees, 1, 'a page with a Markdown sibling is DERIVED — its content costs nothing extra');
+  assert.equal(faux.directes, 1, 'one without is rendered straight by a tool, and that is a different question');
+  assert.equal(faux.octets, 14336);
+  assert.equal(faux.appelsApi, 0, 'the API cost is declared zero rather than computed: a calculated zero reads as "not measured" (L11)');
+  assert.equal(faux.tokensSupplementaires, 0);
+  assert.equal(faux.gabaritMoyenKo, 8, 'the template overhead is the only part of the weight that layout explains (10240 - 2048 = 8 ko)');
+
+  // LE SEUIL MORD, ET IL NOMME LE DOSSIER plutôt que de rendre un total qu'on ne peut pas traiter.
+  const lignes = DR.formatCoutDesPagesHtmlLines(DR.coutDesPagesHtml({
+    root: '/r', racine: 'd',
+    listDirImpl: (c) => (c.endsWith('/d') ? [{ name: 'gros', isDirectory: () => true }] : c.endsWith('/gros') ? [{ name: 'x.html', isDirectory: () => false }] : []),
+    statImpl: () => ({ size: 3 * 1024 * 1024 }),
+    existsImpl: () => false,
+  }));
+  assert.ok(lignes.some((l) => /d\/gros/.test(l)), 'MUST BITE: a folder above the threshold is NAMED — a bare total is a figure nobody can act on');
+
+  // EN DIRECT (Article 25), et les trois chiffres qui répondent vraiment à sa question.
+  const reel = DR.coutDesPagesHtml();
+  assert.equal(reel.mesurable, true);
+  assert.ok(reel.pages > 50, `the real repository must be swept (currently ${reel.pages} pages)`);
+  assert.equal(reel.appelsApi, 0, 'and the answer to the part of his question that worried him is zero');
+  assert.ok(reel.directes > reel.derivees, `the bulk is NOT what gets delivered to him: ${reel.directes} pages are a tool's automatic deposits against ${reel.derivees} derived from a document`);
+
+  // ET IL PARLE LÀ OÙ UN HUMAIN LIT (L2).
+  const src = fs.readFileSync('scripts/doc-report.mjs', 'utf8');
+  assert.ok(/formatCoutDesPagesHtmlLines\(coutHtml\)/.test(src), 'the measure must be PRINTED by the tool, not merely exported');
+
+  console.log(`Passed: ce que coûtent les pages HTML, et la mesure déplace sa question (2026-10-03, tâche #1544). Sa question P56 : « la livraison de docs HTML à cette fréquence est-elle un vrai coût pour moi ? ». TROIS COÛTS QUE TOUT LE MONDE CONFOND : les appels API (ZÉRO — la conversion est locale, aucun modèle sollicité), les tokens d'agent (ZÉRO de plus — le contenu est écrit en Markdown de toute façon, la page en est dérivée), et le poids sur le dépôt, le seul non nul : ${reel.pages} pages pour ${(reel.octets / 1024 / 1024).toFixed(2)} Mo, dont ${reel.gabaritMoyenKo} ko de gabarit par page dérivée. ET LA MESURE DÉPLACE SA QUESTION, c'est son intérêt principal : ${reel.directes} des ${reel.pages} pages ne sont pas des livraisons mais les dépôts automatiques d'outils, contre ${reel.derivees} dérivées d'un document. Le poids ne vient donc pas de ce qu'on lui livre — il vient d'un dossier qui grossit seul à chaque passage et que personne ne lit. Les deux zéros sont DÉCLARÉS et non calculés, parce qu'un zéro calculé se lit comme « non mesuré » ; un parcours vide refuse de conclure ; et le seuil NOMME le dossier fautif, parce qu'un total est un chiffre sur lequel personne ne peut agir.`);
+}
+await testCoutDesPagesHtml();
+
 // =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
 // =============================================================================================

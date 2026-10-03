@@ -488,6 +488,97 @@ export function trouverLaSource(base, { root = ROOT, listerImpl = listerLesFichi
   return candidats.sort()[0] ?? null;
 }
 
+// ============================================================================
+// CE QUE COÛTENT VRAIMENT LES PAGES HTML — sa question P56 (tâche #1544)
+// ============================================================================
+// SA QUESTION, MOT POUR MOT : « la livraison de docs HTML à cette fréquence est-elle un vrai coût
+// pour moi, ou négligeable ? ».
+//
+// TROIS COÛTS QUE TOUT LE MONDE CONFOND, ET ILS N'ONT PAS LES MÊMES RÉPONSES :
+//   ① les APPELS API — zéro. La conversion est locale, aucun modèle n'est sollicité.
+//   ② les TOKENS DE L'AGENT — zéro de plus. Le contenu est écrit en Markdown de toute façon ;
+//      la page HTML en est DÉRIVÉE par un script. Livrer en HTML ou ne pas livrer en HTML ne
+//      change pas un seul token de ce que j'écris.
+//   ③ le POIDS SUR LE DÉPÔT — le seul qui soit non nul, et c'est lui qu'on mesure ici.
+//
+// ⚠️ ET LA MESURE DÉPLACE SA QUESTION, c'est son intérêt principal. Il demande si LA LIVRAISON
+// coûte. La réponse mesurée est que l'essentiel du poids ne vient pas des documents qu'on lui
+// livre : il vient des pages qu'un outil DÉPOSE automatiquement à chaque passage, et que personne
+// ne lit jamais. Un dossier d'archive qui grossit seul n'est pas une livraison.
+export const SEUIL_DOSSIER_LOURD_MO = 1;
+
+export function coutDesPagesHtml({ root = ROOT, racine = "docs", listDirImpl = readdirSync, statImpl = statSync, existsImpl = existsSync } = {}) {
+  const pages = [];
+  const pile = [racine];
+  while (pile.length) {
+    const d = pile.pop();
+    let entrees = [];
+    try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
+    for (const e of entrees) {
+      const chemin = `${d}/${e.name}`;
+      if (e.isDirectory()) { pile.push(chemin); continue; }
+      if (!e.name.endsWith(".html")) continue;
+      let octets = 0;
+      try { octets = statImpl(join(root, chemin)).size; } catch { continue; }
+      const source = chemin.replace(/\.html$/, ".md");
+      let octetsSource = 0;
+      let derivee = false;
+      try { if (existsImpl(join(root, source))) { derivee = true; octetsSource = statImpl(join(root, source)).size; } } catch { /* pas de source */ }
+      pages.push({ chemin, octets, derivee, octetsSource, dossier: chemin.split("/").slice(0, 2).join("/") });
+    }
+  }
+  if (!pages.length) {
+    return { mesurable: false, pourquoi: "aucune page HTML lue : ce zéro dit qu'on n'a rien pu parcourir, jamais que les pages ne coûtent rien (leçons L5/L11)" };
+  }
+  const derivees = pages.filter((p) => p.derivee);
+  const directes = pages.filter((p) => !p.derivee);
+  const parDossier = new Map();
+  for (const p of pages) {
+    if (!parDossier.has(p.dossier)) parDossier.set(p.dossier, { dossier: p.dossier, pages: 0, octets: 0 });
+    const d = parDossier.get(p.dossier);
+    d.pages += 1; d.octets += p.octets;
+  }
+  const dossiers = [...parDossier.values()].sort((a, b) => b.octets - a.octets);
+  const octets = pages.reduce((a, p) => a + p.octets, 0);
+  const octetsSources = derivees.reduce((a, p) => a + p.octetsSource, 0);
+  return {
+    mesurable: true,
+    pages: pages.length,
+    octets,
+    derivees: derivees.length,
+    directes: directes.length,
+    octetsDerivees: derivees.reduce((a, p) => a + p.octets, 0),
+    octetsSources,
+    // Le gabarit ajouté par page : la différence entre une page et son Markdown, moyennée. C'est
+    // la seule part du poids que la MISE EN FORME explique ; tout le reste est du contenu.
+    gabaritMoyenKo: derivees.length ? Math.round(((derivees.reduce((a, p) => a + p.octets - p.octetsSource, 0)) / derivees.length / 1024) * 10) / 10 : null,
+    dossiers,
+    // APPELS API ET TOKENS : déclarés plutôt que calculés, parce qu'ils sont structurellement nuls
+    // et qu'un chiffre calculé à zéro se lirait comme « non mesuré » (L11).
+    appelsApi: 0,
+    tokensSupplementaires: 0,
+  };
+}
+
+export function formatCoutDesPagesHtmlLines(r, { seuilMo = SEUIL_DOSSIER_LOURD_MO, combien = 5 } = {}) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r.pourquoi}`];
+  const mo = (o) => (o / 1024 / 1024).toFixed(2);
+  const out = [];
+  out.push(`PAGES HTML — ${r.pages} page(s), ${mo(r.octets)} Mo au total.`);
+  out.push(`   Appels API : ${r.appelsApi} — la conversion est locale, aucun modèle n'est sollicité.`);
+  out.push(`   Tokens d'agent en plus : ${r.tokensSupplementaires} — le contenu est écrit en Markdown de toute façon, la page en est DÉRIVÉE.`);
+  out.push(`   ${r.derivees} page(s) dérivées d'un Markdown (${mo(r.octetsDerivees)} Mo pour ${mo(r.octetsSources)} Mo de source) · ${r.directes} rendues directement par un outil.`);
+  if (r.gabaritMoyenKo != null) out.push(`   Le gabarit ajoute ${r.gabaritMoyenKo} ko par page : c'est la seule part du poids que la mise en forme explique.`);
+  const lourds = r.dossiers.filter((d) => d.octets / 1024 / 1024 >= seuilMo);
+  if (lourds.length) {
+    out.push("");
+    out.push(`   ⚠️ ${lourds.length} dossier(s) pèsent plus de ${seuilMo} Mo de pages à eux seuls :`);
+    for (const d of lourds.slice(0, combien)) out.push(`      · ${d.dossier} — ${d.pages} page(s), ${mo(d.octets)} Mo`);
+    out.push("      Un dossier qui grossit seul n'est pas une livraison : ce sont des dépôts automatiques que personne ne lit.");
+  }
+  return out;
+}
+
 export function findPagesHtmlPerimees({ root = ROOT, listDirImpl = readdirSync, shImpl = sh, listerImpl = listerLesFichiers, readFileImpl = lireFichierPartage } = {}) {
   let pages;
   try { pages = listDirImpl(join(root, DOSSIER_PAGES_HTML)).filter((f) => f.endsWith(".html")); } catch { return null; }
@@ -1011,6 +1102,16 @@ function main() {
   // parce que c'est ici que la seconde source est écrite ; le calcul vit chez le classificateur,
   // à qui l'axe appartient, et le registre lui est INJECTÉ (il importe déjà ce fichier, donc
   // l'importer en retour ferait un cycle).
+  // CE QUE COÛTENT LES PAGES HTML (2026-10-03, tâche #1544, sa question P56). Le contrôle vit ici
+  // parce que c'est doc-report qui porte la décision de rendu de chaque registre
+  // (`texte` / `archived_html` / `delivery_html`) : le coût d'une décision se lit là où la
+  // décision se prend.
+  const coutHtml = coutDesPagesHtml();
+  for (const l of formatCoutDesPagesHtmlLines(coutHtml)) console.log(l);
+  for (const d of (coutHtml?.dossiers ?? []).filter((x) => x.octets / 1024 / 1024 >= SEUIL_DOSSIER_LOURD_MO)) {
+    ecartsMuets.push({ fichier: d.dossier, defaut: `${d.pages} pages HTML pour ${(d.octets / 1024 / 1024).toFixed(2)} Mo — un dossier qui grossit seul à chaque passage, jamais une livraison`, tache: `décider si ${d.dossier} doit continuer à déposer une page à chaque passage, ou n'en garder que la dernière`, fausseUneMesure: false });
+  }
+
   const famillesCorroborees = findFamillesNonCorroborees({ registres: REGISTRIES });
   for (const l of formatFamillesNonCorroboreesLines(famillesCorroborees)) console.log(l);
   for (const d of famillesCorroborees?.divergentes ?? []) ecartsMuets.push({ fichier: d.slug, defaut: `rangé en « ${d.declaree} » par l'équipe et en « ${d.registre} » par son registre : deux rangements du même outil, et rien ne dit lequel fait foi`, tache: `trancher la famille de ${d.slug} et aligner les deux sources`, fausseUneMesure: true });

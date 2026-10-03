@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Réponses à tes 49 questions</title>
+<title>RÉPONSES À SES 49 QUESTIONS — avec la demande inavouée, et l'action en face</title>
 <style>
   :root {
     --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
@@ -19,6 +19,18 @@
        deux constantes au fichier réel à chaque exécution. */
     --lia: #f29bc3; --noe: #55dbe5;
   }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
   * { box-sizing: border-box; }
   /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
      l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
@@ -106,12 +118,17 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-09-29T18:54:52.973Z</div>
-    <h1>Réponses à tes 49 questions</h1>
-    <p class="sub">Partie I : les 49 · Partie II : ce qui a changé ce soir · Partie III : les questions nées de notre conversation</p>
+    <div class="date">2026-10-03T08:11:09.213Z</div>
+    <h1>RÉPONSES À SES 49 QUESTIONS — avec la demande inavouée, et l'action en face</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/reponses-a-ses-49-questions.md — jamais écrite à la main.</p>
   </header>
   <div class="divider"></div>
-  <main><p><em>(Nuit du 2026-09-29 — heure LUE, source système. Tâches #1112 · #1153. Sa consigne : « livre-moi les réponses aux questions […] sonde quelles sont mes questions et inquiétudes inavouées » et « pour chaque question et réponse du fichier, ou groupe de réponses, il y a des actions en face, en face de ma demande inavouée, à calibrer avec toi ? ».)</em></p>
+  <main><p><strong>Où ce document se situe dans la cascade</strong> — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :</p>
+<pre><code>philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── ▣ grand-projet/02-strategie/reponses-a-ses-49-questions   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)</code></pre>
+<p><em>(Nuit du 2026-09-29 — heure LUE, source système. Tâches #1112 · #1153. Sa consigne : « livre-moi les réponses aux questions […] sonde quelles sont mes questions et inquiétudes inavouées » et « pour chaque question et réponse du fichier, ou groupe de réponses, il y a des actions en face, en face de ma demande inavouée, à calibrer avec toi ? ».)</em></p>
 <div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/grand-projet/02-strategie/la-cible-2026-09-29.md</code>
 <em>les réponses s'appuient sur la cible et sur le chemin proposés ; quand la cible change, elles changent.</em></p></div>
 <hr>
