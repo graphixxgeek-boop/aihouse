@@ -31,7 +31,7 @@ import { toolsNeverUsed, recordCliUsage, horizonDuJournal, formatHorizonLine } f
 import { recommendFindBooster } from "./find-booster.mjs";
 import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, regimeDEcriture, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage, lireLesScriptsDuDepot, sh } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName, primaryToolName, PRESTATIONS, normaliserNomDOutil } from "./le-coordinateur.mjs";
-import { findFamillesNonCorroborees, formatFamillesNonCorroboreesLines } from "./le-classificateur.mjs";
+import { findFamillesNonCorroborees, formatFamillesNonCorroboreesLines, findZonesDePreuveAbsentes, formatZonesDePreuveLines } from "./le-classificateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -1341,6 +1341,14 @@ function main() {
   for (const d of (coutHtml?.dossiers ?? []).filter((x) => x.octets / 1024 / 1024 >= SEUIL_DOSSIER_LOURD_MO)) {
     ecartsMuets.push({ fichier: d.dossier, defaut: `${d.pages} pages HTML pour ${(d.octets / 1024 / 1024).toFixed(2)} Mo — un dossier qui grossit seul à chaque passage, jamais une livraison`, tache: `décider si ${d.dossier} doit continuer à déposer une page à chaque passage, ou n'en garder que la dernière`, fausseUneMesure: false });
   }
+
+  // L'AXE « PREUVE JURIDIQUE » (2026-10-03, tâche #1548, sa consigne P67). Le contrôle vit ici
+  // parce que doc-report est déjà le lieu où la forme et l'intégrité des documents se vérifient —
+  // page périmée, document jumeau, famille corroborée, schéma sans titre. Un quarantième outil
+  // pour une ligne aurait ajouté un rendez-vous de plus (Article 31 : étendre plutôt qu'ajouter).
+  const preuves = findZonesDePreuveAbsentes();
+  for (const l of formatZonesDePreuveLines(preuves)) console.log(l);
+  for (const z of preuves?.absentes ?? []) ecartsMuets.push({ fichier: z.chemin, defaut: "déclaré zone de PREUVE JURIDIQUE et absent du dépôt : une zone de preuve qui pointe vers un dossier disparu est pire qu'une absence de déclaration", tache: `rétablir ${z.chemin} ou retirer sa déclaration de ZONES_DE_PREUVE`, fausseUneMesure: true });
 
   const famillesCorroborees = findFamillesNonCorroborees({ registres: REGISTRIES });
   for (const l of formatFamillesNonCorroboreesLines(famillesCorroborees)) console.log(l);

@@ -401,3 +401,60 @@ l'homonyme.
 
 **Une étape ou un indicateur de plus** rejoint la liste par une entrée dans `ETAPES_DU_SCHEMA`, et
 rien d'autre ne change — chaque indicateur déclare lui-même comment il se lit (`lire(m)`).
+
+
+---
+
+## L'AXE « PREUVE JURIDIQUE » (2026-10-03, tâche #1548)
+
+*(Sa consigne P67, en quatre temps : déclarer l'axe, écrire la règle, l'inscrire dans la stratégie
+de rationalisation, l'étendre aux outils.)*
+
+**CE QUI DISTINGUE CET AXE DE TOUS LES AUTRES.** Les autres axes disent ce qu'un fichier EST
+(son type, sa nature) ou ce qu'il VAUT pour le travail (sa vitalité, son exportabilité). Celui-ci
+dit **ce qu'on perdrait devant un tiers en y touchant**.
+
+Une preuve ne vaut que par son **INTÉGRITÉ** et sa **DATE**. La résumer, la reformuler ou la
+« nettoyer » la détruit — **même quand on l'améliore**.
+
+### Les trois critères, et ils sont cumulatifs
+
+Un seul ne suffit pas, sinon tout le dépôt serait une preuve :
+
+| Critère | Ce qu'il exige |
+|---|---|
+| **datée** | par un mécanisme hors de notre contrôle — l'horodatage git, une date d'envoi |
+| **verbatim** | le texte tel qu'il a été écrit, jamais ce qu'on en a compris |
+| **établit** | une antériorité ou une paternité, si quelqu'un la contestait |
+
+### La conséquence est une INTERDICTION, pas une information
+
+**Partout ailleurs dans ce dépôt, alléger est un progrès. Ici, c'est une destruction.** C'est la
+seule classe du projet où « rendre plus clair » est interdit — et c'est ce qui rend l'axe
+nécessaire : sans lui, un allègement bien intentionné détruirait une preuve sans que personne ne
+le remarque, puisque le document résultant serait meilleur à lire.
+
+### Les six zones déclarées, chacune avec son interdit
+
+Elles vivent dans `ZONES_DE_PREUVE` (`scripts/le-classificateur.mjs`) et chacune porte, en plus de
+ses critères, **ce qui y est interdit** — une zone sans interdit n'est qu'une étiquette. Le
+garde-fou `findZonesDePreuveAbsentes()` refuse une zone déclarée qui n'existe pas, un critère non
+défini, et une zone sans interdit écrit.
+
+**LA LISTE EST CURATÉE, et sa nature manuelle est déclarée ici comme l'Article 24 l'exige** :
+aucun programme ne peut deviner qu'un dossier porterait une preuve devant un tiers. Ce qu'une
+mécanique vérifie, c'est que chaque zone déclarée existe pour de vrai.
+
+### L'extension aux OUTILS, quatrième temps de sa consigne
+
+Un outil ne porte pas de preuve **par son code** — un script se réécrit sans rien détruire. Il en
+porte une **par ce qu'il ÉCRIT** : un outil dont le registre est dans une zone de preuve doit
+écrire en AJOUTANT, jamais en remplaçant. C'est déjà le cas des deux plus importants — le suivi
+(une ligne nouvelle, jamais une ligne réécrite) et les archives — et c'est la forme que doit
+prendre tout outil futur qui déposerait dans une de ces zones.
+
+### Ce que cet axe ne dit pas
+
+**La QUALITÉ juridique d'une preuve ne se mesure pas ici.** Ce qui vaut devant un tiers relève
+d'un avis qu'aucun script ne rend. Cet axe dit ce qu'il NE FAUT PAS TOUCHER ; il ne dit jamais ce
+qui gagnerait un procès.

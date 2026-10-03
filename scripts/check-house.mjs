@@ -22875,6 +22875,70 @@ async function testCouvertureDuJeuParJesus() {
 }
 await testCouvertureDuJeuParJesus();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// #1548 — L'AXE OÙ « RENDRE PLUS CLAIR » EST INTERDIT
+// ─────────────────────────────────────────────────────────────────────────────
+// SA CONSIGNE P67, EN QUATRE TEMPS : « chaque data qui porte une preuve juridique doit être
+// DÉCLARÉE comme telle (axe transverse) ; règle écrite quelque part ; renseigné dans la stratégie
+// de rationalisation ; adapté pour les outils ».
+//
+// CE QUI DISTINGUE CET AXE DE TOUS LES AUTRES : les autres disent ce qu'un fichier EST ou ce qu'il
+// VAUT pour le travail. Celui-ci dit ce qu'on PERDRAIT DEVANT UN TIERS en y touchant. Et sa
+// conséquence est une INTERDICTION : partout ailleurs alléger est un progrès, ici c'est une
+// destruction. C'est la seule classe du projet où « rendre plus clair » est interdit — sans elle,
+// un allègement bien intentionné détruirait une preuve sans que personne ne le remarque, puisque
+// le document résultant serait meilleur à lire.
+async function testAxePreuveJuridique() {
+  const LC = await import('../scripts/le-classificateur.mjs');
+
+  // LES TROIS CRITÈRES SONT CUMULATIFS, sinon tout le dépôt serait une preuve.
+  assert.equal(LC.CRITERES_DE_PREUVE.length, 3);
+  assert.ok(LC.CRITERES_DE_PREUVE.every((c) => c.cle && c.quoi), 'each criterion says what it demands — one nobody can read is not a criterion');
+
+  // UNE ZONE SANS INTERDIT N'EST PAS UNE ZONE DE PREUVE, c'est une étiquette : tout l'intérêt de
+  // l'axe est de dire ce qu'on n'a PAS le droit de faire.
+  assert.ok(LC.ZONES_DE_PREUVE.every((z) => String(z.interdit ?? '').trim().length > 20), 'every declared zone says what is FORBIDDEN there, in writing');
+  assert.ok(LC.ZONES_DE_PREUVE.every((z) => (z.criteres ?? []).length), 'and which criteria make it a proof');
+
+  // LES TROIS DÉFAUTS QUE LE GARDE-FOU DOIT ATTRAPER.
+  const casse = LC.findZonesDePreuveAbsentes({
+    zones: [
+      { chemin: 'docs/disparu', quoi: 'x', criteres: ['datee'], interdit: 'ne rien toucher du tout ici jamais' },
+      { chemin: 'docs', quoi: 'y', criteres: ['critere-invente'], interdit: 'ne rien toucher du tout ici jamais' },
+      { chemin: 'docs', quoi: 'z', criteres: ['datee'], interdit: '' },
+    ],
+    existsImpl: (c) => !String(c).includes('disparu'),
+  });
+  assert.equal(casse.absentes.length, 1, 'MUST BITE: a proof zone pointing at a vanished folder is worse than no declaration (Article 28)');
+  assert.equal(casse.criteresInconnus.length, 1, 'and an undefined criterion is named rather than accepted');
+  assert.deepEqual(casse.sansInterdit, ['docs'], 'and a zone with no written prohibition is only a label');
+
+  assert.equal(LC.findZonesDePreuveAbsentes({ zones: [] }).mesurable, false, 'an empty list means the list is empty, never that the repository carries no proof (L11)');
+
+  // EN DIRECT (Article 25) : les six zones déclarées doivent exister.
+  const reel = LC.findZonesDePreuveAbsentes();
+  assert.equal(reel.mesurable, true);
+  assert.ok(reel.total >= 5, `the real axis must declare its zones (currently ${reel.total})`);
+  assert.deepEqual(reel.absentes, [], 'and every one of them exists on disk');
+  assert.deepEqual(reel.sansInterdit, []);
+
+  // LA RÈGLE EST IMPRIMÉE AVEC LA MESURE, parce que c'est elle qui compte : le chiffre ne dit
+  // rien, l'interdiction dit tout.
+  const lignes = LC.formatZonesDePreuveLines(reel).join('\n');
+  assert.ok(/DESTRUCTION, pas un progrès/.test(lignes), 'the rule travels with the measure: the count says nothing, the prohibition says everything');
+  assert.ok(/HORS PORTÉE/.test(lignes), 'and the limit is declared: no script renders a legal opinion');
+
+  // LES QUATRE TEMPS DE SA CONSIGNE SONT TENUS, et chacun se vérifie sur le disque — une consigne
+  // en quatre points dont trois sont faits est une consigne ratée.
+  assert.ok(fs.readFileSync('docs/referentiel/le-classificateur.md', 'utf8').includes('PREUVE JURIDIQUE'), '② the rule is WRITTEN in the referentiel');
+  assert.ok(fs.readFileSync('docs/strategies/export-et-commercialisation-strategie.md', 'utf8').includes('ZONES_DE_PREUVE'), '③ and recorded in the rationalisation strategy, where an alleviation pass would read it');
+  assert.ok(fs.readFileSync('docs/referentiel/le-classificateur.md', 'utf8').includes("L'extension aux OUTILS"), '④ and extended to tools: a tool carries proof not by its code but by what it WRITES');
+  assert.ok(/formatZonesDePreuveLines\(preuves\)/.test(fs.readFileSync('scripts/doc-report.mjs', 'utf8')), '① and the axis is PRINTED by a tool, never only exported (L2)');
+
+  console.log(`Passed: l'axe où « rendre plus clair » est interdit (2026-10-03, tâche #1548). Sa consigne P67 en quatre temps, et les quatre sont tenus et vérifiés sur le disque — une consigne en quatre points dont trois sont faits est une consigne ratée. CE QUI DISTINGUE CET AXE DE TOUS LES AUTRES : les autres disent ce qu'un fichier EST ou ce qu'il VAUT pour le travail ; celui-ci dit ce qu'on PERDRAIT DEVANT UN TIERS en y touchant. Une preuve ne vaut que par son INTÉGRITÉ et sa DATE, donc la résumer la détruit MÊME QUAND ON L'AMÉLIORE — et c'est précisément ce qui rend l'axe nécessaire : sans lui, un allègement bien intentionné détruirait une preuve sans que personne ne le remarque, puisque le document résultant serait meilleur à lire. ${reel.total} zones déclarées, toutes présentes, chacune portant ses critères ET ce qui y est INTERDIT — une zone sans interdit n'est qu'une étiquette. Les trois critères sont CUMULATIFS (datée par un mécanisme qu'on ne contrôle pas, verbatim, établirait une antériorité), sinon tout le dépôt serait une preuve. LA LISTE EST CURATÉE et sa nature manuelle est déclarée (Article 24) : aucun programme ne devine qu'un dossier vaudrait preuve devant un tiers. QUATRIÈME TEMPS, l'extension aux outils : un outil ne porte pas de preuve par son CODE — un script se réécrit sans rien détruire — mais par ce qu'il ÉCRIT, donc un outil qui dépose dans une zone de preuve doit AJOUTER et jamais remplacer.`);
+}
+await testAxePreuveJuridique();
+
 // =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
 // =============================================================================================

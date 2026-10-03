@@ -116,3 +116,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/livrables/systeme-de-suivi.html` | `docs/systeme-de-suivi.md` | 45710 | 2026-10-03 09:47Z |
 | `docs/livrables/LIVRAISON-14H-2026-10-03.html` | `docs/livrables/LIVRAISON-14H-2026-10-03.md` | 17694 | 2026-10-03 09:48Z |
 | `docs/essais-ailleurs/index.html` | `docs/essais-ailleurs/index.md` | 10990 | 2026-10-03 10:17Z |
+| `docs/strategies/export-et-commercialisation-strategie.html` | `docs/strategies/export-et-commercialisation-strategie.md` | 40448 | 2026-10-03 10:43Z |

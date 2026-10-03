@@ -1293,6 +1293,94 @@ export const AXES_EXEMPLES_MAX = 2;
 // `registres` EST INJECTÉ, JAMAIS IMPORTÉ, et ce n'est pas un détail de style : `doc-report`
 // importe déjà ce fichier, donc l'importer en retour créerait un cycle. La règle de dépendance de
 // ce fichier (ne jamais remonter vers ses appelants) est tenue par l'injection.
+// ============================================================================
+// L'AXE « PREUVE JURIDIQUE » — sa consigne P67 en quatre temps (tâche #1548)
+// ============================================================================
+// SA CONSIGNE, ET ELLE PORTE EN ELLE SA PROPRE JUSTIFICATION : « chaque data qui porte une preuve
+// juridique doit être DÉCLARÉE comme telle (axe transverse) ; règle écrite quelque part ;
+// renseigné dans la stratégie de rationalisation ; adapté pour les outils ».
+//
+// POURQUOI CET AXE N'EST PAS UNE ÉTIQUETTE DE PLUS, et c'est ce qui le distingue de tous les
+// autres axes de classification : les autres disent ce qu'un fichier EST ou ce qu'il VAUT pour
+// le travail. Celui-ci dit ce qu'on PERDRAIT DEVANT UN TIERS en y touchant. Une preuve ne vaut
+// que par son INTÉGRITÉ et sa DATE — la résumer, la réécrire ou la « nettoyer » la détruit, même
+// quand on l'améliore.
+//
+// ⚠️ LA CONSÉQUENCE EST UNE INTERDICTION, PAS UNE INFORMATION. Partout ailleurs dans ce dépôt,
+// un allègement ou une reformulation est un progrès ; ici, c'est une destruction. C'est la seule
+// classe du projet où « rendre plus clair » est interdit.
+//
+// CE QUI FAIT QU'UNE DONNÉE PORTE UNE PREUVE, et les trois critères sont cumulatifs — un seul ne
+// suffit pas, sinon tout le dépôt serait une preuve :
+//   ① elle est DATÉE par un mécanisme qu'on ne contrôle pas soi-même (l'horodatage git, un envoi) ;
+//   ② elle est VERBATIM — ce qui a été écrit, pas ce qu'on en a compris ;
+//   ③ elle établirait une ANTÉRIORITÉ ou une PATERNITÉ si quelqu'un la contestait.
+export const CRITERES_DE_PREUVE = [
+  { cle: "datee", quoi: "datée par un mécanisme hors de notre contrôle (horodatage git, date d'envoi)" },
+  { cle: "verbatim", quoi: "le texte tel qu'il a été écrit, jamais ce qu'on en a compris" },
+  { cle: "etablit", quoi: "établirait une antériorité ou une paternité si quelqu'un la contestait" },
+];
+
+// LA LISTE EST CURATÉE, ET SA NATURE MANUELLE EST ÉCRITE ICI (Article 24, qui l'autorise à cette
+// seule condition) : aucun programme ne peut deviner qu'un dossier porterait une preuve devant un
+// tiers. Ce qu'une mécanique PEUT faire, et fait ci-dessous, c'est vérifier que chaque zone
+// déclarée existe pour de vrai — une zone de preuve qui pointe vers un dossier disparu est pire
+// qu'une absence de déclaration (Article 28).
+export const ZONES_DE_PREUVE = [
+  { chemin: "docs/grand-projet/00-sources", quoi: "les textes qu'il a écrits lui-même, recopiés verbatim", criteres: ["datee", "verbatim", "etablit"],
+    interdit: "les résumer, les reformuler, les corriger — même une faute de frappe : c'est sa parole, et une parole corrigée n'est plus une preuve" },
+  { chemin: "docs/suivi", quoi: "les décisions datées, tâche par tâche, avec qui a tranché", criteres: ["datee", "etablit"],
+    interdit: "réécrire une ligne close ou en changer la date — la correction se fait par une ligne NOUVELLE qui déclare l'écart" },
+  { chemin: "docs/suivi/archives", quoi: "le suivi ancien, archivé tel quel", criteres: ["datee", "verbatim", "etablit"],
+    interdit: "condenser une archive, même pour gagner de la place : c'est exactement ce qu'elle existe pour empêcher" },
+  { chemin: "docs/simulations", quoi: "les transcripts de parties, preuve de ce que le produit faisait à une date", criteres: ["datee", "verbatim"],
+    interdit: "retoucher un transcript : il prouve ce que le jeu DISAIT ce jour-là, pas ce qu'on aurait voulu qu'il dise" },
+  { chemin: "docs/contexte-projet", quoi: "les archives historiques qu'il a transmises", criteres: ["datee", "verbatim", "etablit"],
+    interdit: "les traiter comme une source de vérité sur l'état actuel — et les modifier" },
+  { chemin: "docs/essais-ailleurs", quoi: "les comptes rendus datés d'installation ailleurs", criteres: ["datee", "etablit"],
+    interdit: "réécrire un essai passé à la lumière de ce qu'on sait depuis : son intérêt est d'avoir dit vrai à sa date" },
+];
+
+export function findZonesDePreuveAbsentes({ zones = ZONES_DE_PREUVE, root = ROOT, existsImpl = existsSync, criteres = CRITERES_DE_PREUVE } = {}) {
+  if (!zones?.length) {
+    return { mesurable: false, pourquoi: "aucune zone de preuve déclarée : ce zéro dit que la liste est vide, jamais que le dépôt ne porte aucune preuve (leçons L5/L11)" };
+  }
+  const connus = new Set(criteres.map((c) => c.cle));
+  const absentes = [];
+  const criteresInconnus = [];
+  const sansInterdit = [];
+  for (const z of zones) {
+    let existe = false;
+    try { existe = existsImpl(join(root, z.chemin)); } catch { existe = false; }
+    if (!existe) absentes.push(z);
+    for (const c of z.criteres ?? []) if (!connus.has(c)) criteresInconnus.push({ zone: z.chemin, critere: c });
+    // UNE ZONE SANS INTERDIT N'EST PAS UNE ZONE DE PREUVE, c'est une étiquette : tout l'intérêt
+    // de l'axe est de dire ce qu'on n'a PAS le droit de faire, pas de décorer un dossier.
+    if (!String(z.interdit ?? "").trim()) sansInterdit.push(z.chemin);
+  }
+  return {
+    mesurable: true,
+    total: zones.length,
+    presentes: zones.length - absentes.length,
+    absentes, criteresInconnus, sansInterdit,
+    horsPortee: "la QUALITÉ juridique d'une preuve ne se mesure pas ici — ce qui vaut devant un tiers relève d'un avis qu'aucun script ne rend. Cet axe dit ce qu'il NE FAUT PAS TOUCHER, jamais ce qui gagnerait un procès.",
+  };
+}
+
+export function formatZonesDePreuveLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  const out = [`PREUVE JURIDIQUE — ${r.presentes} zone(s) déclarée(s) et présente(s) sur ${r.total}.`];
+  for (const z of r.absentes) out.push(`   🚨 « ${z.chemin} » est déclaré zone de preuve et n'existe pas : une zone de preuve qui pointe vers un dossier disparu est pire qu'une absence de déclaration.`);
+  for (const c of r.criteresInconnus) out.push(`   ⚠️ « ${c.zone} » invoque le critère « ${c.critere} », qui n'est pas défini : un critère qu'on ne peut pas lire n'en est pas un.`);
+  for (const z of r.sansInterdit) out.push(`   ⚠️ « ${z} » ne dit pas ce qui y est INTERDIT : une zone de preuve sans interdit n'est qu'une étiquette.`);
+  if (!r.absentes.length && !r.criteresInconnus.length && !r.sansInterdit.length) {
+    out.push("   ✅ Chaque zone existe, invoque des critères définis, et dit ce qui y est interdit.");
+  }
+  out.push("   LA RÈGLE, EN UNE PHRASE : dans ces zones, RÉSUMER ou REFORMULER est une DESTRUCTION, pas un progrès. C'est la seule classe du projet où « rendre plus clair » est interdit.");
+  out.push(`   HORS PORTÉE : ${r.horsPortee}`);
+  return out;
+}
+
 export function findFamillesNonCorroborees({ categories = AGENT_CATEGORIES, registres = null, familleDe = familleDeLaCategorie } = {}) {
   if (!registres?.length) {
     return { mesurable: false, pourquoi: "aucun registre fourni : sans seconde source, TOUTES les familles paraîtraient non corroborées — ce serait un faux total, pas une mesure (leçons L5/L11). Le registre s'injecte depuis doc-report, qui importe déjà ce fichier et ne peut donc pas être importé en retour." };

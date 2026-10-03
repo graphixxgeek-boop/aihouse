@@ -441,3 +441,26 @@ plus haut. Corriger une occurrence ne corrige pas la classe.
 *ne se remplit qu'À LA FIN, juste avant la construction effective*
 
 *(vide — rien n'a encore été versé ici)*
+
+
+---
+
+## LA PREUVE JURIDIQUE EST UN AXE DE RATIONALISATION, PAS UNE ANNEXE (2026-10-03, tâche #1548)
+
+*(Troisième temps de sa consigne P67 : « renseigné dans la stratégie de rationalisation ».)*
+
+**POURQUOI ÇA APPARTIENT ICI ET NON AU DOSSIER LICENCE.** Rationaliser, dans ce projet, veut dire
+alléger : retirer ce qui ne sert plus, condenser ce qui dit deux fois la même chose, résumer ce
+qui s'est empilé. **Or il existe une catégorie de données où exactement ce geste est une
+destruction** — celles qui portent une preuve, et qui ne valent que par leur intégrité et leur
+date.
+
+**LA RÈGLE QUE TOUTE PASSE DE RATIONALISATION DOIT RESPECTER** : avant d'alléger quoi que ce soit,
+vérifier que la zone touchée n'est pas déclarée zone de preuve
+(`ZONES_DE_PREUVE`, `scripts/le-classificateur.mjs`). Dans ces six zones, **résumer n'est pas un
+progrès, c'est une perte sèche** — et c'est la seule exception à la logique d'allègement qui
+gouverne tout le reste du chantier.
+
+**CE QUE ÇA CHANGE CONCRÈTEMENT POUR L'EXPORT** : ces zones partent avec le dépôt, entières. On ne
+livre pas une version « allégée » de l'historique des décisions ou des textes de l'utilisateur —
+ce serait livrer une Agence qui ne peut plus prouver sa propre histoire.

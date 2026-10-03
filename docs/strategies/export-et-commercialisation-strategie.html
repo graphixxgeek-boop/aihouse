@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STRATÉGIE DE CHANTIER — EXPORT ET COMMERCIALISATION</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-03T10:43:35.799Z</div>
+    <h1>STRATÉGIE DE CHANTIER — EXPORT ET COMMERCIALISATION</h1>
+    <p class="sub">Page générée depuis docs/strategies/export-et-commercialisation-strategie.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><strong>Où ce document se situe dans la cascade</strong> — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :</p>
+<pre><code>philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── ▣ strategies/export-et-commercialisation-strategie   ← CE DOCUMENT
+            └── plans/version-agence-axe-majeur</code></pre>
+<p><em>(Créée le 2026-09-26 05:44Z, liée à la tâche <strong>#902</strong>.)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/strategies/strategie-globale-du-projet-entier.md</code>
+*stratégie de CHANTIER : elle passe par la stratégie globale, qui porte la direction d'ensemble
+et se règle elle-même sur la cible du projet entier
+(<code>docs/grand-projet/02-strategie/la-cible-2026-09-29.md</code>). L'alignement sur la cible n'est donc pas
+perdu : il est HÉRITÉ, au lieu d'être déclaré en sautant le niveau qui le porte.*
+*Rattachement corrigé le 2026-10-02 (tâche <strong>#1434</strong>) : jusque-là ces dix fiches déclaraient la cible
+directement, pendant que la stratégie globale affirmait de son côté que « les dix stratégies de
+CHANTIER passent par elle ». Les deux ne pouvaient pas être vrais en même temps.*</p></div>
+<div class="highlight"><p><strong>CE DOCUMENT NE RÉSUME JAMAIS.</strong> Il AGRÈGE et il ORDONNE. Chaque idée y entre
+intégralement, entre guillemets, avec sa source. Trouver sa place dans la stratégie est
+le travail ; la raccourcir serait la perdre. En cas de conflit majeur entre une idée
+nouvelle et la stratégie en place, on ne tranche pas : on pose une question de calibrage.</p></div>
+<h3>1. POURQUOI CE CHANTIER</h3>
+<p><em>l'intention d'origine, dans SES mots — jamais reformulée en vocabulaire d'agent</em></p>
+<p>« je voudrais qu'un outil mesure quelles fonctions sont inhérentes au fonctionnement de l'agence, quelles fonctions sont essentielles, insispensables, utiles, facultatives, optionnelles, etc. [...] pour pouvoir mesurer par la suite de quelles parties de l'agence on pourrait se separer dans des versions plus light »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p>« l'agence est faite pour etre consommé : c'est à dire : on installe l'agence au depart d'un projet de code, puis on la desinstalle avant la publication/commercialisation du projet de code. On a sauvegardé la version exporté de base, et c'est celle qu'on reutilise pour un nouveau projet. »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p>« dans le cadre de sa construction, l'agence demande certaines choses qu'elle ne demandera plus une fois commercialisée/exportée : par ex : l'acheteur achete l'agence, il l'installe. Ensuite l'agence n'a plus besoin d'etre exportable. Les versions exportables sont uniquement celles commercialisées »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<h3>2. CE QUI EXISTE DÉJÀ</h3>
+<p><em>mesuré sur le dépôt, jamais supposé — c'est ce qui évite de reconstruire ce qui est là</em></p>
+<p>« SAFE-EXPORT est le septième Gardien sacré depuis le 2026-09-23. Sa couche légère tourne à chaque commit. Il porte findRaisonsPerdues() (alerte quand une raison écrite DISPARAÎT du dépôt) et findGardienAmbigu() (le mot « gardien » employé seul). Registre : 13 entrées pour 50 outils — une liste tenue à la main sans garde-fou, le patron exact que l'Article 24 interdit (tâche #807). »</p>
+<p>— source : mesuré dans le dépôt le 2026-09-26</p>
+<p>« Le dépôt compte 88 fichiers d'outillage et 49 582 lignes, dont check-house seul en pèse 12 052 — un quart de l'Agence dans un fichier (mesure #744). »</p>
+<p>— source : mesure réelle, tâche #744</p>
+<p>« La règle des deux documents par outil existe déjà : un blueprint générique réutilisable ailleurs, une instanciation propre à ce projet dans docs/referentiel/. C'est la moitié de l'exportabilité, déjà en place. »</p>
+<p>— source : CLAUDE.md, inventaire documentaire</p>
+<h3>3. LES IDÉES RETENUES</h3>
+<p><em>intégrales, citées, jamais résumées — chacune avec sa source</em></p>
+<p>« est-ce que les blueprints sont suffisants pour exporter ? un blu-print ca n'est pas du code ? comment fiabiliser les blueprint. je suis nice sur la question »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p>« l'outil est capable de mesurer l'exportabilité de l'agence et de dire lors de circle le pourcentage d'exportabilité de l'agence : il sait reperer ou il manque blue print indispensables [...] Existe-t-il un blue print de l'agence elle-même ? Chez quel outil ? Safe-export ? A creer si besoin. »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p>« Un blue print qui se met à jour automatiquement : tous les blue print doivent se mettre à jour automatiquement ca c'est ok ? [...] il doit y avoir un lien historique entre les blueprint et les versions, et on doit facilement savoir comment retrograder un blueprint dans une version moins developpée »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p>« safe export : l'outil vérifie les exports, et aussi à la marge : qu'un changement de modèle CLAUDE (opus, fable…) en cours de route est fluidifié grâce à l'outil, le relai se fait de manière propre et complète (mémoire, ligne de conduite, process, etc) et exportable »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p>« L'agence devrait tourner sur un modèle moins puissant que toi, tu ne dois pas te servir de toi même pour calibrer ca »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p>« on a absolument besoin de renforcer un outil ou de creer un nouvel outil pour mesurer : les performances de l'agence en terme d'économies réalisées : chaque fois qu'un outil est utilisé, son utilisation precise engendre une depense et une economie de : TOKEN, API, TEMPS »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p>« quelle est l'impact de l'agence sur la memoire disque ? [...] à combien ce cout peut-il etre au bout de 1 mois ? 2 mois ? 1 an ? »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p>« est-ce que tu te PERDS dans le fonctionnement de l'agence ou est-ce que ca T'AIDE vraiment. Sois honnête dans ta réponse stp. Pas besoin de me ménager ou de me plaire. Je veux du factuel. »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<h3>4. LES RECHERCHES ET TROUVAILLES</h3>
+<p><em>ce qu'on est allé chercher dehors, et ce qu'on en a tiré</em></p>
+<p>« Le modèle « open core » (un cœur ouvert + une couche payante) ne tient QUE si on possède chaque ligne du code : c'est la condition posée en tête de toutes les sources. Ici elle est remplie — le dépôt n'a qu'un auteur et un agent — mais elle cesse de l'être au premier contributeur extérieur, et un accord de cession doit exister AVANT, jamais après. »</p>
+<p>— source : recherche web du 2026-09-26 — mecanik.dev « Software Licensing Models: An Enterprise Guide 2026 » et nhimg.org « What Is Open Core Licensing? »</p>
+<p>« Le piège documenté de l'open core, et il vise exactement ce que produit l'Agence : l'acheteur approuve l'outil sur ce que fait le cœur, puis découvre que la surveillance, la restriction d'accès et la rétention sont derrière le mur payant. Transposé ici : si les Gardiens sacrés sont dans le cœur mais que le suivi, les registres et les rapports sont payants, l'outil gratuit signale sans jamais rien garder — et c'est exactement l'inverse de ce que ce projet a appris (un rapport qui ne devient pas une tâche ne sert à rien, Article 28). »</p>
+<p>— source : recherche web du 2026-09-26 — nhimg.org, glossaire « open core licensing »</p>
+<p>« Le patron éprouvé cité par les sources est la double licence à la Qt / MySQL : une édition communautaire sous copyleft, et une licence commerciale pour qui ne peut pas accepter le copyleft. L'intérêt pour ce projet-ci est qu'il ne demande AUCUN découpage du produit — on vend le droit, pas une version amputée. C'est la seule forme qui n'oblige pas à fabriquer une « agence light » artificielle. »</p>
+<p>— source : recherche web du 2026-09-26 — mecanik.dev, « Software Licensing Models »</p>
+<p>« Ce qui rend un cadre d'agent IA réellement portable, d'après l'état de l'art : être agnostique au fournisseur de modèle et au langage, découper en compétences modulaires versionnées avec le code, séparer les préoccupations (planification, exécution, observation, correction) plutôt qu'un monolithe, et surtout DÉCHARGER LE CRITIQUE SUR DU DÉTERMINISTE branché aux événements du cycle de vie — de sorte que le système, et non le modèle, garantisse l'exécution. »</p>
+<p>— source : recherche web du 2026-09-26 — epsilla.com « 12 Reusable Agentic Harness Design Patterns from Claude Code », spring.io « Agent Skills », devblogs.microsoft.com « AGENTS.md and Skills »</p>
+<p>« LE POINT QUI VALIDE L'ARCHITECTURE DE L'AGENCE, et il mérite d'être noté tel quel : « offload critical tasks to deterministic middleware, bind them to specific agent lifecycle events, so the system — not the LLM — guarantees execution ». C'est mot pour mot ce que fait le crochet post-commit avec les sept Gardiens sacrés. Ce n'est donc pas une particularité de ce projet : c'est un patron reconnu, et l'Agence en est une instance complète plutôt qu'une bizarrerie locale. »</p>
+<p>— source : recherche web du 2026-09-26 — thesystemguide.com « Common Security Anti-Patterns in AI Agent Deployments » et epsilla.com</p>
+<p>« L'anti-patron nommé qui décrit un vrai risque ici : « every invocation starts from zero context », le manque de partage de contexte, cité comme LE facteur qui limite la réutilisabilité entre projets. C'est exactement ce que l'Article 27 et le process XP-IA adressent — et c'est la partie de l'Agence qui n'est PAS du code, donc la plus difficile à exporter. »</p>
+<p>— source : recherche web du 2026-09-26 — dev.to « I Built 100+ Gen AI Agents » et epsilla.com</p>
+<p>« COÛT D'HÉBERGEMENT DU SITE, chiffres 2026 : le palier gratuit de Cloudflare Workers couvre 100 000 requêtes/jour, 10 ms de CPU par invocation, 128 Mo de mémoire ; D1 y ajoute 5 Go de stockage, 5 millions de lignes lues et 100 000 écrites par jour. Le palier payant démarre à 5 $/mois minimum par compte, puis 0,30 $ par million de requêtes au-delà de 10 millions inclus. La bande passante sortante n'est facturée ni sur Workers, ni sur D1, ni sur R2. »</p>
+<p>— source : recherche web du 2026-09-26 — developers.cloudflare.com/workers/platform/pricing et developers.cloudflare.com/d1/platform/pricing</p>
+<p>« CE QUE CES CHIFFRES CHANGENT POUR LA DÉCISION, et c'est net : l'hébergement n'est PAS le sujet. Tant que le site reste sous 100 000 requêtes/jour, il coûte 0 €, et le premier palier payant est à 5 $/mois. Le coût réel de ce projet est ailleurs — dans les appels au modèle (Article 8, deux cerveaux par tour) et dans les 19 Mo de dépôt qui croissent de 2,4 Mo/jour. Projeter l'hébergement à un an était une inquiétude légitime, et la mesure la retire de la liste. »</p>
+<p>— source : dérivé des chiffres Cloudflare ci-dessus croisés avec l'empreinte disque mesurée le 2026-09-26</p>
+<h3>4bis. LES QUATRE MOMENTS D'ARRIVÉE DE L'AGENCE (2026-09-27, idée de l'utilisateur)</h3>
+<p><strong>Son idée, dans ses mots</strong> : « les 4 possibilités : intégration de l'agence AVANT / À LA SOURCE / EN COURS / À LA FIN d'un projet (de site web, de jeu…) ».</p>
+<p><strong>Pourquoi c'est structurant et pas un simple découpage commercial</strong> : l'Agence ne rend pas le même service selon le moment où elle arrive, et surtout elle n'a pas les mêmes DROITS. Arrivée avant, elle peut imposer une architecture ; arrivée à la fin, elle ne peut plus que constater et proposer. Un outil qui suppose toujours le même moment se trompera trois fois sur quatre.</p>
+<table><thead><tr><th>Moment</th><th>Ce que l'Agence peut faire</th><th>Ce qu'elle ne peut plus faire</th><th>Le geste type</th></tr></thead><tbody><tr><td><strong>AVANT</strong> — le projet n'existe pas encore</td><td>poser l'architecture : comment le filet de sécurité sera bâti, comment les tests seront découpés, où vivront les registres</td><td>rien à rattraper : c'est la position idéale</td><td><strong>prescrire</strong> un gabarit</td></tr><tr><td><strong>À LA SOURCE</strong> — le projet démarre</td><td>brancher les garde-fous dès le premier commit, avant qu'aucune dette ne naisse</td><td>plus de table rase totale, mais presque</td><td><strong>installer</strong> la machinerie</td></tr><tr><td><strong>EN COURS</strong> — le projet tourne depuis des mois</td><td>mesurer l'existant, nommer les dettes, proposer des corrections encadrées</td><td>imposer une architecture : ce serait une réécriture, pas une intégration</td><td><strong>diagnostiquer</strong> puis proposer</td></tr><tr><td><strong>À LA FIN</strong> — le projet est livré ou figé</td><td>rendre un état des lieux, préparer la reprise par quelqu'un d'autre</td><td>changer quoi que ce soit au produit</td><td><strong>documenter</strong> et transmettre</td></tr></tbody></table>
+<p><strong>LA CONSÉQUENCE POUR CHAQUE OUTIL, et c'est le vrai apport de cette grille</strong> : un outil doit savoir dans lequel de ces quatre mondes il se trouve, ou au minimum déclarer celui qu'il suppose. Un outil qui suppose « EN COURS » et qu'on lance « AVANT » ne trouvera rien et se croira inutile ; un outil qui suppose « AVANT » et qu'on lance « À LA FIN » proposera une réécriture que personne ne veut.</p>
+<p><strong>Le cas d'école, mesuré le jour même</strong> : EZECHIEL-LES-TESTS suppose « EN COURS » — il enquête sur un filet qui existe déjà, et le chemin de ce filet est <strong>écrit en dur</strong> dans son code (<code>FILET = &quot;scripts/check-house.mjs&quot;</code>). Sur un autre projet il ne saurait ni trouver le filet, ni en proposer un s'il n'y en a pas. Trois manques identifiés, trois tâches ouvertes.</p>
+<h3>4ter. LES DOCUMENTS DE RÉFÉRENCE ET LA CHARTE — mesuré le 2026-09-27</h3>
+<p><strong>Ses questions, dans ses mots</strong> : « les fichiers de références sont-ils exportables ? avec abraham ? les fichiers de references sont ils bien construits en architecture (pour un futur projet) ? comment bien exporter toute cette partie ? y compris dans le contenu : certaines regles concernent le fonctionnement de l'agence et pas du jeu, il faut que ces regles soient inscrites dans un autre projet, au meme endroit, je pense ? »</p>
+<h4>Ce que la mesure dit, contre le dépôt réel (459 documents classés, 100 % de couverture)</h4>
+<table><thead><tr><th>Ensemble</th><th>PART (s'exporte)</th><th>RESTE (propre au jeu)</th><th>MÉMOIRE (archive)</th></tr></thead><tbody><tr><td><code>docs/referentiel/</code> (105 fiches)</td><td><strong>90</strong></td><td>11</td><td>4</td></tr><tr><td>Tout le dépôt (459 documents)</td><td>208</td><td>14</td><td>237</td></tr></tbody></table>
+<p><strong>Les 11 fiches qui restent sont exactement les bonnes</strong> : <code>principes</code>, <code>parametres</code>, <code>regles-du-temps</code>, <code>regles-de-l-espace</code>, <code>regles-des-graphismes</code>, <code>regles-de-la-memoire</code>, <code>points-fragiles</code>, <code>feuille-de-route</code>, <code>charte-cartographie</code>, <code>claude-md-regles</code>, <code>organisation-globale-projet</code>. Ce sont les règles du JEU. Le classement n'a pas de trou de ce côté-là — l'architecture des fiches tient.</p>
+<h4>LE TROU EST AILLEURS, ET IL EST EXACTEMENT CELUI QU'IL PRESSENTAIT</h4>
+<p><strong><code>CLAUDE.md</code> est classé RESTE en entier</strong> — « propre au jeu Lia/Noé, ne sert à rien ailleurs ». Or sur ses 33 Articles, une petite dizaine seulement parlent du jeu :</p>
+<table><thead><tr><th>Parlent du JEU (restent)</th><th>Parlent de l'AGENCE (devraient partir)</th></tr></thead><tbody><tr><td>0 (l'esprit des personnages), 1 (la conversation prime), 4 (l'enquête tient debout), 9 (rejouabilité), 10 (répliques locales), 11 (zéro répétition), 12 (le sens avant la forme), 17 (se mettre à la place des personnages)</td><td>3, 5, 6, 7, 13, 14, 15, 16, 18, 19, 20, 20bis, 21, 24, 25, 26, 27, 28, 29, 30, 31, 32 — comprendre avant de toucher, corriger la cause, un rapport devient des tâches, le temps se lit, tout passe par un outil, reprenable par une autre IA…</td></tr><tr><td>Mixtes : 2 (cohérence, cite les jauges), 8 (sobriété API, cite Gemini), 22 (Smart Conso API)</td><td></td></tr></tbody></table>
+<p><strong>Deux Articles sur trois sont génériques, et aujourd'hui aucun ne part.</strong> Un projet suivant repartirait sans « comprendre avant de toucher », sans « un rapport n'est pas fini tant qu'il n'est pas devenu des tâches », sans « le temps se lit, jamais ne se déduit » — c'est-à-dire sans ce qui a coûté le plus cher à apprendre ici.</p>
+<h4>LA CAUSE, ET ELLE EST STRUCTURELLE</h4>
+<p><strong>Chaque outil a deux documents : un blueprint générique et une instanciation propre au projet.</strong> 82 blueprints existent. <strong>La charte, elle, n'a pas de blueprint.</strong> Elle mélange dans un seul fichier ce qui est vrai pour Lia et Noé et ce qui serait vrai pour n'importe quel projet piloté par IA — et comme elle est un seul fichier, le classement ne peut que la ranger d'un côté ou de l'autre. Il l'a rangée du mauvais.</p>
+<p>Le même raisonnement vaut pour <code>docs/regles-de-travail.md</code> (la méthode de collaboration : presque entièrement générique) et pour <code>docs/philosophie-et-politique.md</code>, qui est <strong>déjà écrit</strong> pour être réutilisable ailleurs — la preuve que la séparation est possible et qu'elle a déjà été faite une fois.</p>
+<h4>CE QUI EST PROPOSÉ, ET QUI RESTE À TRANCHER</h4>
+<ul><li><strong>Donner un blueprint à la charte</strong> : <code>docs/charte-blueprint.md</code>, la version générique des ~22 Articles d'Agence, sans une ligne sur Lia ni Noé. <code>CLAUDE.md</code> en devient l'instanciation : il garde les Articles de jeu et cite le blueprint pour le reste. Même patron que les 82 autres — <strong>rien de nouveau à inventer, seulement à appliquer</strong>.</li><li><strong>Le vérificateur naturel est Abraham</strong>, pas MOÏSE. MOÏSE ne connaît qu'un document, la charte ; Abraham traite n'importe quel document à règles numérotées, donc il peut comparer le blueprint et l'instanciation et dire lesquelles des règles sont tombées en route.</li><li><strong>À trancher</strong> : découper la charte est une opération sur la pièce maîtresse du projet. Elle demande la double confirmation de l'Article 14, et elle n'est pas engagée.</li></ul>
+<h4>LES OUTILS : lesquels partent ?</h4>
+<p>Mesuré contre <code>EXEMPTES_DU_KIT</code> (<code>scripts/safe-export.mjs</code>), la seule liste qui fasse foi : <strong>tous les outils de l'Agence partent</strong>, y compris MOÏSE, Abraham et Ezechiel. Trois catégories seulement sont dispensées, chacune avec sa raison écrite : les crochets git, le script d'installation de l'environnement, et ce qui sert le PRODUIT plutôt que l'outillage.</p>
+<p><strong>Le seul cas particulier est <code>check-house.mjs</code></strong> : « la suite de tests DE ce projet : elle teste le jeu, donc elle le nomme. Elle ne s'exporte pas, elle se réécrit. » Juste pour son CONTENU — mais la décision laisse partir son ARCHITECTURE avec, alors que c'est elle qui vaut (cf. tâche #1028).</p>
+<p><strong>Et un avertissement mesuré le même jour</strong> : « l'outil part » ne veut pas dire « l'outil marche ailleurs ». Ezechiel est dans le kit d'export et pourtant le chemin du filet est écrit en dur dans son code. <strong>Être exportable et être portable sont deux choses différentes</strong>, et seule la première est aujourd'hui vérifiée.</p>
+<h3>4quater. LE PLAN D'ACTION PORTABILITÉ (2026-09-27, tâche #1034)</h3>
+<p><strong>Sa demande</strong> : « pour la PORTABILITE tu me diras ton plan d'action ». Trois étapes, dans cet ordre, et chacune conditionne la suivante.</p>
+<h4>Étape 1 — MESURER (faite le jour même)</h4>
+<p><code>mesurerLaPortabilite()</code> dans SAFE-EXPORT balaie les 82 scripts et compte ceux qui portent, <strong>dans leur code et non dans leurs commentaires</strong>, un chemin ou un nom propre à ce dépôt. Résultat : <strong>42 sur 82, soit 49 % de portabilité contre 100 % d'exportabilité</strong>. Les deux chiffres s'affichent côte à côte, et un contre-test du filet interdit qu'ils fusionnent jamais.</p>
+<h4>Étape 2 — CLASSER, parce qu'un lien n'est pas forcément un défaut</h4>
+<p><strong>C'est l'étape que personne ne saute impunément</strong> : traiter les 42 comme 42 bugs serait un chantier absurde. Trois catégories, et une seule appelle du travail :</p>
+<table><thead><tr><th>Catégorie</th><th>Ce que c'est</th><th>Le geste</th></tr></thead><tbody><tr><td><strong>PARAMÉTRABLE</strong></td><td>l'outil lit un chemin qui pourrait être un argument avec ce chemin comme défaut</td><td>une ligne : <code>{ dossier = &quot;docs/suivi/&quot; } = {}</code> — le comportement d'ici ne change pas d'un iota</td></tr><tr><td><strong>À DÉCOUPLER</strong></td><td>l'outil suppose une structure, pas seulement un chemin (« il existe un dossier par outil », « la charte est numérotée par Articles »)</td><td>du vrai travail : faire DÉTECTER la structure au lieu de la supposer</td></tr><tr><td><strong>LÉGITIMEMENT LIÉ</strong></td><td>l'outil sert le PRODUIT, pas l'outillage</td><td>rien à faire — il ne part pas, et c'est écrit</td></tr></tbody></table>
+<p><strong>La première catégorie est probablement la plus grosse</strong>, et elle coûte presque rien. C'est là que le taux monte vite, sans risque.</p>
+<h4>Étape 3 — PROUVER, avec un PROJET TÉMOIN</h4>
+<p>Les deux premières étapes reposent sur la lecture du texte. <strong>La seule preuve est l'exécution.</strong></p>
+<p>Un <strong>projet témoin</strong> : un dépôt minuscule et synthétique, avec une arborescence VOLONTAIREMENT différente (pas de <code>docs/referentiel/</code>, une charte nommée autrement, un filet nommé autrement, aucun personnage). On lance toute l'Agence dessus, et on classe :</p>
+<ul><li><strong>PORTABLE</strong> — l'outil rend un résultat sensé ;</li><li><strong>HONNÊTE</strong> — l'outil rend « PAS MESURÉ » avec sa raison : c'est un <strong>bon</strong> résultat, pas un échec ;</li><li><strong>NON PORTABLE</strong> — l'outil plante, ou pire, rend un résultat qui parle du projet d'origine.</li></ul>
+<p><strong>Le piège que ce test ferme, et il est le vrai enjeu</strong> : un outil qui lit un dossier absent ne plante pas. Il rend zéro, et zéro se lit comme « rien à signaler ». Sans projet témoin, ce cas-là est <strong>invisible</strong> — et c'est le plus probable des trois.</p>
+<p>C'est la technique standard du métier pour tester un outillage : un dépôt de fixture. Elle est gratuite, elle tourne en secondes, et elle se rejoue à chaque Ronde.</p>
+<h4>Ce que le banc témoin a ÉCRIT — les cinq contraintes d'export</h4>
+<p><em>(Le RÉCIT des passages — critères du témoin, déroulé de chaque essai, chiffres, défauts trouvés — a été déplacé le 2026-09-28 dans <code>docs/safe-export/journal-du-banc-temoin.md</code>, sur son arbitrage « Oui, même principe que les tâches ». Rien n'est perdu : c'est un DÉPLACEMENT, jamais une suppression, et le texte y est verbatim. Ce qui reste ici est ce que ces passages ont DÉCIDÉ, parce qu'un document de stratégie porte des décisions et ce qui reste à trancher — pas un journal.)</em></p>
+<ul><li><strong>L'Agence s'emporte ENTIÈRE, jamais à la carte.</strong> La toile de dépendances entre les scripts est dense (<code>lib-shell.mjs</code>, <code>tool-usage.mjs</code>, <code>report-template.mjs</code> sont importés par presque tout le monde). Ce n'est pas un défaut — c'est ce qui fait qu'un nouvel outil hérite du travail des autres (Article 24) — mais <strong>le manuel d'installation doit l'écrire noir sur blanc</strong> : « copier dix scripts ne marche pas, et l'erreur ne dira pas pourquoi ».</li><li><strong>Un outil qui ne trouve pas la charte doit le DIRE, jamais s'arrêter.</strong> Cas le plus fréquent ET le plus facile à corriger, donc la première correction de portabilité à faire.</li><li><strong>« Pas mesuré » est un SUCCÈS d'export, pas un échec.</strong> Un taux qui compterait ces cas-là comme des échecs pousserait à fabriquer des réponses là où il n'y a pas de données — l'exact contraire de la discipline anti-faux-vert du projet. <strong>D'où trois verdicts et non deux</strong> : portable, HONNÊTE, non portable.</li><li><strong>Le témoin se rejoue, il ne se visite pas une fois.</strong> Lancé une fois, il mesure l'état d'un jour ; lancé à chaque Ronde, il mesure une TRAJECTOIRE — et c'est la trajectoire qui dit si l'Agence devient portable ou si elle en parle seulement.</li><li><strong>CE QUI NE DOIT PAS VOYAGER est aussi important que ce qui voyage.</strong> Le kit d'export liste explicitement ce qui RESTE : <code>scripts/hooks/</code> (les crochets de CE dépôt : emportés, ils font croire à l'Agence qu'elle est chez elle et faussent toute détection), le fichier de tests du produit (seule son ARCHITECTURE part, <code>docs/architecture-du-filet.md</code>), et le script d'installation de l'environnement (propre à la machine d'origine). Sans cette liste, une installation naïve emporte tout et les outils détectent l'ancien projet au lieu du nouveau — <strong>une panne silencieuse, jamais une erreur</strong>.</li></ul>
+<h4>Ce qui reste à trancher</h4>
+<p>L'ordre entre l'étape 2 et l'étape 3 est discutable : construire le projet témoin d'abord donnerait la classification <strong>par la mesure</strong> au lieu de la donner par la lecture. C'est plus sûr et plus long. Décision de l'utilisateur.</p>
+<h3>5. LES DÉCISIONS DÉJÀ PRISES</h3>
+<p><em>ce qui ne se rediscute plus, avec la date et qui a tranché</em></p>
+<p>« TRANCHÉ en fenêtre le 2026-09-26 : un blueprint ne suffit PAS à exporter. Un blueprint est de la PROSE : il dit ce qu'un outil doit faire et pourquoi, pas comment. Il permet de RECONSTRUIRE l'outil ailleurs, pas de le TRANSPLANTER. Un vrai export a besoin des deux : le blueprint (le pourquoi, qui survit au changement de langage) ET le fichier .mjs (le comment). »</p>
+<p>— source : sa réponse en fenêtre de calibrage, 2026-09-26</p>
+<p>« TRANCHÉ en fenêtre le 2026-09-26 : l'échelle de vitalité a QUATRE niveaux — vital (sans lui l'Agence ne tourne pas), essentiel (sans lui elle tourne mais perd une garantie), utile (il fait gagner du temps), optionnel (confort ou cas particulier). »</p>
+<p>— source : sa réponse en fenêtre de calibrage, 2026-09-26</p>
+<p>« TRANCHÉ en fenêtre le 2026-09-26 : les bénéfices nets se mesurent sur ce qui EST mesurable — appels API évités, tokens économisés, défauts trouvés. Le contrefactuel « temps qu'aurait pris un codage sans Agence » n'est PAS mesurable sans groupe témoin, et un argument commercial bâti sur un chiffre inventé s'effondre à la première question. »</p>
+<p>— source : sa réponse en fenêtre de calibrage, 2026-09-26</p>
+<p>« TRANCHÉ en fenêtre le 2026-09-26 : recherches web CIBLÉES, 3 à 4 questions précises, pas un panorama de marché. »</p>
+<p>— source : sa réponse en fenêtre de calibrage, 2026-09-26</p>
+<h3>6. CE QUI RESTE À TRANCHER</h3>
+<p><em>les arbitrages qui lui reviennent — jamais tranchés par l'agent</em></p>
+<p>« LA PART DE L'AGENCE INUTILE EN VERSION COMMERCIALISÉE. Il demande de l'estimer en lignes de code. La logique à préciser avec lui : l'exportabilité est un besoin DU CRÉATEUR pendant la construction, pas de l'acheteur après installation. »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p><strong>MESURÉ LE 2026-09-27 (tâche #902) — <code>node scripts/safe-export.mjs export</code>, section « CONSTRUIRE OU FAIRE TOURNER ».</strong> La question chiffrée est répondue, l'arbitrage reste le sien.</p>
+<ul><li><strong>70 551 lignes sur 70 793 servent à CONSTRUIRE — 99,7 %.</strong></li><li><strong>242 lignes seulement servent encore le produit une fois installé</strong> : <code>scripts/install-pnpm.sh</code> (217 lignes, il décrit la machine d'ici) et <code>scripts/run-framework.mjs</code> (25 lignes, il lance le jeu).</li></ul>
+<p><strong>CE QUE LE CHIFFRE CONFIRME</strong> : son intuition était juste, et plus fortement qu'annoncé. L'Agence n'est pas « en partie » inutile après installation — elle l'est presque entièrement, par construction. C'est la définition même d'un outillage : il sert à fabriquer, pas à tourner.</p>
+<p><strong>CE QUE LE CHIFFRE NE DIT PAS, et la mesure l'imprime elle-même</strong> : il compte <code>scripts/</code> seulement, donc l'outillage ; le produit (<code>lib/</code>, <code>app/</code>, <code>components/</code>) n'est pas au dénominateur. Et une ligne n'est pas un coût — 70 000 lignes que personne ne lance ne pèsent rien à l'exécution. Ce chiffre éclaire un arbitrage, il ne rend aucun verdict.</p>
+<p><strong>CE QUI RESTE À TRANCHER, et c'est lui qui le tranche</strong> : faut-il livrer une version commercialisée SANS l'outillage (un produit net, mais l'acheteur ne peut plus le faire évoluer avec l'Agence), AVEC (il hérite de la machine à construire, et de sa maintenance), ou les deux en deux offres ?</p>
+<p>« LA TAILLE DE CODE CIBLE. Est-ce que 49 582 lignes d'outillage peuvent servir un projet plus petit qu'elles ? aussi gros ? plus gros ? Question ouverte, recherches web demandées. »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p>« LES MEMBRES CLASSIQUES N'ONT PAS DE BLUEPRINT, par décision documentée. Sont-ils indispensables au fonctionnement de l'Agence ? Si oui, comment les exporter sans blueprint ? Question qu'il pose et qui n'est pas tranchée. »</p>
+<p>— source : son gros prompt du 2026-09-26</p>
+<p><strong>LA QUESTION S'EST REFERMÉE TOUTE SEULE, ET AVANT QU'ON LA TRAITE (constaté le 2026-09-27, tâche #902).</strong> Il avait déjà répondu lui-même le 2026-09-26, dans un autre échange, et sa raison est décisive : « les optionnels de l'agence ne pourront pas être réinstallés correctement si on les a intégrés à l'agence. Ça n'est pas logique. » La dispense de blueprint a été <strong>abrogée</strong> ce jour-là, et les six outils concernés ont reçu leurs pièces le jour même. Il n'y a donc plus de membre sans blueprint à exporter.</p>
+<p><strong>ET LE CHIFFRE LE CONFIRME MÉCANIQUEMENT</strong> : la couverture blueprint est de <strong>100 % aux quatre niveaux de vitalité</strong> (39/39 vitaux, 3/3 essentiels, 25/25 utiles, 16/16 optionnels), zéro bloquant.</p>
+<p><strong>MAIS CE 100 % ÉTAIT FAUX JUSQU'À CE MATIN, et c'est la trouvaille du jour.</strong> La mesure annonçait six outils « sans blueprint » — <code>check-argus</code>, <code>check-gemini-quota</code>, <code>check-harmonia</code>, <code>kpi-report</code>, <code>the-screener-capture</code>, <code>memento</code> — <strong>les six à tort</strong>. Elle cherchait un plan nommé d'après le SCRIPT quand un plan est nommé d'après l'OUTIL : ARGUS s'appelle <code>check-argus.mjs</code> et son plan <code>argus-blueprint.md</code>. Le lien exact est écrit dans la colonne « Architecture » de l'inventaire de CLAUDE.md ; la mesure le LIT désormais au lieu de le deviner (Article 24).</p>
+<p><strong>LA VRAIE LEÇON N'EST PAS LE CHIFFRE, C'EST LA RÉCIDIVE</strong> : c'est la <strong>troisième</strong> fois que ce dépôt paie exactement ce défaut — LE-CLASSIFICATEUR accusait 22 outils d'être « SANS FICHE », puis <code>findOutilsSansBlueprint()</code> a accusé les mêmes le matin même, dans le même fichier, cinquante lignes plus haut. Corriger une occurrence ne corrige pas la classe.</p>
+<div class="highlight"><p><strong>Le journal des passages du banc témoin vit dans <code>docs/safe-export/journal-du-banc-temoin.md</code></strong>
+(déplacé le 2026-09-28, tâche #1054) : critères du témoin, déroulé de chaque essai, chiffres,
+défauts trouvés. Ce document-ci ne garde que les DÉCISIONS et ce qui reste à trancher.</p></div>
+<h3>7. LE PLAN D'EXÉCUTION</h3>
+<p><em>ne se remplit qu'À LA FIN, juste avant la construction effective</em></p>
+<p><em>(vide — rien n'a encore été versé ici)</em></p>
+<hr>
+<h3>LA PREUVE JURIDIQUE EST UN AXE DE RATIONALISATION, PAS UNE ANNEXE (2026-10-03, tâche #1548)</h3>
+<p><em>(Troisième temps de sa consigne P67 : « renseigné dans la stratégie de rationalisation ».)</em></p>
+<p><strong>POURQUOI ÇA APPARTIENT ICI ET NON AU DOSSIER LICENCE.</strong> Rationaliser, dans ce projet, veut dire alléger : retirer ce qui ne sert plus, condenser ce qui dit deux fois la même chose, résumer ce qui s'est empilé. <strong>Or il existe une catégorie de données où exactement ce geste est une destruction</strong> — celles qui portent une preuve, et qui ne valent que par leur intégrité et leur date.</p>
+<p><strong>LA RÈGLE QUE TOUTE PASSE DE RATIONALISATION DOIT RESPECTER</strong> : avant d'alléger quoi que ce soit, vérifier que la zone touchée n'est pas déclarée zone de preuve (<code>ZONES_DE_PREUVE</code>, <code>scripts/le-classificateur.mjs</code>). Dans ces six zones, <strong>résumer n'est pas un progrès, c'est une perte sèche</strong> — et c'est la seule exception à la logique d'allègement qui gouverne tout le reste du chantier.</p>
+<p><strong>CE QUE ÇA CHANGE CONCRÈTEMENT POUR L'EXPORT</strong> : ces zones partent avec le dépôt, entières. On ne livre pas une version « allégée » de l'historique des décisions ou des textes de l'utilisateur — ce serait livrer une Agence qui ne peut plus prouver sa propre histoire.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/strategies/export-et-commercialisation-strategie.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
