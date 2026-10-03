@@ -448,6 +448,40 @@ export function encombrement(groupes = [], { top = 10 } = {}) {
 // LA QUESTION QUI DÉCIDE DE TOUT LE CHANTIER, et elle ne se devine pas. Si l'essentiel du temps
 // vient de l'instrumentation et du typage, alors retirer des tests ne gagnerait rien et coûterait
 // de la protection. Ezechiel REFUSE donc de conclure sans les trois durées réelles.
+// OÙ LES TROIS DURÉES SONT GARDÉES (2026-10-03). Elles venaient de TROIS VARIABLES
+// D'ENVIRONNEMENT que personne ne renseignait jamais — une capacité réelle, branchée sur rien
+// (leçon L2), et c'est exactement pourquoi l'alerte « d'où vient le temps n'a pas été mesuré »
+// brûlait depuis quatre jours sans que personne puisse l'éteindre : il n'y avait aucun geste
+// disponible pour la traiter. L'outil sait désormais les mesurer lui-même et les écrire ici.
+export const FICHIER_DES_COUCHES = "docs/ezechiel-les-tests/couches.json";
+
+export function coucheEnregistrees({ root = ROOT, lire = null } = {}) {
+  const lireF = lire ?? ((f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } });
+  const brut = lireF(FICHIER_DES_COUCHES);
+  if (brut == null) return { presentes: false, pourquoi: `aucune mesure des trois couches (${FICHIER_DES_COUCHES}) — lancer \`node scripts/ezechiel-les-tests.mjs couches\`` };
+  try {
+    const j = JSON.parse(brut);
+    return { presentes: true, quand: j.quand ?? null, nuMs: j.nuMs ?? null, couvertureMs: j.couvertureMs ?? null, typageMs: j.typageMs ?? null, codes: j.codes ?? null };
+  } catch { return { presentes: false, pourquoi: `${FICHIER_DES_COUCHES} illisible — un fichier de mesure abîmé se lirait comme une absence de problème` };
+  }
+}
+
+// LE RENDU DES TROIS COUCHES, ÉCRIT UNE SEULE FOIS. Il vivait étalé dans `formatEnqueteLines` ;
+// la sous-commande `couches` en avait besoin aussi, et le recopier aurait fait diverger les deux
+// affichages d'une même mesure au premier changement (leçon L29).
+export function formatCouchesLines(c = {}) {
+  if (!c?.mesurable) return [`  PAS MESURÉ — ${c?.pourquoi}`];
+  const s = (ms) => `${(ms / 1000).toFixed(1)} s`;
+  const surc = c.surcoutNegligeable
+    ? "surcoût non distinguable du bruit de mesure"
+    : `surcoût ${s(c.surcoutCouverture)}`;
+  return [
+    `  filet nu ${s(c.nuMs)} · sous instrumentation ${s(c.couvertureMs)} (${surc})` + (c.typageMesure ? ` · typage ${s(c.typageMs)}` : " · typage NON MESURÉ"),
+    `  Sur le total bloquant de ${s(c.totalBloquant)} : les tests ${c.partTestsPct.toFixed(0)} %, l'enveloppe ${c.partEnveloppePct.toFixed(0)} %.`,
+    `  → ${c.verdict}`,
+  ];
+}
+
 export function comparerLesCouches({ nuMs = null, couvertureMs = null, typageMs = null } = {}) {
   const manquantes = [];
   if (!Number.isFinite(nuMs)) manquantes.push("le filet nu");
@@ -1123,6 +1157,47 @@ export const MOTIF_LIGNE_D_ACCOMPAGNEMENT = /^\s*\(Use `node --trace-warnings/;
 // LA RÈGLE RESTE ÉTROITE, et c'est ce qui la rend sûre : seules sont écartées les lignes qui
 // correspondent à un motif d'avertissement DÉJÀ déclaré, plus la ligne d'accompagnement que le
 // moteur colle derrière. Tout le reste compte, y compris un avertissement d'un genre inconnu.
+// LES AVERTISSEMENTS DÉCLARÉS — ceux qu'AUCUNE action légitime ne peut éteindre (2026-10-03).
+//
+// LE RAISONNEMENT EXISTAIT DÉJÀ ICI, APPLIQUÉ À MOITIÉ, et c'est ce qui rend ce cas instructif.
+// Le 2026-09-28 (tâche #1098), le rapport a cessé de compter DEUX FOIS l'avertissement de
+// `node:sqlite` — une fois sous son nom, une fois comme « bruit inexpliqué » — et la raison écrite
+// ce jour-là était déjà la bonne : « cet avertissement-là NE PEUT PAS ÊTRE RETIRÉ, il vient du
+// moteur, il dit vrai, et il dira vrai tant que node:sqlite sera expérimental. Une alerte qu'aucune
+// action légitime ne peut éteindre devient du décor (leçon L6). »
+//
+// LE PAS QUI MANQUAIT : on avait retiré la ligne du compte du BRUIT, et laissé l'avertissement
+// lui-même compter comme ANOMALIE. Résultat, la suite ne pouvait structurellement JAMAIS être
+// déclarée verte, et JESUS la signalait comme une alerte que personne n'éteint — six jours durant.
+// Exactement le défaut que la correction précédente visait, une marche plus haut.
+//
+// CE N'EST PAS UN SILENCE, C'EST UNE DÉCLARATION : l'avertissement reste COMPTÉ et AFFICHÉ, avec
+// sa raison et la date de sa déclaration. Ce qui change est qu'il ne compte plus comme une
+// anomalie à traiter, puisqu'il n'y a rien à traiter. Un avertissement d'un genre inconnu reste
+// une anomalie, et c'est ce qui garde le voyant utile.
+export const AVERTISSEMENTS_DECLARES = [
+  {
+    cle: "sqlite-experimental",
+    motif: /SQLite is an experimental feature/i,
+    pourquoi: "`node:sqlite` est le moteur de base de données du JEU, et il est marqué expérimental par Node lui-même. L'avertissement vient du moteur, il dit vrai, et il dira vrai tant que l'API ne sera pas stabilisée — aucune action de ce dépôt ne peut l'éteindre, sinon cesser d'utiliser node:sqlite, ce qui n'est pas une décision d'outillage.",
+    depuis: "2026-10-03",
+  },
+];
+
+export function findAvertissementsMalDeclares({ declares = AVERTISSEMENTS_DECLARES } = {}) {
+  const ecarts = [];
+  for (const a of declares) {
+    if (!(a.motif instanceof RegExp)) { ecarts.push(`l'avertissement déclaré « ${a.cle} » n'a pas de motif : il ne reconnaîtra jamais rien`); continue; }
+    if (!a.pourquoi || a.pourquoi.length < 60) ecarts.push(`l'avertissement déclaré « ${a.cle} » n'explique pas pourquoi aucune action ne peut l'éteindre : une déclaration sans raison est un silence déguisé`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(a.depuis ?? ""))) ecarts.push(`l'avertissement déclaré « ${a.cle} » ne dit pas depuis quand : une déclaration sans date ne peut jamais être relue`);
+  }
+  return ecarts;
+}
+
+export function avertissementDeclare(texte = "", declares = AVERTISSEMENTS_DECLARES) {
+  return declares.find((a) => a.motif instanceof RegExp && a.motif.test(String(texte))) ?? null;
+}
+
 export function ligneDejaExpliquee(texte, motifs = MOTIFS_D_AVERTISSEMENT) {
   const t = String(texte ?? "");
   if (MOTIF_LIGNE_D_ACCOMPAGNEMENT.test(t)) return true;
@@ -1149,9 +1224,21 @@ export function santeDuFilet({ code = null, ms = null, lignes = [], groupes = []
     anomalies.push({ cle: "doublons", gravite: "sérieuse", quoi: `${doubles.length} succès imprimé(s) plus d'une fois`, pourquoi: "un bloc exécuté deux fois paie son temps deux fois et fausse tout classement de coût — et, plus vicieux, il peut signaler que le fichier est importé deux fois", detail: doubles.slice(0, 5) });
   }
   const texteComplet = lignes.map((l) => String(l.texte ?? l)).join("\n");
+  // UN AVERTISSEMENT DÉCLARÉ EST COMPTÉ ET AFFICHÉ, jamais tu — mais il ne compte pas comme une
+  // ANOMALIE, puisqu'aucune action légitime ne peut l'éteindre. Les deux listes sont rendues
+  // séparément : confondre « rien à faire » et « rien à signaler » serait le silence que cette
+  // fonction existe pour empêcher.
+  const declares = [];
   for (const a of MOTIFS_D_AVERTISSEMENT) {
-    const n = (texteComplet.match(new RegExp(a.motif.source, "gi")) ?? []).length;
-    if (n) anomalies.push({ cle: a.cle, gravite: "à surveiller", quoi: `${n} avertissement(s) « ${a.cle} » pendant l'exécution`, pourquoi: a.quoi });
+    const occurrences = texteComplet.split("\n").filter((l) => new RegExp(a.motif.source, "i").test(l));
+    if (!occurrences.length) continue;
+    const connu = occurrences.every((l) => avertissementDeclare(l));
+    if (connu) {
+      const d = avertissementDeclare(occurrences[0]);
+      declares.push({ cle: d.cle, genre: a.cle, combien: occurrences.length, pourquoi: d.pourquoi, depuis: d.depuis });
+      continue;
+    }
+    anomalies.push({ cle: a.cle, gravite: "à surveiller", quoi: `${occurrences.length} avertissement(s) « ${a.cle} » pendant l'exécution`, pourquoi: a.quoi });
   }
   // LE BRUIT, C'EST CE QUE PERSONNE N'A DÉJÀ NOMMÉ (2026-09-28, tâche #1098) : les lignes rattachées
   // à un avertissement que le rapport annonce déjà sont retirées du compte, jamais additionnées une
@@ -1165,13 +1252,13 @@ export function santeDuFilet({ code = null, ms = null, lignes = [], groupes = []
   const bloquantes = anomalies.filter((a) => a.gravite === "bloquante");
   return {
     mesurable: true, code, ms, succes: succes.length, attendus,
-    anomalies,
+    anomalies, declares,
     vert: anomalies.length === 0,
     // « VERT » et « SANS ANOMALIE BLOQUANTE » ne sont pas la même chose, et les confondre serait
     // exactement le vert creux que cette fonction existe pour empêcher. Les deux sont rendus.
     sansBlocage: bloquantes.length === 0,
     verdict: anomalies.length === 0
-      ? "VERT — la suite tourne entièrement, rend 0, n'imprime aucun avertissement et ne saute aucun bloc."
+      ? `VERT — la suite tourne entièrement, rend 0, ne saute aucun bloc${declares.length ? `, et les ${declares.reduce((a, d) => a + d.combien, 0)} avertissement(s) qu'elle imprime sont DÉCLARÉS : ${declares.map((d) => d.cle).join(", ")}` : " et n'imprime aucun avertissement"}.`
       : (bloquantes.length ? `🚨 ANOMALIE BLOQUANTE — ${bloquantes.map((a) => a.quoi).join(" · ")}` : `🟡 ÇA TOURNE, MAIS — ${anomalies.length} anomalie(s) non bloquante(s) : un vert qui laisse passer du bruit finit par cacher une vraie alerte.`),
   };
 }
@@ -1180,6 +1267,9 @@ export function formatSanteLines(s) {
   if (!s?.mesurable) return [`PAS MESURÉ — ${s.pourquoi}`];
   const L = [`${s.verdict}`, `  code de sortie ${s.code} · ${s.succes}/${s.attendus} succès imprimés${s.ms ? ` · ${(s.ms / 1000).toFixed(1)} s` : ""}`];
   for (const a of s.anomalies) L.push(`   ${a.gravite === "bloquante" ? "🚨" : a.gravite === "sérieuse" ? "🟠" : "🟡"} ${a.quoi} — ${a.pourquoi}`);
+  // LES DÉCLARÉS S'AFFICHENT TOUJOURS, y compris sur un voyant vert : les taire ferait croire que
+  // la suite n'imprime rien, et c'est faux. « Rien à faire » n'est pas « rien à signaler ».
+  for (const d of s.declares ?? []) L.push(`   ⬜ ${d.combien} avertissement(s) « ${d.cle} » — DÉCLARÉ le ${d.depuis}, aucune action légitime ne peut l'éteindre : ${d.pourquoi}`);
   return L;
 }
 
@@ -1984,6 +2074,51 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   // ---- `robustesse` : la passe qui casse le code exprès (passe SÉPARÉE, jamais dans l'enquête) -
   // ---- `rapport` : le rapport complet sur le filet (tâche #1547, sa décision P66 option d) ----
+  // ---- `couches` : les trois durées, mesurées pour de vrai (tâche #1566) ----------------------
+  // Elle lance le filet DEUX FOIS (nu, puis sous instrumentation de couverture) et le typage une
+  // fois : ~10 minutes. C'est cher, et c'est la seule façon honnête de répondre à « d'où vient le
+  // temps » — l'alternative était trois variables d'environnement que personne ne posait jamais.
+  if (sousCommande === "couches") {
+    printReportHeader({ tool: "ezechiel-les-tests", title: "EZECHIEL — d'où vient le temps : les trois couches", scriptPath: "scripts/ezechiel-les-tests.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    const { spawnSync } = await import("node:child_process");
+    const { writeFileSync, mkdirSync, mkdtempSync } = await import("node:fs");
+    const { dirname } = await import("node:path");
+    const { tmpdir } = await import("node:os");
+    const chrono = (quoi, cmd, args, env) => {
+      const t = Date.now();
+      const r = spawnSync(cmd, args, { cwd: ROOT, env: { ...process.env, ...env }, stdio: "ignore" });
+      const ms = Date.now() - t;
+      console.log(`  ${quoi.padEnd(28)} ${(ms / 1000).toFixed(1).padStart(7)} s (code ${r.status})`);
+      return { ms, code: r.status };
+    };
+    const filet = join(ROOT, filetResolu());
+    console.log("Trois passages réels — c'est long, et c'est la seule réponse honnête :");
+    const nu = chrono("le filet NU", process.execPath, ["--max-old-space-size=3072", filet], {});
+    const dossier = mkdtempSync(join(tmpdir(), "ez-couv-"));
+    const couv = chrono("le filet SOUS COUVERTURE", process.execPath, ["--max-old-space-size=3072", filet], { NODE_V8_COVERAGE: dossier });
+    const tsc = chrono("le TYPAGE (tsc --noEmit)", "npx", ["tsc", "--noEmit"], {});
+    // UN PASSAGE ROUGE NE SE MESURE PAS : il s'est arrêté avant la fin, donc sa durée décrit un
+    // filet partiel. On écrit quand même les CODES, pour que l'absence soit lisible (leçon L5).
+    const utilisable = nu.code === 0 && couv.code === 0;
+    const contenu = {
+      quand: new Date().toISOString(),
+      source: "trois passages réels mesurés par `ezechiel-les-tests couches`",
+      nuMs: utilisable ? nu.ms : null,
+      couvertureMs: utilisable ? couv.ms : null,
+      // Le typage peut légitimement rendre un code non nul (l'erreur préexistante de vite.config.ts,
+      // connue et tolérée par le crochet) : sa DURÉE reste valable, elle.
+      typageMs: tsc.ms,
+      codes: { nu: nu.code, couverture: couv.code, typage: tsc.code },
+    };
+    mkdirSync(dirname(join(ROOT, FICHIER_DES_COUCHES)), { recursive: true });
+    writeFileSync(join(ROOT, FICHIER_DES_COUCHES), JSON.stringify(contenu, null, 2));
+    recordRegistryWrite(FICHIER_DES_COUCHES, { par: "ezechiel-les-tests" });
+    console.log("");
+    if (!utilisable) console.log(`🚨 PAS MESURÉ — un passage s'est arrêté avant la fin (codes ${JSON.stringify(contenu.codes)}) : sa durée décrirait un filet partiel, donc elle n'est pas enregistrée.`);
+    else for (const l of formatCouchesLines(comparerLesCouches(contenu))) console.log(l);
+    console.log(`\nÉcrit dans ${FICHIER_DES_COUCHES}`);
+    process.exit(0);
+  }
   if (sousCommande === "rapport") {
     printReportHeader({ tool: "ezechiel-les-tests", title: "EZECHIEL — le rapport complet sur le filet", scriptPath: "scripts/ezechiel-les-tests.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
     const { writeFileSync } = await import("node:fs");
@@ -2121,10 +2256,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // ---- l'enquête ordinaire (instantanée, ne touche à rien) -------------------------------------
   printReportHeader({ tool: "ezechiel-les-tests", title: "EZECHIEL-LES-TESTS — le filet de sécurité, et tout ce qui l'entoure", scriptPath: "scripts/ezechiel-les-tests.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   printReliabilityNotice("ezechiel-les-tests");
+  // LES TROIS DURÉES SE LISENT DANS LE REGISTRE, et les variables d'environnement ne servent plus
+  // qu'à forcer une valeur ponctuellement. L'ordre est celui-là et pas l'inverse : une mesure
+  // écrite sur disque par un passage réel vaut mieux qu'une variable qu'il faut penser à poser.
+  const enregistrees = coucheEnregistrees();
   const durees = {
-    nuMs: Number(process.env.EZ_NU_MS) || null,
-    couvertureMs: Number(process.env.EZ_COUV_MS) || null,
-    typageMs: Number(process.env.EZ_TSC_MS) || null,
+    nuMs: Number(process.env.EZ_NU_MS) || enregistrees.nuMs || null,
+    couvertureMs: Number(process.env.EZ_COUV_MS) || enregistrees.couvertureMs || null,
+    typageMs: Number(process.env.EZ_TSC_MS) || enregistrees.typageMs || null,
   };
   // LE FILET SE DÉTECTE, ET LA DÉTECTION S'IMPRIME (2026-09-27, tâche #1030) : un outil qui choisit
   // en silence le fichier qu'il étudie rend un rapport invérifiable — si la détection se trompe,

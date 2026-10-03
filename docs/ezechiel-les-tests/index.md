@@ -9,6 +9,7 @@ registre tout seul — et le déclarer vaut mieux que de laisser croire le contr
 |---|---|---|
 | `historique.json` | les vingt derniers relevés chronométrés (date, durée totale, code de sortie, nombre d'anomalies). C'est LUI qui permet de parler de GAIN : un relevé seul décrit un état, c'est la suite qui dit si un changement a servi à quelque chose. | `node scripts/ezechiel-les-tests.mjs sante` |
 | `robustesse.json` | les dix dernières passes de robustesse, chaque cassure volontaire identifiée par fichier + ligne + opérateur et son verdict (attrapée / survivante). C'est LUI qui permet de dire ce qu'un allègement a coûté en protection. | `node scripts/ezechiel-les-tests.mjs robustesse` |
+| `couches.json` | les TROIS durées qui disent d'où vient le temps : le filet nu, le filet sous instrumentation de couverture, et le typage. Né le 2026-10-03 parce que ces trois durées venaient de trois variables d'environnement que personne n'a jamais posées — une capacité réelle branchée sur rien. Un passage ROUGE n'y écrit aucune durée : elle décrirait un filet partiel. | `node scripts/ezechiel-les-tests.mjs couches` |
 | `mesures.json` | le chronométrage du filet groupe par groupe ET sa santé de fonctionnement du dernier passage réel. Écrasé à chaque `mesurer` : c'est l'état du DERNIER relevé, jamais une archive qui grossirait. | `node scripts/ezechiel-les-tests.mjs sante` |
 
 ## Les passages

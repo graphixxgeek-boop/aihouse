@@ -24466,7 +24466,21 @@ async function testMemeEvenementFactureDeuxFois() {
   ];
   const sante = e.santeDuFilet({ code: 0, ms: 1000, lignes: lignesDuJour, groupes: [{ sujets: 1 }] });
   const cles = sante.anomalies.map((a) => a.cle);
-  assert.ok(cles.includes('experimental'), 'l\'avertissement du moteur reste annoncé : il ne s\'agissait jamais de le taire, seulement de ne pas le facturer une seconde fois');
+  // L'EXIGENCE N'A PAS CHANGÉ, SON EMPLACEMENT SI (2026-10-03). Cette ligne vérifiait que
+  // l'avertissement restait dans les ANOMALIES. Il est désormais DÉCLARÉ — toujours compté,
+  // toujours affiché, avec sa raison et sa date — mais il ne compte plus comme une anomalie à
+  // traiter, puisqu'aucune action légitime ne peut l'éteindre. C'est le pas qui manquait au
+  // raisonnement de 2026-09-28 : on avait retiré la ligne du compte du BRUIT et laissé
+  // l'avertissement compter comme ANOMALIE, si bien que la suite ne pouvait structurellement
+  // JAMAIS être verte et que JESUS la signalait six jours durant comme une alerte que personne
+  // n'éteint. L'intention d'origine — « il ne s'agissait jamais de le taire » — est vérifiée
+  // plus strictement qu'avant : on exige qu'il soit annoncé ET que sa raison soit lisible.
+  assert.ok(!cles.includes('experimental'), 'a warning no legitimate action can extinguish is no longer counted as an anomaly to treat — otherwise the suite can never be green and the alert becomes scenery (leçon L6)');
+  const declare = (sante.declares ?? []).find((d) => d.genre === 'experimental');
+  assert.ok(declare, 'l\'avertissement du moteur reste ANNONCÉ : il ne s\'agissait jamais de le taire, seulement de ne pas le facturer comme un travail à faire');
+  assert.ok(declare.pourquoi.length > 60 && /^\d{4}-\d{2}-\d{2}$/.test(declare.depuis), 'and it carries the reason no action can extinguish it, plus the date it was declared — a declaration without either is a silence in disguise');
+  assert.ok(e.formatSanteLines(sante).join('\n').includes('DÉCLARÉ'), 'it is printed even on a green verdict: "nothing to do" is not "nothing to report"');
+  assert.strictEqual(sante.vert, true, 'and the suite can finally BE green, which is the whole point — a voyant that can never turn green stops being read');
   assert.ok(!cles.includes('bruit'), 'MUST NOT DOUBLE-COUNT: les deux lignes de la sortie d\'erreur ÉTANT cet avertissement, il ne reste rien d\'inexpliqué — un « traite ce bruit » qu\'aucune action légitime ne peut éteindre devient du décor (leçon L6)');
 
   // CONTRE-TEST (BP4) — UNE VRAIE LIGNE INATTENDUE DOIT TOUJOURS RESSORTIR. C'est la seule alerte
@@ -27338,3 +27352,52 @@ async function testLeDocumentMaitre() {
   console.log('Passed: le document maître, mesuré par sa PORTÉE plutôt que déclaré (2026-10-03, tâche #1554, sa question P94/Q4.1). SA DÉFINITION SE MESURE, ce qui est rare pour une phrase de ce genre : « chaque élément du projet est en adéquation = la référence ultime » n\'est pas une qualité du texte, c\'est une propriété du GRAPHE — on part du document, on suit ses renvois, on regarde jusqu\'où on va. Un document déclaré maître sans que rien ne parte de lui n\'est pas un maître, c\'est un titre. ET LE PREMIER PASSAGE A RENDU UN ZÉRO SPECTACULAIRE ET FAUX, sur le candidat qu\'il a nommé lui-même : le Cerveau des fils « n\'atteignait aucun document », parce que ses liens s\'écrivent `(fil-04-x.md)` et pas le chemin complet, et qu\'une comparaison de chaînes brutes ne les reconnaissait pas. C\'est le pire résultat possible d\'une mesure fausse — spectaculaire, donc crédible, donc on le garde. Les liens relatifs se résolvent désormais contre le dossier du document qui les porte, `../` compris, et le classement devient lisible : l\'index généré du référentiel en tête (62 %), le Cerveau des fils deuxième (41 %), la charte troisième (36 %). LA NUANCE QUI COMPTE EST ÉCRITE DANS LE RAPPORT : la PORTÉE N\'EST PAS L\'AUTORITÉ. Un index généré atteint beaucoup parce qu\'il énumère — c\'est une propriété de sa fabrication, pas de son rang. La mesure établit une condition NÉCESSAIRE (on ne peut pas être la référence de ce qu\'on ne nomme jamais), jamais suffisante. ET UN RÉSULTAT MÉRITE UNE DÉCISION : le document de gouvernance atteint ZÉRO — il ne cite rien du dépôt, ce qui est cohérent avec ses 44 articles sur 45 sans porteur mesurés le même jour, et le disqualifie pour un rôle qui suppose l\'inverse.');
 }
 await testLeDocumentMaitre();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1566 — LES DEUX ALERTES QU'AUCUN GESTE NE POUVAIT ÉTEINDRE
+async function testLesDeuxAlertesDEzechiel() {
+  const E = await import('../scripts/ezechiel-les-tests.mjs');
+
+  // ── 1. UN AVERTISSEMENT DÉCLARÉ DOIT PORTER SA RAISON ET SA DATE, sinon c'est un silence
+  // déguisé — et un silence déguisé est exactement ce qu'on vient de refuser à l'autre bout.
+  assert.deepStrictEqual(E.findAvertissementsMalDeclares(), [], 'the real declarations are complete');
+  assert.match(E.findAvertissementsMalDeclares({ declares: [{ cle: 'x', motif: /x/, depuis: '2026-10-03' }] })[0], /n'explique pas pourquoi/, 'one with no reason is refused');
+  assert.match(E.findAvertissementsMalDeclares({ declares: [{ cle: 'x', motif: /x/, pourquoi: 'y'.repeat(80) }] })[0], /depuis quand/, 'and one with no date is refused too: a declaration nobody can date is a declaration nobody will ever re-read');
+  assert.match(E.findAvertissementsMalDeclares({ declares: [{ cle: 'x', pourquoi: 'y'.repeat(80), depuis: '2026-10-03' }] })[0], /pas de motif/, 'and one with no pattern would never recognise anything');
+
+  // ── 2. LE CONTRE-TEST EST CE QUI REND LA DÉCLARATION SÛRE (BP4) : un avertissement du MÊME
+  // GENRE mais d'une autre origine reste une anomalie. Sans ça, déclarer « experimental » aurait
+  // rendu le détecteur aveugle à toute future API expérimentale.
+  const connu = [{ flux: 'sortie', texte: 'Passed: un bloc' }, { flux: 'erreur', texte: '(node:1) ExperimentalWarning: SQLite is an experimental feature' }];
+  assert.strictEqual(E.santeDuFilet({ code: 0, ms: 1, lignes: connu, groupes: [{ sujets: 1 }] }).vert, true, 'the declared warning lets the suite be green');
+  const inconnu = [{ flux: 'sortie', texte: 'Passed: un bloc' }, { flux: 'erreur', texte: '(node:1) ExperimentalWarning: Type stripping is an experimental feature' }];
+  const sInconnu = E.santeDuFilet({ code: 0, ms: 1, lignes: inconnu, groupes: [{ sujets: 1 }] });
+  assert.strictEqual(sInconnu.vert, false, 'an experimental warning of ANOTHER origin is still an anomaly — otherwise the declaration would blind the detector to every future one');
+  assert.ok(sInconnu.anomalies.some((a) => a.cle === 'experimental'), 'and it is named by its kind');
+  // Et un MÉLANGE — un déclaré plus un inconnu — ne doit pas absoudre l'inconnu.
+  const melange = E.santeDuFilet({ code: 0, ms: 1, lignes: [...connu, inconnu[1]], groupes: [{ sujets: 1 }] });
+  assert.strictEqual(melange.vert, false, 'a declared warning never absolves an undeclared one sitting beside it');
+
+  // ── 3. LES TROIS DURÉES SE LISENT SUR DISQUE, ET LEUR ABSENCE N'EST PAS UN ZÉRO (leçons L5/L11).
+  // Elles venaient de trois variables d'environnement que personne n'a jamais posées — une
+  // capacité réelle branchée sur rien (leçon L2), et c'est pour ça que l'alerte « d'où vient le
+  // temps » brûlait depuis quatre jours : aucun geste n'existait pour la traiter.
+  assert.strictEqual(E.coucheEnregistrees({ lire: () => null }).presentes, false, 'no recorded measurement says so');
+  assert.match(E.coucheEnregistrees({ lire: () => null }).pourquoi, /couches/, 'and it names the command that would produce it');
+  assert.strictEqual(E.coucheEnregistrees({ lire: () => 'pas du json' }).presentes, false, 'a damaged file reads as an absence of measurement, never as an absence of problem');
+  const lues = E.coucheEnregistrees({ lire: () => JSON.stringify({ quand: 'x', nuMs: 10, couvertureMs: 12, typageMs: 3 }) });
+  assert.strictEqual(lues.nuMs, 10, 'and a valid file is read');
+
+  // ── 4. LE RENDU DES TROIS COUCHES EST ÉCRIT UNE SEULE FOIS, parce que deux affichages d'une
+  // même mesure divergent au premier changement (leçon L29).
+  const c = E.comparerLesCouches({ nuMs: 200000, couvertureMs: 220000, typageMs: 5000 });
+  const rendu = E.formatCouchesLines(c).join('\n');
+  assert.match(rendu, /filet nu 200\.0 s/, 'the three durations are rendered');
+  assert.match(rendu, /surcoût 20\.0 s/, 'with the instrumentation overhead');
+  // UN SURCOÛT NÉGATIF N'EST PAS UN GAIN, c'est du bruit de mesure, et le rendu le dit.
+  assert.match(E.formatCouchesLines(E.comparerLesCouches({ nuMs: 200000, couvertureMs: 191000, typageMs: 5000 })).join('\n'), /non distinguable du bruit/, 'and an impossible negative overhead is named as measurement noise rather than read as a gain');
+  assert.match(E.formatCouchesLines(E.comparerLesCouches({})).join('\n'), /PAS MESURÉ/, 'with nothing supplied it refuses to conclude');
+
+  console.log('Passed: les deux alertes qu\'aucun geste ne pouvait éteindre (2026-10-03, tâche #1566). JESUS les signalait depuis quatre et six jours en posant la bonne question : « à ce stade la question n\'est plus *que dit-elle* mais *pourquoi personne ne peut l\'éteindre* ». LA PREMIÈRE ÉTAIT UN RAISONNEMENT APPLIQUÉ À MOITIÉ, et c\'est ce qui la rend instructive : le 2026-09-28 on avait cessé de compter DEUX FOIS l\'avertissement de `node:sqlite`, avec la bonne raison écrite ce jour-là — « il vient du moteur, il dit vrai, et aucune action légitime ne peut l\'éteindre ». Mais on l\'avait retiré du compte du BRUIT en le laissant compter comme ANOMALIE : la suite ne pouvait donc structurellement JAMAIS être déclarée verte, et un voyant qui ne peut pas virer au vert cesse d\'être lu (leçon L6). Un avertissement DÉCLARÉ est désormais compté, affiché avec sa raison et sa date, et ne compte plus comme un travail à faire. CE N\'EST PAS UN SILENCE, ET LE CONTRE-TEST EST CE QUI LE PROUVE : un avertissement du même GENRE mais d\'une autre origine reste une anomalie, et un déclaré n\'absout jamais un inconnu assis à côté de lui — sans ça, déclarer « experimental » aurait rendu le détecteur aveugle à toute future API expérimentale. LA SECONDE ÉTAIT UNE CAPACITÉ RÉELLE BRANCHÉE SUR RIEN (leçon L2) : les trois durées qui disent d\'où vient le temps venaient de TROIS VARIABLES D\'ENVIRONNEMENT que personne n\'a jamais posées. Aucun geste n\'existait pour traiter l\'alerte, donc elle ne pouvait que brûler. L\'outil sait maintenant les mesurer lui-même — trois passages réels, dix minutes, c\'est cher et c\'est la seule réponse honnête — et il REFUSE d\'enregistrer une durée issue d\'un passage rouge, qui décrirait un filet partiel.');
+}
+await testLesDeuxAlertesDEzechiel();
