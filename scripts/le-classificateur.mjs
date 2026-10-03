@@ -1268,6 +1268,78 @@ export function rangsQuiDivergent({ categories = AGENT_CATEGORIES, rangs = ORG_R
 // dans deux fichiers, c'est exactement la dette que la tâche #1005 instruit par ailleurs).
 export const AXES_EXEMPLES_MAX = 2;
 
+// ============================================================================
+// LA FAMILLE EST-ELLE CONSTATÉE OU DÉCLARÉE ? (2026-10-03, tâche #1540)
+// ============================================================================
+// SA QUESTION P35, ET C'EST LE CŒUR DE SON INQUIÉTUDE : « combien de classifications sont
+// INVENTÉES et non CONSTATÉES ? » — il veut un classement réel et DYNAMIQUE, où un outil modifié
+// change de classe sans geste manuel.
+//
+// ⚠️ MA PREMIÈRE RÉPONSE ÉTAIT FAUSSE, ET ELLE ÉTAIT POURTANT MESURÉE. J'avais répondu « les
+// familles sont déclarées à 100 % à la main », parce que `familleDeLaCategorie()` ne fait que
+// découper une chaîne écrite dans `AGENT_CATEGORIES`. C'est vrai du MÉCANISME et faux de la
+// QUESTION : le référentiel déclare que chaque famille a été « DÉRIVÉE du registre qui la portait
+// déjà », et ce registre existe — `doc-report.REGISTRIES[].family`. Une déclaration CORROBORÉE par
+// une seconde source n'est pas une invention ; j'avais mesuré comment la valeur est LUE, pas d'où
+// elle VIENT. Les deux questions ont des réponses opposées.
+//
+// CE QUE MESURE CE GARDE-FOU, ET POURQUOI IL FALLAIT L'ÉCRIRE : la corroboration était vraie le
+// jour où elle a été faite, et RIEN ne vérifiait qu'elle le reste. C'est exactement la forme que
+// l'Article 24 interdit — une copie tenue à la main sans mécanisme qui détecte l'écart. Trois
+// états, jamais deux, parce qu'ils appellent des gestes opposés : CORROBORÉE (deux sources,
+// d'accord), DIVERGENTE (deux sources, en désaccord — à réparer tout de suite), NON CORROBORÉE
+// (une seule source, donc une déclaration que rien ne soutient).
+//
+// `registres` EST INJECTÉ, JAMAIS IMPORTÉ, et ce n'est pas un détail de style : `doc-report`
+// importe déjà ce fichier, donc l'importer en retour créerait un cycle. La règle de dépendance de
+// ce fichier (ne jamais remonter vers ses appelants) est tenue par l'injection.
+export function findFamillesNonCorroborees({ categories = AGENT_CATEGORIES, registres = null, familleDe = familleDeLaCategorie } = {}) {
+  if (!registres?.length) {
+    return { mesurable: false, pourquoi: "aucun registre fourni : sans seconde source, TOUTES les familles paraîtraient non corroborées — ce serait un faux total, pas une mesure (leçons L5/L11). Le registre s'injecte depuis doc-report, qui importe déjà ce fichier et ne peut donc pas être importé en retour." };
+  }
+  const parSlug = new Map();
+  for (const r of registres) if (r?.slug && r?.family) parSlug.set(r.slug, r.family);
+  const corroborees = [];
+  const divergentes = [];
+  const nonCorroborees = [];
+  for (const [slug, categorie] of Object.entries(categories ?? {})) {
+    const declaree = familleDe(categorie);
+    if (!declaree) continue;
+    if (!parSlug.has(slug)) { nonCorroborees.push({ slug, declaree }); continue; }
+    const vue = parSlug.get(slug);
+    if (vue === declaree) corroborees.push({ slug, famille: declaree });
+    else divergentes.push({ slug, declaree, registre: vue });
+  }
+  // L'AUTRE SENS (BP4) : un registre qui porte une famille sans que l'outil soit dans l'équipe.
+  // Souvent légitime — plusieurs registres sont des dossiers de SORTIES (kpi, simulations) et non
+  // des outils — donc ils sont listés sans être comptés comme fautifs.
+  const registresSansOutil = [...parSlug.keys()].filter((s) => !Object.hasOwn(categories ?? {}, s));
+  const total = corroborees.length + divergentes.length + nonCorroborees.length;
+  return {
+    mesurable: true,
+    total,
+    corroborees, divergentes, nonCorroborees, registresSansOutil,
+    part: total ? Math.round((corroborees.length / total) * 100) : 0,
+  };
+}
+
+export function formatFamillesNonCorroboreesLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  const out = [`FAMILLES — ${r.corroborees.length} corroborée(s) sur ${r.total} (${r.part} %), ${r.divergentes.length} divergente(s), ${r.nonCorroborees.length} sans seconde source.`];
+  for (const d of r.divergentes) {
+    out.push(`   🚨 « ${d.slug} » : l'équipe le range en « ${d.declaree} », son registre dit « ${d.registre} ». Deux rangements du même outil, et rien ne disait lequel fait foi.`);
+  }
+  if (r.nonCorroborees.length) {
+    out.push(`   ⚠️ ${r.nonCorroborees.length} outil(s) portent une famille qu'AUCUN registre ne confirme : ${r.nonCorroborees.map((n) => n.slug).join(" · ")}`);
+    out.push("      Ce n'est pas une faute en soi — un outil sans registre n'a pas de seconde source à offrir. C'est la part du classement qui repose sur une seule déclaration, et la connaître est tout l'objet de sa question.");
+  }
+  if (r.registresSansOutil.length) {
+    out.push(`   · ${r.registresSansOutil.length} registre(s) portent une famille sans être un outil de l'équipe (dossiers de sorties, pour l'essentiel) : ${r.registresSansOutil.join(" · ")}`);
+  }
+  if (!r.divergentes.length) out.push("   ✅ Aucune divergence : partout où les deux sources parlent, elles disent la même chose.");
+  return out;
+}
+
 export function carteDesAxes({ categories = AGENT_CATEGORIES, rangDe = rangDeLaCategorie, familleDe = familleDeLaCategorie } = {}) {
   const parRang = new Map();
   const parFamille = new Map();

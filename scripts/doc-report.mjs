@@ -31,6 +31,7 @@ import { toolsNeverUsed, recordCliUsage, horizonDuJournal, formatHorizonLine } f
 import { recommendFindBooster } from "./find-booster.mjs";
 import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, regimeDEcriture, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage, lireLesScriptsDuDepot, sh } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName, primaryToolName } from "./le-coordinateur.mjs";
+import { findFamillesNonCorroborees, formatFamillesNonCorroboreesLines } from "./le-classificateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -1001,6 +1002,18 @@ function main() {
   const pagesHtml = findPagesHtmlPerimees();
   for (const l of formatPagesHtmlPerimeesLines(pagesHtml)) console.log(l);
   for (const p of pagesHtml?.perimees ?? []) ecartsMuets.push({ fichier: `${DOSSIER_PAGES_HTML}/${p.page}`, defaut: `plus ancienne que sa source ${p.source} : la page dit autre chose que le document dont elle se réclame`, tache: `régénérer la page depuis sa source — node scripts/html-report.mjs document ${p.source} ${DOSSIER_PAGES_HTML}/${p.page}`, fausseUneMesure: false });
+
+  // LA FAMILLE EST-ELLE CORROBORÉE ? (2026-10-03, tâche #1540, sa question P35 : « combien de
+  // classifications sont INVENTÉES et non CONSTATÉES ? »). Le référentiel déclare que chaque
+  // famille a été DÉRIVÉE du registre qui la portait déjà — et REGISTRIES, ici, EST ce registre.
+  // La corroboration était donc vraie le jour où elle a été faite, et rien ne vérifiait qu'elle le
+  // reste : exactement la copie sans garde-fou que l'Article 24 interdit. Le contrôle vit ICI
+  // parce que c'est ici que la seconde source est écrite ; le calcul vit chez le classificateur,
+  // à qui l'axe appartient, et le registre lui est INJECTÉ (il importe déjà ce fichier, donc
+  // l'importer en retour ferait un cycle).
+  const famillesCorroborees = findFamillesNonCorroborees({ registres: REGISTRIES });
+  for (const l of formatFamillesNonCorroboreesLines(famillesCorroborees)) console.log(l);
+  for (const d of famillesCorroborees?.divergentes ?? []) ecartsMuets.push({ fichier: d.slug, defaut: `rangé en « ${d.declaree} » par l'équipe et en « ${d.registre} » par son registre : deux rangements du même outil, et rien ne dit lequel fait foi`, tache: `trancher la famille de ${d.slug} et aligner les deux sources`, fausseUneMesure: true });
 
   const planDoc = planDactionDepuisEcarts([...ecartsDocReport, ...ecartsMuets], { toolSlug: "doc-report",
     libelle: (e) => `${e.fichier} — ${e.defaut}`,

@@ -22345,6 +22345,55 @@ async function testPorteursDAxesExistent() {
 }
 await testPorteursDAxesExistent();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// #1540 — LA FAMILLE EST-ELLE CONSTATÉE, ET MA PREMIÈRE RÉPONSE ÉTAIT FAUSSE
+// ─────────────────────────────────────────────────────────────────────────────
+// SA QUESTION P35 EST LE CŒUR DE SON INQUIÉTUDE : « combien de classifications sont INVENTÉES et
+// non CONSTATÉES ? ». J'avais répondu « les familles sont déclarées à 100 % à la main », et cette
+// réponse ÉTAIT mesurée — sur la mauvaise question. `familleDeLaCategorie()` ne fait que découper
+// une chaîne, c'est vrai du MÉCANISME ; mais le référentiel déclare que chaque famille a été
+// « DÉRIVÉE du registre qui la portait déjà », et ce registre existe. J'avais mesuré comment la
+// valeur est LUE, pas d'où elle VIENT, et les deux questions ont des réponses opposées.
+//
+// CE QUI MANQUAIT N'ÉTAIT DONC PAS LA DÉRIVATION MAIS SON GARDE-FOU : la corroboration était vraie
+// le jour où elle a été faite, et rien ne vérifiait qu'elle le reste. C'est très exactement la
+// copie tenue à la main sans mécanisme que l'Article 24 interdit.
+async function testFamillesCorroborees() {
+  const LC = await import('../scripts/le-classificateur.mjs');
+  const DR = await import('../scripts/doc-report.mjs');
+
+  // SANS SECONDE SOURCE, ON REFUSE DE CONCLURE : toutes les familles paraîtraient non corroborées,
+  // ce qui serait un faux total et non une mesure (L5/L11).
+  assert.equal(LC.findFamillesNonCorroborees({ registres: [] }).mesurable, false, 'no registry means no measure — never "nothing is corroborated"');
+  assert.match(LC.formatFamillesNonCorroboreesLines(LC.findFamillesNonCorroborees({ registres: null })).join('\n'), /PAS MESURÉ/);
+
+  // LES TROIS ÉTATS SONT DISTINCTS, et c'est le point : ils appellent des gestes opposés.
+  const f = LC.findFamillesNonCorroborees({
+    categories: { a: 'Membre — Famille X', b: 'Membre — Famille Y', c: 'Membre — Famille Z' },
+    registres: [{ slug: 'a', family: 'Famille X' }, { slug: 'b', family: 'Famille AUTRE' }, { slug: 'zz', family: 'Famille W' }],
+    familleDe: (c) => String(c).split('—')[1]?.trim() ?? null,
+  });
+  assert.equal(f.corroborees.length, 1, 'two sources agreeing is CORROBORATED');
+  assert.equal(f.divergentes.length, 1, 'MUST BITE: two sources disagreeing is the one case to repair at once');
+  assert.equal(f.divergentes[0].slug, 'b');
+  assert.equal(f.nonCorroborees.length, 1, 'and a single source is neither sound nor faulty — it is simply unverified, which is exactly what he asked to know');
+  assert.deepEqual(f.registresSansOutil, ['zz'], 'the other direction is reported too (BP4): a registry carrying a family for something that is not a team tool');
+
+  // EN DIRECT (Article 25) — et le chiffre réel corrige ma réponse d'hier soir.
+  const reel = LC.findFamillesNonCorroborees({ registres: DR.REGISTRIES });
+  assert.equal(reel.mesurable, true);
+  assert.deepEqual(reel.divergentes, [], `wherever both sources speak they must agree — ${reel.corroborees.length} of ${reel.total} families are corroborated (${reel.part} %)`);
+  assert.ok(reel.corroborees.length > reel.nonCorroborees.length, `and corroboration is the majority case, which is precisely what refutes "100 % hand-declared" (${reel.corroborees.length} vs ${reel.nonCorroborees.length})`);
+
+  // ET IL PARLE LÀ OÙ UN HUMAIN LIT (L2) : un garde-fou appelé par personne est une intention.
+  const src = fs.readFileSync('scripts/doc-report.mjs', 'utf8');
+  assert.ok(/findFamillesNonCorroborees\(\{ registres: REGISTRIES \}\)/.test(src), 'the guard must be CALLED by the tool that owns the second source, not only exist');
+  assert.ok(/formatFamillesNonCorroboreesLines/.test(src), 'and printed in the report a human actually reads');
+
+  console.log(`Passed: la famille est-elle constatée, et ma première réponse était fausse (2026-10-03, tâche #1540). Sa question P35 — « combien de classifications sont INVENTÉES et non CONSTATÉES ? » — avait reçu « les familles sont déclarées à 100 % à la main ». Cette réponse ÉTAIT mesurée, et sur la mauvaise question : j'avais regardé comment la valeur est LUE (une chaîne découpée, donc manuelle) au lieu d'où elle VIENT (dérivée du registre qui la portait déjà). Les deux questions ont des réponses opposées, et c'est la seconde qu'il posait. LA MESURE RÉELLE : ${reel.corroborees.length} familles sur ${reel.total} sont corroborées par une seconde source (${reel.part} %), ${reel.divergentes.length} divergent, ${reel.nonCorroborees.length} reposent sur une seule déclaration — et ces 18-là n'ont pas de registre, donc pas de seconde source à offrir ; ce n'est pas une faute, c'est la part du classement qu'il faut connaître. CE QUI MANQUAIT N'ÉTAIT DONC PAS LA DÉRIVATION MAIS SON GARDE-FOU : la corroboration était vraie le jour où elle a été faite et rien ne vérifiait qu'elle le reste — la copie sans mécanisme que l'Article 24 interdit. Trois états plutôt que deux, parce qu'une divergence se répare tout de suite et qu'une absence de seconde source ne se répare pas du tout. Le registre est INJECTÉ et jamais importé : doc-report importe déjà le classificateur, et l'inverse ferait un cycle.`);
+}
+await testFamillesCorroborees();
+
 // =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
 // =============================================================================================
