@@ -73,5 +73,54 @@
       "attend-un-argument": 6,
       "dependance-non-installee": 3
     }
+  },
+  {
+    "date": "2026-10-03T02:57:51.608Z",
+    "temoin": "/tmp/claude-0/-home-user-aihouse/b96a7cb6-ab2b-5738-adad-b787dab23b16/scratchpad/temoin",
+    "commit": "2add0ed",
+    "taux": 96.7741935483871,
+    "debout": 150,
+    "examines": 155,
+    "verdicts": {
+      "portable": 77,
+      "honnete": 60,
+      "attend-un-argument": 11,
+      "attend-une-configuration": 2,
+      "non-portable": 5,
+      "dependance-non-installee": 4
+    }
+  },
+  {
+    "date": "2026-10-03T03:00:30.214Z",
+    "temoin": "/tmp/claude-0/-home-user-aihouse/b96a7cb6-ab2b-5738-adad-b787dab23b16/scratchpad/temoin",
+    "commit": "2add0ed",
+    "taux": 98.70967741935483,
+    "debout": 153,
+    "examines": 155,
+    "verdicts": {
+      "portable": 76,
+      "honnete": 61,
+      "attend-un-argument": 12,
+      "attend-une-configuration": 2,
+      "honnete-mais-sort-en-erreur": 2,
+      "non-portable": 2,
+      "dependance-non-installee": 4
+    }
+  },
+  {
+    "date": "2026-10-03T03:02:11.326Z",
+    "temoin": "/tmp/claude-0/-home-user-aihouse/b96a7cb6-ab2b-5738-adad-b787dab23b16/scratchpad/temoin",
+    "commit": "2add0ed",
+    "taux": 100,
+    "debout": 155,
+    "examines": 155,
+    "verdicts": {
+      "portable": 76,
+      "honnete": 61,
+      "attend-un-argument": 13,
+      "attend-une-configuration": 3,
+      "honnete-mais-sort-en-erreur": 2,
+      "dependance-non-installee": 4
+    }
   }
 ]

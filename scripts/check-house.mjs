@@ -19761,6 +19761,32 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // proprement. Les compter comme non portables était une erreur du MESUREUR, jamais un défaut du
   // mesuré — et un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
   assert.equal(se.verdictDuTemoin({ code: 1, sortie: 'Usage: node scripts/x.mjs <arg>' }).cle, 'attend-un-argument', 'un outil qui imprime son mode d\'emploi et refuse de tourner à vide n\'est pas non portable : c\'est le banc qui l\'a mal appelé');
+
+  // LE BANC NE LANÇAIT QUE LA COMMANDE NUE (2026-10-03, tâche #1465, son arbitrage du 2026-10-02).
+  // Les crochets git terminent chaque ligne par « || true », donc le code de sortie d'un outil
+  // n'est lu NULLE PART ailleurs que dans ce banc — et le banc ignorait toute la surface des
+  // sous-commandes. Un rapport imprimé puis planté ressemble trait pour trait à un rapport réussi,
+  // et c'est ce qui a laissé « safe-export rapport » cassé pendant 39 heures.
+  assert.deepEqual(se.sousCommandesDeclarees('if (process.argv[2] === "plans") {}\nif (process.argv[2] === "kits") {}'), ['kits', 'plans'],
+    'the subcommands are DERIVED from each script\'s source, so a tool that gains one tomorrow enters the bench the same day (Article 24) — a hand-copied list would go stale at the first new literal');
+  assert.deepEqual(se.sousCommandesDeclarees('const tache = process.argv[2];\nif (tache === "bilan") {}'), ['bilan'],
+    'and the second dispatch form used in this repo — a variable carrying argv[2] — is recognised too, because half the scripts write it that way');
+  assert.deepEqual(se.sousCommandesDeclarees('export const x = 1;'), [],
+    'COUNTER-TEST: a script with no dispatch yields nothing rather than a guessed command — inventing a form no script uses would manufacture failures for a reason that does not exist');
+
+  // LE CINQUIÈME VERDICT, né du PREMIER passage avec les sous-commandes. Trois d'entre elles
+  // IMPRIMENT leur refus honnête puis sortent en code 1. Les compter comme des plantages était
+  // faux ; les ranger dans « honnête » aurait absous un vrai plantage précédé de la bonne phrase.
+  assert.equal(se.verdictDuTemoin({ code: 1, sortie: 'PAS MESURÉ — aucune tâche ouverte lue' }).cle, 'honnete-mais-sort-en-erreur',
+    'a tool that SAYS what it cannot measure and then exits non-zero is neither a crash nor a clean success: the situation is NAMED instead of being forced into an existing box, and whether that exit code is intended belongs to the tool\'s author');
+  assert.notEqual(se.verdictDuTemoin({ code: 1, sortie: 'PAS MESURÉ — rien lu' }).cle, 'honnete',
+    'COUNTER-TEST: it must NOT be filed as plain "honnête" — that would absolve a real crash that happened to print the right sentence first');
+  assert.equal(se.verdictDuTemoin({ code: 1, sortie: 'Error: runLabel obligatoire' }).cle, 'attend-un-argument',
+    'a refusal naming the missing argument without printing a "Usage:" line is still a proper refusal — le-regisseur was being counted as non-portable for behaving exactly as asked (L4)');
+  assert.equal(se.verdictDuTemoin({ code: 1, sortie: 'Sur un dépôt sale, une restauration ratée serait indiscernable du travail en cours.' }).cle, 'attend-une-configuration',
+    'and refusing to run on a DIRTY repository is the soundest refusal in this repo, not a portability failure: the verdict now covers a precondition as well as a missing key, rather than inventing a sixth verdict for one case');
+  assert.ok(se.VERDICTS_DU_TEMOIN.some((v) => v.cle === 'honnete-mais-sort-en-erreur'),
+    'the fifth verdict is declared in the registry the report reads, never only in the classifier — a verdict the formatter cannot name would print as a blank line');
   assert.equal(se.verdictDuTemoin({ code: 1, sortie: 'Error: ENOENT machin' }).cle, 'non-portable', 'MUST STILL BITE: un vrai plantage sur un fichier absent reste non portable — la nouvelle catégorie ne doit rien absorber d\'autre que le mode d\'emploi');
   const avecArg = se.synthetiserLeTemoin([{ outil: 'a', verdict: { cle: 'attend-un-argument' } }, { outil: 'b', verdict: { cle: 'non-portable' } }], { exemptes: {} });
   assert.equal(avecArg.tiennentDebout, 1, 'et « attend un argument » tient debout : refuser proprement à vide est un comportement sain, pas une panne');

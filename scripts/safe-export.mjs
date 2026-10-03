@@ -2078,11 +2078,26 @@ function main() {
       const rec = lc.recenserLesScripts();
       const noms = [...new Set((rec.lignes ?? rec).map((l) => String(l.chemin ?? l.fichier ?? "")).filter((c) => c.endsWith(".mjs")).map((c) => c.replace(/^scripts\//, "").replace(/\.mjs$/, "")))]
         .filter((n) => !n.startsWith("hooks/") && n !== "check-house" && n !== "lib-shell");
-      const passages = noms.map((outil) => {
-        const r = spawnSync(process.execPath, [`scripts/${outil}.mjs`], { cwd: ou, timeout: 60000, encoding: "utf8" });
-        return { outil, verdict: verdictDuTemoin({ code: r.status ?? 1, sortie: `${r.stdout ?? ""}\n${r.stderr ?? ""}` }) };
-      });
+      // LES SOUS-COMMANDES AUSSI (2026-10-03, tâche #1465) : la commande nue ne couvrait qu'une
+      // fraction de la surface réellement exécutable. Elles se DÉRIVENT de la source de chaque
+      // script (Article 24), donc un outil qui en gagne une demain entre dans le banc le jour même.
+      // `--nu` reste là pour revenir à l'ancien périmètre quand on veut un passage court.
+      const nuSeulement = process.argv.includes("--nu");
+      const passages = [];
+      for (const outil of noms) {
+        const lancer = (args, etiquette) => {
+          const r = spawnSync(process.execPath, [`scripts/${outil}.mjs`, ...args], { cwd: ou, timeout: 60000, encoding: "utf8" });
+          passages.push({ outil: etiquette, verdict: verdictDuTemoin({ code: r.status ?? 1, sortie: `${r.stdout ?? ""}\n${r.stderr ?? ""}` }) });
+        };
+        lancer([], outil);
+        if (nuSeulement) continue;
+        let source = "";
+        try { source = readFileSync(join(ROOT, "scripts", `${outil}.mjs`), "utf8"); } catch { /* illisible : on s'en tient à la commande nue */ }
+        for (const sous of sousCommandesDeclarees(source)) lancer([sous], `${outil} ${sous}`);
+      }
       const synthese = synthetiserLeTemoin(passages);
+      const sousCommandes = passages.filter((p) => p.outil.includes(" ")).length;
+      console.log(`${passages.length} lancement(s) : ${passages.length - sousCommandes} commande(s) nue(s) + ${sousCommandes} sous-commande(s) dérivée(s) de la source${nuSeulement ? " — périmètre réduit par --nu" : ""}.\n`);
       for (const l of formatTemoinLines(synthese, { ou })) console.log(l);
       // LE PASSAGE S'ENREGISTRE, sans quoi il ne sert qu'à celui qui regarde l'écran (leçon L2) :
       // le rapport central affichait « aucune mesure disponible » quelques secondes après que la
@@ -4117,8 +4132,9 @@ export const VERDICTS_DU_TEMOIN = [
   { cle: "portable", icone: "✅", quoi: "il tourne et rend un résultat" },
   { cle: "honnete", icone: "⚪", quoi: "il tourne et DÉCLARE ce qu'il ne peut pas mesurer — un succès d'export, jamais un échec" },
   { cle: "attend-un-argument", icone: "🔤", quoi: "il réclame un argument et refuse correctement — le banc l'a lancé à vide, ce n'est pas un défaut de portabilité" },
-  { cle: "attend-une-configuration", icone: "🔑", quoi: "il refuse PROPREMENT faute d'une configuration locale absente (une clé, un fichier de secrets) — un refus n'est pas un plantage" },
+  { cle: "attend-une-configuration", icone: "🔑", quoi: "il refuse PROPREMENT faute d'une configuration locale ou d'un état de dépôt attendu (une clé, un fichier de secrets, un arbre de travail propre) — un refus n'est pas un plantage" },
   { cle: "dependance-non-installee", icone: "📦", quoi: "il manque un paquet npm que le banc n'a pas installé — une limite du BANC, jamais un défaut de l'outil" },
+  { cle: "honnete-mais-sort-en-erreur", icone: "🟠", quoi: "il DIT ce qu'il ne peut pas mesurer, puis sort en code non nul — ni un plantage ni un succès franc, et la question « ce code est-il voulu ? » appartient à l'auteur de l'outil" },
   { cle: "non-portable", icone: "💥", quoi: "il s'arrête sur une hypothèse qui n'est vraie que chez nous" },
 ];
 
@@ -4159,13 +4175,57 @@ export const MOTIFS_D_HONNETETE = /PAS MESUR[ÉE]|pas mesur[ée]|NON MESUR[ÉE]|
 export const MOTIF_PAQUET_MANQUANT = /ERR_MODULE_NOT_FOUND|Cannot find package/;
 
 export const MOTIF_TRACE_DE_PILE = /\n\s+at\s+\S+/;
-export const MOTIF_CONFIGURATION_ABSENTE = /introuvable|manquante?|absente?|non configurée?|not (found|configured)/i;
+// ÉLARGI LE 2026-10-03 AUX PRÉCONDITIONS, pas seulement aux configurations (tâche #1465).
+// `ezechiel-les-tests robustesse` refuse de tourner sur un dépôt SALE, en expliquant pourquoi :
+// « cette passe modifie de vrais fichiers le temps d'un lancement et les restaure ensuite ; sur un
+// dépôt sale, une restauration ratée serait indiscernable du travail en cours ». C'est le refus le
+// plus sain du dépôt, et le banc le comptait comme un plantage de portabilité. Le verdict porte
+// désormais « une configuration ou un état de dépôt », parce que c'est ce qu'il recouvre vraiment —
+// élargir le libellé plutôt qu'inventer un sixième verdict pour un seul cas.
+export const MOTIF_CONFIGURATION_ABSENTE = /introuvable|manquante?|absente?|non configurée?|not (found|configured)|d[ée]p[ôo]t sale|arbre de travail sale|working tree (is )?dirty/i;
 
-export const MOTIFS_D_ARGUMENT_MANQUANT = /^\s*(Usage|usage|Utilisation)\s*:|^usage :/m;
+// ÉLARGI LE 2026-10-03 (tâche #1465, premier passage avec les sous-commandes) : `le-regisseur`
+// refuse en nommant précisément ce qui manque (« simName et transcriptPath sont obligatoires »)
+// sans imprimer de ligne « Usage : ». Il faisait donc partie des « non-portables » alors qu'il se
+// comportait exactement comme on le lui demande, et une fausse accusation dans un banc de
+// portabilité est pire qu'une absence de mesure (L4).
+export const MOTIFS_D_ARGUMENT_MANQUANT = /^\s*(Usage|usage|Utilisation)\s*:|^usage :|\bobligatoires?\b/m;
 
 // Le verdict se lit sur DEUX choses, jamais une : le code de sortie ET ce qui a été dit. Un outil
 // qui sort en 0 sans rien dire n'est pas la même chose qu'un outil qui sort en 0 en déclarant son
 // impuissance — et c'est la seconde catégorie qu'il ne faut pas compter comme un échec.
+// ————————————————————————————————————————————————————————————————————————
+// LE BANC NE LANÇAIT QUE LA COMMANDE NUE — TOUTE LA SURFACE DES SOUS-COMMANDES ÉTAIT HORS DE VUE
+// (2026-10-03, tâche #1465, son arbitrage du 2026-10-02)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LA CAUSE STRUCTURELLE, et elle vaut qu'on la garde écrite : **un rapport imprimé puis planté
+// ressemble trait pour trait à un rapport réussi**, et rien dans ce dépôt ne peut faire la
+// différence. Les crochets git terminent chaque ligne par `|| true` — choix assumé, cohérent avec
+// « god signale fort, ne bloque jamais » — ce qui implique que le code de sortie d'un outil n'est
+// JAMAIS lu nulle part. Le banc témoin est le seul mécanisme qui lance les outils et lit ce code.
+// Et il ne passait AUCUNE sous-commande.
+//
+// CE QUE ÇA A COÛTÉ, MESURÉ : `safe-export.mjs rapport` est un item de Ronde dont l'instruction
+// AFFIRME que le fichier daté est déjà écrit. Cette affirmation est restée fausse ~39 heures, et
+// seule une Ronde qui a lancé la commande pour de vrai l'a vu.
+//
+// LA LISTE SE DÉRIVE DE LA SOURCE, JAMAIS NE SE RECOPIE (Article 24) : un outil qui gagne une
+// sous-commande demain entre dans le banc le jour même, sans que personne y pense. Le motif lit la
+// forme de répartition réellement employée ici — une comparaison de `process.argv[2]`, ou d'une
+// variable qui le porte — et rien d'autre : inventer des formes qu'aucun script n'utilise
+// fabriquerait des lancements qui échouent pour une raison qui n'existe pas.
+export const MOTIFS_DE_SOUS_COMMANDE = [
+  /process\.argv\[2\]\s*===\s*["'`]([a-z][a-z0-9-]{1,24})["'`]/g,
+  /\b(?:tache|cmd|commande|sous|action|argv2|sousCommande)\s*===\s*["'`]([a-z][a-z0-9-]{1,24})["'`]/g,
+];
+
+export function sousCommandesDeclarees(source = "") {
+  const trouvees = new Set();
+  for (const motif of MOTIFS_DE_SOUS_COMMANDE) for (const m of String(source).matchAll(motif)) trouvees.add(m[1]);
+  return [...trouvees].sort();
+}
+
 export function verdictDuTemoin({ code, sortie = "" } = {}) {
   if (code !== 0 && MOTIFS_D_ARGUMENT_MANQUANT.test(String(sortie))) return { cle: "attend-un-argument", pourquoi: "il imprime son mode d'emploi et refuse de tourner à vide — le banc l'a lancé sans argument, la faute est au banc" };
   if (code !== 0 && MOTIF_PAQUET_MANQUANT.test(String(sortie))) {
@@ -4173,6 +4233,20 @@ export function verdictDuTemoin({ code, sortie = "" } = {}) {
   }
   if (code !== 0 && !MOTIF_TRACE_DE_PILE.test(String(sortie)) && MOTIF_CONFIGURATION_ABSENTE.test(String(sortie))) {
     return { cle: "attend-une-configuration", pourquoi: `il refuse proprement (code ${code}, aucune trace de pile) en nommant ce qui manque : ${(String(sortie).match(/[^\n]*(?:introuvable|manquante?|absente?|non configurée?)[^\n]*/i) ?? ["une configuration locale"])[0].trim().slice(0, 90)}` };
+  }
+  // UN CINQUIÈME VERDICT, NÉ DU PREMIER PASSAGE AVEC LES SOUS-COMMANDES (2026-10-03, tâche #1465).
+  // Trois sous-commandes — `check-tasks-details decisions`, `ezechiel-les-tests robustesse`,
+  // `fils-de-discussion livrer` — IMPRIMENT leur refus honnête (« PAS MESURÉ — aucune tâche ouverte
+  // lue », « docs/fils n'existe pas encore ») ET sortent en code 1. Le banc les comptait comme des
+  // plantages, ce qu'elles ne sont pas, et les ranger dans « honnête » aurait absous un vrai
+  // plantage qui aurait eu la bonne phrase avant de tomber. Ni l'un ni l'autre : on NOMME la
+  // situation, comme ce projet le fait partout ailleurs plutôt que de forcer une case existante.
+  //
+  // CE QUE CE VERDICT N'AFFIRME PAS : que le code de sortie soit faux. « Je n'ai rien pu mesurer »
+  // mérite peut-être un code non nul, pour qu'un appelant le sache. Ce verdict pose la question au
+  // lieu de la trancher à la place des auteurs de ces outils.
+  if (code !== 0 && MOTIFS_D_HONNETETE.test(String(sortie))) {
+    return { cle: "honnete-mais-sort-en-erreur", pourquoi: `il DIT ce qu'il ne peut pas mesurer ici, puis sort en code ${code} : ${(String(sortie).match(/[^\n]*(?:PAS MESUR[ÉE]|pas mesur[ée]|NON MESUR[ÉE])[^\n]*/) ?? ["refus honnête non extrait"])[0].trim().slice(0, 100)}` };
   }
   if (code !== 0) return { cle: "non-portable", pourquoi: `il s'arrête (code ${code}) : ${(String(sortie).match(/Error: [^\n]{0,90}/) ?? ["cause non lisible dans sa sortie"])[0]}` };
   if (MOTIFS_D_HONNETETE.test(String(sortie))) return { cle: "honnete", pourquoi: "il tourne et déclare ce qu'il ne peut pas mesurer ici — c'est le comportement attendu au moment « AVANT »" };
@@ -4226,8 +4300,13 @@ export function synthetiserLeTemoin(passages = [], { exemptes = NE_PART_PAS_ET_C
   // « attend un argument » et « attend une configuration » tiennent debout eux aussi : refuser
   // proprement, en nommant ce qui manque, est un comportement sain — et le compter comme un échec
   // pousserait un outil à fabriquer un résultat plutôt qu'à dire non.
+  // LE CINQUIÈME VERDICT COMPTE DU CÔTÉ « DEBOUT », et c'est délibéré : l'outil a fait son travail
+  // — il a dit honnêtement qu'il ne pouvait pas mesurer. Le compter comme un échec de portabilité
+  // punirait exactement le comportement que tout ce dépôt réclame (L5). Ce qui reste discutable est
+  // son code de sortie, pas sa tenue debout, et le verdict le nomme pour qu'on puisse en décider.
   const tiennentDebout = (parVerdict.portable?.length ?? 0) + (parVerdict.honnete?.length ?? 0)
-    + (parVerdict["attend-un-argument"]?.length ?? 0) + (parVerdict["attend-une-configuration"]?.length ?? 0);
+    + (parVerdict["attend-un-argument"]?.length ?? 0) + (parVerdict["attend-une-configuration"]?.length ?? 0)
+    + (parVerdict["honnete-mais-sort-en-erreur"]?.length ?? 0);
   return { mesurable: true, total, parVerdict, tiennentDebout, horsSujet, limiteDuBanc,
     tauxPct: total ? (tiennentDebout / total) * 100 : 0,
     // LE TAUX COMPTE « HONNÊTE » DU BON CÔTÉ, et cette décision est le cœur du dispositif :

@@ -1142,3 +1142,51 @@ parce qu'aucun des deux en-têtes ne le dit.
 La question ne se pose qu'en revue de rationalisation. L'afficher à chaque commit accuserait des
 dizaines de petits scripts parfaitement légitimes — exactement le garde-fou qui accuse le geste
 normal et qu'on cesse de lire (leçon L4).
+
+---
+
+## Le banc témoin lance enfin les sous-commandes (2026-10-03, tâche #1465)
+
+**La cause structurelle, et elle vaut qu'on la garde écrite** : *un rapport imprimé puis planté
+ressemble trait pour trait à un rapport réussi*, et rien dans ce dépôt ne peut faire la différence.
+Les crochets git terminent chaque ligne par `|| true` — choix assumé, cohérent avec « god signale
+fort, ne bloque jamais » — ce qui implique que **le code de sortie d'un outil n'est lu nulle part
+ailleurs que dans ce banc**. Et le banc ne passait aucune sous-commande.
+
+**Ce que ça a coûté, mesuré** : `safe-export.mjs rapport` est un item de Ronde dont l'instruction
+AFFIRME que le fichier daté est déjà écrit. Cette affirmation est restée fausse ~39 heures.
+
+**La liste se DÉRIVE de la source** (`sousCommandesDeclarees()`), jamais ne se recopie (Article 24) :
+un outil qui gagne une sous-commande demain entre dans le banc le jour même. Deux formes de
+répartition sont reconnues, parce que ce dépôt emploie les deux : `process.argv[2] === "x"` et une
+variable qui le porte. **Rien d'autre** — inventer des formes qu'aucun script n'utilise fabriquerait
+des lancements qui échouent pour une raison qui n'existe pas. `--nu` revient à l'ancien périmètre.
+
+**Premier passage réel** : 169 lancements au lieu de 84 — **85 sous-commandes qu'aucun contrôle
+d'exécution n'avait jamais lancées.**
+
+### Les cinq trouvailles du premier passage, et ce qu'elles ont appris au classeur
+
+Les cinq étaient des **sous-commandes**, donc toutes invisibles jusqu'à ce jour. Aucune n'était le
+plantage qu'elle paraissait être, et c'est la leçon :
+
+| Ce qui ressortait « non portable » | Ce que c'était vraiment |
+|---|---|
+| `check-tasks-details decisions` · `fils-de-discussion livrer` | elles IMPRIMENT « PAS MESURÉ — … » puis sortent en code 1 |
+| `le-regisseur archive` · `le-regisseur kpi` | elles refusent en nommant l'argument manquant, sans ligne « Usage : » |
+| `ezechiel-les-tests robustesse` | elle refuse de tourner sur un **dépôt sale**, parce qu'elle modifie de vrais fichiers et les restaure |
+
+**Un cinquième verdict est né de là** : `honnete-mais-sort-en-erreur`. Les compter comme des
+plantages était faux ; les ranger dans « honnête » aurait absous un vrai plantage qui aurait eu la
+bonne phrase avant de tomber. **Ni l'un ni l'autre : on nomme la situation.** Ce verdict n'affirme
+pas que le code de sortie soit faux — « je n'ai rien pu mesurer » mérite peut-être un code non nul,
+pour qu'un appelant le sache. Il pose la question au lieu de la trancher pour les auteurs.
+
+### Le chiffre a bougé parce que le CLASSEUR a changé, pas les outils — et le taire serait mentir
+
+**97 % → 99 % → 100 %** en trois passages, le même soir, **sans qu'une seule ligne d'outil ne
+change**. Ce qui a changé : le motif d'argument manquant accepte « obligatoire » sans ligne
+« Usage : », le motif de configuration couvre un **état de dépôt** et plus seulement une clé, et le
+cinquième verdict existe. Un 100 % obtenu en élargissant les cases d'acceptation est exactement le
+faux vert que ce dépôt traque partout ailleurs — **la seule protection est de l'écrire ici**, et de
+retenir que **2 lancements restent en orange**, nommés dans le rapport et non absous.
