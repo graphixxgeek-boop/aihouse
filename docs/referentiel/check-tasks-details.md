@@ -733,3 +733,34 @@ quasi-totalité des lignes, et un garde-fou qui refuse le geste normal cesse d'�
 `description` qui n'existe pas — il s'appelle `detail`. **La mesure n'a pas rendu d'erreur : elle a
 rendu 8 citations là où le texte en porte 26.** Un petit nombre sur un sujet où l'on s'attend à un
 petit nombre ne réveille personne, et c'est la forme la plus discrète d'une mesure fausse.
+
+---
+
+## Le quatrième signal : une décision annoncée dans la PROSE (2026-10-03, tâche #1517)
+
+**C'est le miroir exact de #1507, corrigé le même soir.** Celui-là retirait de la liste deux tâches
+comptées comme dues alors qu'il avait **déjà répondu**, sa réponse vivant dans la description et non
+dans le statut. Le défaut symétrique existait aussi, et personne ne l'avait vu : une tâche qui écrit
+**« À TRANCHER AVEC LUI »** en toutes lettres, avec un statut nu « Ouverte », ne figurait **nulle
+part** dans ce qu'il doit trancher.
+
+**Mesuré sur le registre réel** : cinq tâches ouvertes dans ce cas — `#677`, `#793`, `#1456`,
+`#1480`, `#1490` — dont une (`#1480`) dont le travail est **fini depuis la veille** et qui n'attend
+plus que son mot sur trois bornes proposées.
+
+**Pourquoi ce motif-là, et pas « proposé » ni « avec son accord »** : les trois ont été mesurés
+avant d'en choisir un. `à trancher avec (lui|l'utilisateur)` rend 5 tâches, toutes vraies à la
+relecture ; les formulations plus lâches en rendaient une ou deux chacune, dont certaines n'étaient
+que de la prose. Un signal qui se déclenche sur une tournure courante coûte plus de bruit qu'il ne
+rend de service (leçon L4).
+
+**Le motif tolère l'accent sur sa première lettre** (`[àa] trancher`) parce que le registre l'écrit
+des deux façons — le piège du `\b` devant une lettre accentuée a été payé le même jour sur un autre
+garde-fou, et un motif aveugle à la moitié de son corpus ne mesure rien.
+
+### Ce que ça change, et il faut le dire franchement
+
+**Le compte de décisions dues a AUGMENTÉ : 63 → 68.** Sur la même nuit il était d'abord passé de
+66 à 64 (deux qu'il avait déjà tranchées) puis à 63 (une close). Le solde est positif, et c'est le
+bon résultat : la liste est désormais vraie **dans les deux sens** — elle ne lui réclame plus ce
+qu'il a donné, et elle ne lui cache plus ce qu'il doit.

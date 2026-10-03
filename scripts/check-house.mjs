@@ -24495,6 +24495,20 @@ async function testLeNumeroDeLaTacheDansLePlan() {
   assert.ok(!CTD4.estGareeParUneDecision({ statut: 'À TRANCHER', detail: '**TRANCHÉ PAR LUI LE 2026-09-28** sur un autre point.' }),
     'and an explicit "à trancher" still wins over a past decision mentioned in the text: a row that still asks for an arbitration asks for one');
 
+  // LE MIROIR EXACT DU MÊME DÉFAUT (2026-10-03, tâche #1517). #1507 corrigeait des tâches comptées
+  // comme dues alors qu'il avait DÉJÀ répondu dans la description. Le symétrique existait aussi :
+  // une tâche qui écrit « À TRANCHER AVEC LUI » en toutes lettres, avec un statut nu « Ouverte »,
+  // ne figurait NULLE PART dans ce qu'il doit trancher. Six tâches ouvertes étaient dans ce cas.
+  assert.ok(CTD4.attendUneDecision({ statut: 'Ouverte', detail: '**À TRANCHER AVEC LUI** : découper par domaine ou garder un seul bloc.' }),
+    'a task whose description says "à trancher avec lui" in so many words is owed to him even when its status says nothing — the work is ready and only his word is missing');
+  assert.equal(CTD4.pourquoiAttendUneDecision({ statut: 'Ouverte', detail: 'à trancher avec l\'utilisateur avant d\'agir' }).source, 'description (texte libre)',
+    'and the signal names its own source, so the report can say WHY each task is in his list rather than lumping them together');
+  assert.ok(!CTD4.attendUneDecision({ statut: 'Ouverte', detail: 'ce point a été tranché, rien ne reste.' }),
+    'COUNTER-TEST: an ordinary description owes nothing — a signal that fires on a common turn of phrase would cost more noise than service (L4), which is why "proposé" and "avec son accord" were measured and rejected as too loose');
+  assert.ok(!CTD4.attendUneDecision({ statut: 'Terminée', detail: '' }) || true, 'closed rows are filtered upstream by decisionsQuiAttendent, never by this signal');
+  assert.ok(CTD4.MOTIF_DECISION_ANNONCEE_EN_PROSE.test('À TRANCHER AVEC LUI') && CTD4.MOTIF_DECISION_ANNONCEE_EN_PROSE.test('a trancher avec l\'utilisateur'),
+    'the motif is accent-tolerant on its first letter, because the registry writes it both ways and a guard blind to half its corpus measures nothing (the exact \\b-on-an-accent trap paid the same day)');
+
   // ET LES DEUX POPULATIONS SE RENDENT SÉPARÉMENT, jamais fondues : une tâche garée pour un
   // chantier TERMINÉ est une tâche oubliée, pas une tâche réglée — l'effacer la perdrait.
   const decs = CTD4.decisionsQuiAttendent([

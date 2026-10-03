@@ -1974,8 +1974,29 @@ export function pourquoiAttendUneDecision(row = {}, { registre = STATUTS_RECONNU
   const bas = brut.toLowerCase();
   const trouve = (marqueurs ?? []).find((m) => bas.includes(m));
   if (trouve) return { pourquoi: `statut « ${brut} » : il dit en toutes lettres qu'il attend l'utilisateur`, source: "statut (texte libre)" };
+  // QUATRIÈME SIGNAL, ET C'EST LE MIROIR EXACT DE #1507 (2026-10-03, tâche #1517). Celui-là
+  // corrigeait des tâches comptées comme dues alors qu'il avait DÉJÀ répondu, la réponse vivant
+  // dans la description et non dans le statut. Le défaut symétrique existait aussi : une tâche qui
+  // écrit « À TRANCHER AVEC LUI » en toutes lettres dans sa description, avec un statut nu
+  // « Ouverte », ne figurait NULLE PART dans ce qu'il doit trancher. **Mesuré sur le registre
+  // réel : SIX tâches ouvertes dans ce cas** (#677, #793, #1456, #1480, #1490 et une sixième
+  // formulée autrement), dont une dont le travail est fini depuis la veille et qui n'attend plus
+  // que son mot.
+  //
+  // POURQUOI CE MOTIF-LÀ ET PAS « proposé » OU « avec son accord » : mesurés d'abord. « à trancher
+  // avec lui / avec l'utilisateur » rend 5 tâches, toutes vraies à la relecture ; les formulations
+  // plus lâches rendaient une ou deux tâches chacune, dont certaines étaient de la prose. Un signal
+  // qui se déclenche sur une tournure courante ferait plus de bruit que de service (L4).
+  const MOTIF = MOTIF_DECISION_ANNONCEE_EN_PROSE;
+  if (MOTIF.test(String(row.detail ?? ""))) {
+    return { pourquoi: "sa description dit « à trancher avec lui » en toutes lettres, alors qu'aucun de ses trois signaux ne le déclare — le travail est prêt, c'est son mot qui manque", source: "description (texte libre)" };
+  }
   return null;
 }
+
+// LE QUATRIÈME SIGNAL, déclaré à côté des trois autres plutôt qu'enfoui dans la fonction, pour
+// qu'un lecteur qui cherche « qu'est-ce qui fait qu'une tâche lui revient » les trouve ensemble.
+export const MOTIF_DECISION_ANNONCEE_EN_PROSE = /[àa] trancher avec (?:lui|l'utilisateur)/i;
 
 export function attendUneDecision(row = {}, options = {}) {
   return pourquoiAttendUneDecision(row, options) !== null;
