@@ -22678,6 +22678,75 @@ async function testIndexDesFilsEnFinDeRonde() {
 }
 await testIndexDesFilsEnFinDeRonde();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// #1532 — TROIS ÉTATS DE REMISE, ET LE QUATRIÈME QU'IL PROPOSAIT NE SE MESURE PAS
+// ─────────────────────────────────────────────────────────────────────────────
+// SES TROIS POINTS : P02, « si je réponds à un document, c'est que je l'ai reçu ET lu » ; P07,
+// « peux-tu détecter que je CLIQUE sur le fichier ? » — non, franchement non ; P08, un axe à
+// QUATRE états : ENVOYÉ · REÇU · OUVERT · LU.
+//
+// TROIS ÉTATS, JAMAIS QUATRE, et c'est la seule partie où sa proposition n'est pas suivie.
+// OUVERT ne se mesure pas (voir P07), et une colonne qu'aucune mesure ne peut remplir reste vide
+// pour toujours tout en donnant l'impression que quelque chose est surveillé.
+//
+// ET LE PREMIER PASSAGE RÉEL A JUSTIFIÉ LA PRUDENCE DE FAÇON SPECTACULAIRE : les 14 documents
+// détectés comme « cités dans son texte » étaient EXACTEMENT ceux de sa liste « je n'ai pas pu
+// les lire, relivre-les-moi ». Un marquage automatique se serait trompé sur 14 cas sur 14.
+async function testEtatsDeRemise() {
+  const DA = await import('../scripts/data-archangel.mjs');
+
+  // LES TROIS ÉTATS SONT TOUS MESURABLES, et le quatrième est DÉCLARÉ absent plutôt que tu.
+  assert.equal(DA.ETATS_DE_REMISE.length, 3, 'three states, never four');
+  assert.ok(DA.ETATS_DE_REMISE.every((e) => e.mesurable && e.comment), 'each one says HOW it is measured — a state nobody can fill is the defect being avoided');
+  assert.equal(DA.ETAT_NON_MESURABLE.cle, 'ouvert');
+  assert.ok(DA.ETAT_NON_MESURABLE.pourquoi.length > 80, 'and the missing one carries its reason: silence would look like an oversight of his idea (Article 27)');
+
+  // ON REND LE PLUS AVANCÉ, jamais les trois : un document LU est forcément reçu et envoyé.
+  assert.equal(DA.etatDUneRemise({ fichier: 'a', remisLe: 'x' }).cle, 'envoye');
+  assert.equal(DA.etatDUneRemise({ fichier: 'a', remisLe: 'x', recuLe: 'y' }).cle, 'recu');
+  assert.equal(DA.etatDUneRemise({ fichier: 'a', remisLe: 'x', recuLe: 'y', luLe: 'z' }).cle, 'lu');
+  assert.equal(DA.etatDUneRemise({}), null, 'a row without a file is not a delivery');
+
+  // LES TROIS REFUS DU MARQUAGE, et chacun ferme une façon différente de mentir au registre.
+  assert.throws(() => DA.marquerEtatDeRemise('a', 'lu', { quand: null }), /heure LUE/, 'the hour is READ, never fabricated by the registry itself (Article 32)');
+  assert.throws(() => DA.marquerEtatDeRemise('a', 'ouvert', { quand: '2026-10-03T09:00Z' }), /ne se marque pas/, 'the unmeasurable state cannot be marked: allowing it would recreate the empty column by the back door');
+  assert.throws(() => DA.marquerEtatDeRemise('a', 'inventé', { quand: '2026-10-03T09:00Z' }), /inconnu/);
+  const absent = DA.marquerEtatDeRemise('jamais-remis.html', 'lu', { quand: '2026-10-03T09:00Z', readFileImpl: () => JSON.stringify({ remises: [{ fichier: 'autre.html', remisLe: 'x' }] }), ecrireImpl: () => { throw new Error('ne doit pas écrire'); } });
+  assert.equal(absent.absent, true, 'a file never delivered cannot be declared read: the order of the states is not decorative');
+
+  // LE REFUS DE CONCLURE SUR UN REGISTRE VIDE OU ILLISIBLE.
+  assert.equal(DA.etatDesRemises({ readFileImpl: () => { throw new Error('nope'); } }).mesurable, false, 'an unreadable registry means zero READ, never zero delivered (L11)');
+  assert.equal(DA.etatDesRemises({ readFileImpl: () => JSON.stringify({ remises: [] }) }).mesurable, false);
+
+  // LA DÉTECTION DES CITATIONS — sa consigne P02 branchée plutôt qu'actée.
+  const registre = JSON.stringify({ remises: [
+    { fichier: 'docs/livrables/un-document-au-nom-assez-long.html', remisLe: 'x' },
+    { fichier: 'docs/fils/html/index.html', remisLe: 'x' },
+  ] });
+  const c = DA.remisesCiteesDans('je te parle de un-document-au-nom-assez-long et rien d\'autre', { readFileImpl: () => registre });
+  assert.equal(c.citees.length, 1, 'the match is on the file RADICAL, never the full path — he writes the name, not the path');
+  assert.deepEqual(c.tropCourts, ['docs/fils/html/index.html'], 'a radical too short to search is EXCLUDED and NAMED: "index" would match everything, and a silent exclusion reads as an absence of citation');
+  assert.equal(DA.remisesCiteesDans('', { readFileImpl: () => registre }).mesurable, false, 'no text means no measure, never "he cited nothing"');
+  const deja = DA.remisesCiteesDans('un-document-au-nom-assez-long', { readFileImpl: () => JSON.stringify({ remises: [{ fichier: 'docs/livrables/un-document-au-nom-assez-long.html', remisLe: 'x', luLe: 'y' }] }) });
+  assert.equal(deja.aMarquer.length, 0, 'a document already marked read is not proposed again');
+
+  // EN DIRECT (Article 25) — et c'est le passage qui justifie toute la prudence.
+  const reel = DA.etatDesRemises();
+  assert.equal(reel.mesurable, true);
+  assert.ok(reel.total > 10, `the real registry must be read (currently ${reel.total} deliveries)`);
+  const texte = fs.readFileSync('docs/grand-projet/00-sources/01-sa-demande/reponses-2026-10-03.md', 'utf8');
+  const vrai = DA.remisesCiteesDans(texte);
+  assert.equal(vrai.mesurable, true);
+  assert.ok(vrai.citees.length > 5, `his real text names several delivered documents (currently ${vrai.citees.length})`);
+  // AUCUN N'EST MARQUÉ LU, et c'est la conclusion du passage : ils sont nommés dans sa liste
+  // « je n'ai pas pu les lire ». Le signal était inversé.
+  assert.equal(reel.parEtat.lu, 0, 'and NONE of them was marked read: they appear in his "I could not read these, send them back" list — automatic marking would have been wrong on every single one');
+  assert.ok(DA.formatRemisesCiteesLines(vrai).join('\n').includes('14 cas sur 14'), 'the report carries that real counter-example, because a caveat nobody has seen fail gets ignored');
+
+  console.log(`Passed: trois états de remise, et le quatrième qu'il proposait ne se mesure pas (2026-10-03, tâche #1532). Ses trois points : une réponse vaut accusé de réception ET de lecture (acté) ; « peux-tu détecter que je clique ? » (NON, franchement) ; un axe à QUATRE états. TROIS, JAMAIS QUATRE : OUVERT ne se mesure pas, et une colonne qu'aucune mesure ne peut remplir reste vide pour toujours tout en donnant l'impression que quelque chose est surveillé — mieux vaut trois états vrais que quatre dont un ment. L'état absent est DÉCLARÉ avec sa raison, parce que le taire ressemblerait à un oubli de son idée. REÇU et LU ne se confondent pas : l'un est une confirmation quelconque, l'autre une réponse au CONTENU. ET LE PREMIER PASSAGE RÉEL A JUSTIFIÉ LA PRUDENCE DE FAÇON SPECTACULAIRE : les ${vrai.citees.length} documents détectés comme cités dans son texte sont EXACTEMENT ceux de sa liste « je n'ai pas pu les lire, relivre-les-moi ». Un marquage automatique se serait trompé sur tous. Le détecteur PROPOSE et n'applique jamais — et ce contre-exemple est imprimé dans le rapport, parce qu'une mise en garde que personne n'a vue échouer finit par être sautée.`);
+}
+await testEtatsDeRemise();
+
 // =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
 // =============================================================================================

@@ -744,6 +744,154 @@ export function triDesDocumentsLines(r) {
   return L;
 }
 
+// ============================================================================
+// LES ÉTATS D'UNE REMISE — son idée P08, ramenée à ce qui se mesure (tâche #1532)
+// ============================================================================
+// SES TROIS POINTS, et ils n'ont pas la même réponse :
+//   · P02 (CONSIGNE) : « si je réponds à un document, c'est que je l'ai bien reçu et lu » — une
+//     réponse de sa part vaut accusé de réception ET de lecture. Acté.
+//   · P07 (QUESTION) : « peux-tu détecter que je CLIQUE sur le fichier ? » — NON, et c'est un non
+//     franc. Rien dans l'environnement de l'agent ne dit qu'un fichier a été ouvert ; il sait
+//     seulement qu'il l'a envoyé. Une déduction présentée comme un fait serait pire qu'un trou.
+//   · P08 (IDÉE) : un axe à quatre états — ENVOYÉ · REÇU · OUVERT · LU.
+//
+// ⚠️ TROIS ÉTATS, JAMAIS QUATRE, ET C'EST LA SEULE PARTIE OÙ JE NE SUIS PAS SON IDÉE. OUVERT ne
+// se mesure pas — voir P07. Une colonne qu'aucune mesure ne peut remplir reste vide pour
+// toujours, tout en donnant l'impression que quelque chose est surveillé : c'est exactement la
+// forme de faux vert que ce dépôt traque partout ailleurs (leçons L5/L11). Mieux vaut trois états
+// vrais que quatre dont un ment.
+//
+// CE QUI DISTINGUE REÇU DE LU, et sans cette distinction les deux se confondraient : REÇU est une
+// confirmation QUELCONQUE de sa part (« bien reçu », une mention du document) ; LU est une
+// RÉPONSE AU CONTENU. La seconde implique la première, jamais l'inverse.
+export const ETATS_DE_REMISE = [
+  { cle: "envoye", libelle: "ENVOYÉ", quoi: "l'agent a remis le document", mesurable: true, comment: "le registre des remises l'enregistre au moment de l'envoi" },
+  { cle: "recu", libelle: "REÇU", quoi: "il a confirmé l'avoir reçu", mesurable: true, comment: "marqué à la main depuis sa confirmation — aucune mécanique ne peut le déduire" },
+  { cle: "lu", libelle: "LU", quoi: "il a répondu au CONTENU du document", mesurable: true, comment: "sa consigne P02 : une réponse vaut accusé de réception ET de lecture" },
+];
+
+// L'ÉTAT QU'IL PROPOSAIT ET QUI N'EXISTE PAS, déclaré plutôt que tu (Article 27) : le taire
+// donnerait l'impression qu'on a simplement oublié son quatrième état.
+export const ETAT_NON_MESURABLE = {
+  cle: "ouvert", libelle: "OUVERT",
+  pourquoi: "rien dans l'environnement de l'agent ne dit qu'un fichier a été ouvert ou cliqué. Une colonne qu'aucune mesure ne peut remplir reste vide pour toujours tout en donnant l'impression que quelque chose est surveillé — mieux vaut trois états vrais que quatre dont un ment (leçons L5/L11).",
+};
+
+export function etatDUneRemise(remise, { etats = ETATS_DE_REMISE } = {}) {
+  if (!remise?.fichier) return null;
+  // L'ORDRE EST CELUI DE LA PROGRESSION, et on rend le plus avancé : un document LU est forcément
+  // reçu et envoyé, donc rendre les trois serait trois fois la même information.
+  if (remise.luLe) return etats.find((e) => e.cle === "lu");
+  if (remise.recuLe) return etats.find((e) => e.cle === "recu");
+  if (remise.remisLe) return etats.find((e) => e.cle === "envoye");
+  return null;
+}
+
+export function marquerEtatDeRemise(fichier, etat, { root = ROOT, readFileImpl = lireFichierPartage, ecrireImpl = writeFileSync, quand = null, etats = ETATS_DE_REMISE } = {}) {
+  if (!quand) throw new Error("marquerEtatDeRemise() exige l'heure LUE (Article 32) — jamais une heure fabriquée par le registre lui-même");
+  if (etat === ETAT_NON_MESURABLE.cle) {
+    throw new Error(`« ${ETAT_NON_MESURABLE.libelle} » ne se marque pas : ${ETAT_NON_MESURABLE.pourquoi}`);
+  }
+  if (!etats.some((e) => e.cle === etat)) throw new Error(`état de remise inconnu : ${etat} — attendus ${etats.map((e) => e.cle).join(", ")}`);
+  const registre = loadLivraisons({ root, readFileImpl });
+  const ligne = registre.remises.find((r) => r?.fichier === fichier);
+  if (!ligne) return { absent: true, pourquoi: `« ${fichier} » n'a jamais été remis : on ne peut pas le déclarer reçu ou lu avant de l'avoir envoyé` };
+  const champ = etat === "lu" ? "luLe" : etat === "recu" ? "recuLe" : "remisLe";
+  if (ligne[champ]) return { deja: true, quand: ligne[champ] };
+  ligne[champ] = quand;
+  ecrireImpl(join(root, REGISTRE_DES_LIVRAISONS), JSON.stringify(registre, null, 1) + "\n", "utf8");
+  return { deja: false, etat, quand };
+}
+
+// SA CONSIGNE P02, BRANCHÉE PLUTÔT QU'ACTÉE : « si je réponds à un document, c'est que je l'ai
+// bien reçu et lu ». Une consigne qui resterait une phrase dans un rapport n'aurait rien changé ;
+// ce qui la rend vraie, c'est de LIRE ses textes et d'y chercher les documents qu'il nomme.
+//
+// LE RAPPROCHEMENT SE FAIT SUR LE RADICAL DU NOM DE FICHIER, jamais sur le chemin complet : il
+// écrit « reponses-a-ses-49-questions », pas « docs/livrables/reponses-a-ses-49-questions.html ».
+// Exiger le chemin exact rendrait la détection toujours vide, c'est-à-dire un mécanisme qui a
+// l'air de tourner et ne trouve jamais rien (leçon L2).
+//
+// ⚠️ CE QUE ÇA NE PROUVE PAS, et c'est écrit ici plutôt que supposé : citer un document n'est pas
+// toujours y répondre — il peut le nommer pour demander qu'on le lui renvoie. La détection est
+// donc un SIGNAL fort, jamais une preuve, et c'est pourquoi elle PROPOSE un marquage au lieu de
+// l'appliquer. Entre rater une lecture et en inventer une, ce détecteur rate.
+export const LONGUEUR_MIN_RADICAL = 12;
+
+export function remisesCiteesDans(texte, { root = ROOT, readFileImpl = lireFichierPartage, longueurMin = LONGUEUR_MIN_RADICAL } = {}) {
+  const t = String(texte ?? "");
+  if (!t.trim()) return { mesurable: false, pourquoi: "aucun texte fourni : zéro citation trouvée dans rien n'est pas une mesure (leçons L5/L11)" };
+  let registre;
+  try { registre = loadLivraisons({ root, readFileImpl }); } catch (e) {
+    return { mesurable: false, pourquoi: `le registre des remises est illisible (${e.message})` };
+  }
+  const remises = registre?.remises ?? [];
+  if (!remises.length) return { mesurable: false, pourquoi: "le registre ne porte aucune remise : rien à rapprocher" };
+  const bas = t.toLowerCase();
+  const citees = [];
+  const tropCourts = [];
+  for (const r of remises) {
+    const radical = String(r.fichier).split("/").pop().replace(/\.(md|html|txt|json)$/i, "").replace(/-\d{4}-\d{2}-\d{2}$/, "");
+    // UN RADICAL TROP COURT TOUCHERAIT N'IMPORTE QUOI — « index », « carte » — et transformerait
+    // le signal en bruit. Ils sont écartés ET nommés, parce qu'un écart silencieux se lit comme
+    // une absence de citation.
+    if (radical.length < longueurMin) { tropCourts.push(r.fichier); continue; }
+    if (bas.includes(radical.toLowerCase())) citees.push({ fichier: r.fichier, radical, dejaLu: Boolean(r.luLe) });
+  }
+  return { mesurable: true, total: remises.length, citees, aMarquer: citees.filter((c) => !c.dejaLu), tropCourts };
+}
+
+export function formatRemisesCiteesLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  const out = [`CITATIONS — ${r.citees.length} document(s) du registre sont nommés dans son texte, sur ${r.total} remis.`];
+  for (const c of r.aMarquer) out.push(`   → ${c.fichier} — nommé, et pas encore marqué LU`);
+  if (!r.aMarquer.length && r.citees.length) out.push("   ✅ Tous ceux qu'il nomme sont déjà marqués lus.");
+  if (r.tropCourts.length) out.push(`   · ${r.tropCourts.length} document(s) ont un nom trop court pour être cherchés sans tout toucher : ${r.tropCourts.slice(0, 5).join(" · ")}`);
+  out.push("   CE QUE ÇA NE PROUVE PAS : citer un document n'est pas toujours y répondre — il peut le nommer pour demander qu'on le lui renvoie.");
+  out.push("   ET CE N'EST PAS UNE CRAINTE THÉORIQUE : au TOUT PREMIER passage réel (2026-10-03), les 14 documents détectés étaient EXACTEMENT ceux de sa liste « je n'ai pas pu les lire, relivre-les-moi ». Un marquage automatique se serait trompé sur 14 cas sur 14. C'est pour cette raison que le marquage est PROPOSÉ et jamais appliqué tout seul.");
+  return out;
+}
+
+export function etatDesRemises({ root = ROOT, readFileImpl = lireFichierPartage, etats = ETATS_DE_REMISE } = {}) {
+  let registre;
+  try { registre = loadLivraisons({ root, readFileImpl }); } catch (e) {
+    return { mesurable: false, pourquoi: `le registre des remises est illisible (${e.message}) : zéro remise lue n'est pas zéro remise faite (leçons L5/L11)` };
+  }
+  const remises = registre?.remises ?? [];
+  if (!remises.length) return { mesurable: false, pourquoi: "le registre ne porte aucune remise : ce zéro dit que rien n'a été enregistré, jamais que rien n'a été livré" };
+  const parEtat = Object.fromEntries(etats.map((e) => [e.cle, 0]));
+  for (const r of remises) {
+    const e = etatDUneRemise(r, { etats });
+    if (e) parEtat[e.cle] += 1;
+  }
+  return {
+    mesurable: true,
+    total: remises.length,
+    parEtat,
+    // CE QUI COMPTE VRAIMENT : ce qu'il a reçu sans y avoir répondu. C'est la seule case qui
+    // appelle un geste — lui rappeler, ou accepter qu'il n'y revienne pas.
+    sansReponse: remises.filter((r) => !r.luLe).map((r) => r.fichier),
+    nonMesurable: ETAT_NON_MESURABLE,
+  };
+}
+
+export function formatEtatDesRemisesLines(r, { combien = 8 } = {}) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  const out = [`REMISES — ${r.total} document(s) au registre.`];
+  for (const [cle, n] of Object.entries(r.parEtat)) {
+    const e = ETATS_DE_REMISE.find((x) => x.cle === cle);
+    out.push(`   · ${e.libelle} : ${n} — ${e.quoi}`);
+  }
+  if (r.sansReponse.length) {
+    out.push(`   ⚠️ ${r.sansReponse.length} document(s) remis sans réponse de sa part :`);
+    for (const f of r.sansReponse.slice(0, combien)) out.push(`      · ${f}`);
+    if (r.sansReponse.length > combien) out.push(`      … et ${r.sansReponse.length - combien} autre(s)`);
+    out.push("      Ce n'est pas un reproche : c'est la seule case qui appelle un geste — lui rappeler, ou accepter qu'il n'y revienne pas.");
+  }
+  out.push(`   HORS PORTÉE — « ${r.nonMesurable.libelle} » : ${r.nonMesurable.pourquoi}`);
+  return out;
+}
+
 export function findDocumentsNonRemis({ root = ROOT, dossiers = DOSSIERS_DE_LIVRAISON, listerImpl = readdirSync, readFileImpl = lireFichierPartage, statImpl = statSync } = {}) {
   const registre = loadLivraisons({ root, readFileImpl });
   const remis = new Set(registre.remises.map((r) => r?.fichier));
