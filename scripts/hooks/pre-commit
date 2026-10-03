@@ -25,12 +25,56 @@ COV_DIR=".sites-runtime/axa-check-postcommit-cov"
 rm -rf "$COV_DIR"
 mkdir -p "$COV_DIR"
 
-echo "🔎 check-house.mjs (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD + reste de la suite)..."
-if ! NODE_V8_COVERAGE="$COV_DIR" node scripts/check-house.mjs > /tmp/check-house-precommit.log 2>&1; then
-  echo ""
-  echo "🚨 COMMIT BLOQUÉ : check-house.mjs a échoué. Détail :"
-  cat /tmp/check-house-precommit.log
-  exit 1
+# LE FILET EN PARTS, AVEC REPLI AUTOMATIQUE SUR LE SÉQUENTIEL (2026-10-03, tâche #1586).
+#
+# SA DÉCISION, prise en fenêtre dédiée le 2026-10-03 : « Parallèle, repli auto si une part tombe ».
+# Elle revient sur l'arbitrage de septembre (« le séquentiel reste la référence »), et c'est la
+# mesure qui l'a rendue possible : le filet met 84 s en quatre parts contre 263 s en séquentiel,
+# et la couverture lue est MEILLEURE en parallèle — 41 outils à 81 % contre 30 à 42 %, depuis que
+# le lecteur unit les relevés de processus au lieu de garder le premier (tâche #1583).
+#
+# CE QUE LE REPLI PROTÈGE, et c'est la raison d'être de cette forme-là : quand une part tombe, on
+# ne sait pas encore si la faute est au CODE ou au PARALLÉLISME. Le séquentiel est le seul juge.
+# Le crochet le relance donc tout seul, et ne bloque que si LUI aussi échoue — personne n'a de
+# décision à prendre le jour où ça arrive, ce qui est exactement ce qu'on veut d'un crochet.
+#
+# LE COÛT DU CAS RARE EST ASSUMÉ : une part rouge fait payer 84 s + 263 s au lieu de 263 s. C'est
+# le prix de ne jamais confondre les deux fautes, et il ne se paie que sur un échec.
+#
+# LA PORTE DE SORTIE : `FILET_SEQUENTIEL=1 git commit …` force l'ancien comportement.
+FILET_LOG=/tmp/check-house-precommit.log
+lancer_sequentiel() {
+  NODE_V8_COVERAGE="$COV_DIR" node scripts/check-house.mjs > "$FILET_LOG" 2>&1
+}
+
+if [ "${FILET_SEQUENTIEL:-}" = "1" ]; then
+  echo "🔎 check-house.mjs en SÉQUENTIEL (FILET_SEQUENTIEL=1 demandé)..."
+  if ! lancer_sequentiel; then
+    echo ""
+    echo "🚨 COMMIT BLOQUÉ : check-house.mjs a échoué. Détail :"
+    cat "$FILET_LOG"
+    exit 1
+  fi
+else
+  echo "🔎 filet-en-parts (4 parts simultanées, ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD + reste de la suite)..."
+  if ! NODE_V8_COVERAGE="$COV_DIR" node scripts/filet-en-parts.mjs > "$FILET_LOG" 2>&1; then
+    echo ""
+    echo "⚠️  Une part est tombée. REPLI AUTOMATIQUE SUR LE SÉQUENTIEL — c'est lui qui tranche"
+    echo "    entre une faute du CODE et une faute du PARALLÉLISME, et personne n'a à le décider."
+    tail -25 "$FILET_LOG"
+    # La couverture du passage parallèle interrompu n'a rien à faire dans celle du séquentiel.
+    rm -rf "$COV_DIR"; mkdir -p "$COV_DIR"
+    echo ""
+    echo "🔎 check-house.mjs en séquentiel..."
+    if ! lancer_sequentiel; then
+      echo ""
+      echo "🚨 COMMIT BLOQUÉ : le séquentiel échoue AUSSI, donc la faute est bien dans le code. Détail :"
+      cat "$FILET_LOG"
+      exit 1
+    fi
+    echo "✅ Le séquentiel est VERT : la faute venait du parallélisme, pas du code. Le commit passe,"
+    echo "   et ce désaccord mérite d'être regardé (docs/referentiel/filet-en-parts.md)."
+  fi
 fi
 
 echo "🔎 tsc --noEmit (hors l'erreur préexistante et déjà connue de vite.config.ts)..."

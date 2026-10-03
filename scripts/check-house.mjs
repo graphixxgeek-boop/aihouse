@@ -19801,9 +19801,17 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   // ET SUR LE VRAI DÉPÔT, parce qu'un détecteur qui n'a jamais tourné contre le vrai dépôt est une
   // intention (Article 25). Il doit retrouver le filet PAR DÉTECTION, jamais par la constante.
-  const reel = e.detecterLeFilet({ sourceCrochet: fs.readFileSync('scripts/hooks/pre-commit', 'utf8'), paquet: JSON.parse(fs.readFileSync('package.json', 'utf8')) });
+  // LA DÉTECTION A BESOIN DE LIRE SES CANDIDATS DEPUIS LE 2026-10-03 (tâche #1586), et c'est le
+  // crochet qui l'a exigé : il lance maintenant DEUX fichiers — le runner parallèle puis, en
+  // repli, le filet séquentiel. Deux candidats, donc une ambiguïté à lever, et elle se lève en
+  // comptant les assertions : un fichier qui n'en porte aucune est un LANCEUR, jamais une suite.
+  const reel = e.detecterLeFilet({ sourceCrochet: fs.readFileSync('scripts/hooks/pre-commit', 'utf8'), paquet: JSON.parse(fs.readFileSync('package.json', 'utf8')), lire: (c) => { try { return fs.readFileSync(c, 'utf8'); } catch { return null; } } });
   assert.equal(reel.chemin, 'scripts/check-house.mjs', 'sur ce dépôt-ci, la détection doit retrouver le vrai filet');
   assert.equal(reel.piste, 'crochet', 'et le retrouver par le CROCHET, pas par le dernier recours — sinon la détection ne prouverait rien, elle répéterait la constante');
+  // ET SANS LECTEUR, ELLE REFUSE PLUTÔT QUE DE CHOISIR : deux lancements au crochet qu'on ne peut
+  // pas départager, c'est une ambiguïté, pas une désignation.
+  const sansLecteur = e.detecterLeFilet({ sourceCrochet: fs.readFileSync('scripts/hooks/pre-commit', 'utf8'), paquet: JSON.parse(fs.readFileSync('package.json', 'utf8')) });
+  assert.equal(sansLecteur.trouve, false, 'MUST CATCH: with two hook launches and no way to read them, the detection must refuse — picking the first would be a guess dressed as the strongest evidence there is');
 
   console.log("Passed: le filet ne s'écrit plus en dur, il se trouve (2026-09-27, tâche #1030). Sa question ÉTAIT la tâche — « est-ce que Ezechiel saura sinon quel fichier est le filet de sécurité du code, s'il prend les choses en cours » — et la réponse était non : `FILET = \"scripts/check-house.mjs\"` était une constante, donc sur n'importe quel autre dépôt l'outil cherchait un fichier inexistant et ne pouvait rien enquêter. L'Article 24 pris en défaut sur l'outil déclaré fini le jour même. TROIS PISTES, ET LEUR ORDRE EST UN JUGEMENT SUR LEUR FIABILITÉ : ce que le crochet de pré-commit LANCE vraiment est la preuve la plus forte, parce que c'est la définition même d'un filet — ce qui doit passer avant d'enregistrer ; ce que le gestionnaire de paquets DÉCLARE comme commande de test n'est qu'une déclaration ; le plus gros fichier porteur d'assertions est une DEVINETTE, et elle se présente comme telle dans le rapport. CE QUE CES ASSERTIONS PROTÈGENT EST LE REFUS : sans aucune piste, la détection ne rend pas un chemin au hasard — elle rend faux, avec les QUATRE essais qu'elle a faits, parce qu'un « non » sans ses essais ne s'instruit pas, et elle imprime elle-même la sortie de secours (`--filet`) plutôt que de la laisser à la mémoire de qui la lit. Le seuil de vingt assertions joue le même rôle sur la troisième piste : rendre le moins petit de deux fichiers insignifiants ferait enquêter sur du vide en annonçant une trouvaille. Vérifié sur le vrai dépôt, et c'est la seule vérification qui compte ici : la détection retrouve `scripts/check-house.mjs` PAR LE CROCHET, jamais par le dernier recours — sinon elle ne prouverait rien, elle répéterait la constante. filet-en-parts hérite de la même détection par import plutôt que par copie (Article 24), donc une piste de plus profitera aux deux sans qu'on y touche.");
 }
@@ -27873,3 +27881,69 @@ async function testLUnionDeLaCouverture() {
   console.log('Passed: la couverture s\'unit entre processus, elle ne se prend pas au premier arrivé (2026-10-03, tâche #1583). LE LECTEUR DE COUVERTURE D\'AXA-CHECK GARDAIT LE PREMIER RELEVÉ DE PROCESSUS qui touchait un fichier et jetait les autres — « déjà vu dans un autre relevé de process ». C\'est faux dès que deux processus exercent des fonctions DIFFÉRENTES du même fichier : on rendait alors la couverture d\'UN SEUL, en la présentant comme celle du fichier. TROUVÉ EN MESURANT, PAS EN RELISANT, et c\'est le filet lancé en quatre parts qui l\'a révélé : il fait voir 41 outils au lieu de 30 — chaque part en exerce d\'autres — mais la moyenne par outil tombait de 42 % à 37 %, parce que chacun n\'était crédité que de la tranche vue par UNE part. Plus d\'outils mesurés et chacun moins bien mesuré : les deux moitiés d\'un même défaut, et la seconde seule aurait pu passer pour un coût acceptable du parallélisme. UNE FONCTION EST COUVERTE SI UN SEUL PROCESSUS L\'A EXERCÉE : c\'est la définition même de la couverture, donc l\'union ne peut que faire MONTER un chiffre, jamais le baisser. APRÈS CORRECTION, ET LES DEUX MOITIÉS DE LA MESURE COMPTENT : sur un relevé à processus unique elle rend EXACTEMENT ce que rendait l\'ancienne version — 99 % sur 21 fichiers de lib, 30 outils à 42 % de moyenne, inchangés au point près, ce qui prouve qu\'elle n\'invente rien ; et sur le relevé parallèle elle passe de 37 % à 81 % sur 41 outils, c\'est-à-dire une mesure STRICTEMENT MEILLEURE que celle du séquentiel sur les deux axes. CE QUI RESTE INEXPLIQUÉ EST DIT PLUTÔT QUE TU : le relevé parallèle porte 77 scripts distincts contre 59 au séquentiel, et je ne sais pas encore pourquoi un lancement en parts fait apparaître dix-huit fichiers que le lancement entier ne montre pas. Le constat est solide, sa cause ne l\'est pas, et les mélanger ferait passer une hypothèse pour une mesure.');
 }
 await testLUnionDeLaCouverture();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1586 — LE CROCHET PASSE AU PARALLÈLE, ET LA BARRE DE COMPARAISON SE MET À VIEILLIR
+async function testLeCrochetEnPartsEtLaBarreQuiVieillit() {
+  const F = await import('../scripts/filet-en-parts.mjs');
+
+  // ── LE RISQUE QUE SA DÉCISION CRÉE, ET IL EST INVISIBLE SANS CE GARDE-FOU. Depuis que le crochet
+  // lance le parallèle, plus rien ne produit de passage séquentiel vert spontanément. Or c'est lui
+  // qui fait la barre. Elle se fige, le filet grossit, et la barre devient de plus en plus basse —
+  // un garde-fou qui s'assouplit tout seul.
+  const vieux = { mesurable: true, succes: 400, quand: '2026-09-01T00:00:00Z', jours: 32, perimee: true };
+  const frais = { mesurable: true, succes: 400, quand: '2026-10-03T00:00:00Z', jours: 0.4, perimee: false };
+  assert.match(F.verdictDeCompletude({ distincts: 441, reference: vieux }).message, /LA BARRE A 32 JOURS/, 'MUST CATCH: a green verdict whose reference is three weeks old must say so — it looks like a success and is not one');
+  assert.ok(!F.verdictDeCompletude({ distincts: 441, reference: frais }).message.includes('LA BARRE A'), 'a fresh reference says nothing about its age: a guard that speaks every time stops being read');
+
+  // ── IL NOMME, IL NE BLOQUE PAS. Une référence vieille reste une référence ; refuser un commit
+  // sur l'âge d'un fichier serait crier au loup (leçon L4).
+  assert.strictEqual(F.verdictDeCompletude({ distincts: 441, reference: vieux }).suffisant, true, 'an old reference still yields a pass — it names, it never blocks');
+  assert.strictEqual(F.verdictDeCompletude({ distincts: 300, reference: vieux }).suffisant, false, 'and a real loss is still a real loss, old reference or not');
+
+  // ── L'ÂGE SE CALCULE, IL NE SE DEVINE PAS, et une date illisible rend null plutôt que zéro —
+  // « je ne sais pas quel âge ça a » et « c'est tout frais » ne s'écrivent jamais pareil (L5/L11).
+  assert.strictEqual(F.ageEnJours('2026-10-01T00:00:00Z', Date.parse('2026-10-03T00:00:00Z')), 2, 'two days is two days');
+  assert.strictEqual(F.ageEnJours('pas une date'), null, 'an unreadable date has no age, it does not have age zero');
+  assert.strictEqual(F.ageEnJours(undefined), null, 'and an absent one neither');
+  assert.strictEqual(F.referenceSequentielle({ lire: () => JSON.stringify([{ code: 0, succes: 10, quand: 'pas une date' }]) }).perimee, false, 'an unreadable date never DECLARES the reference stale either: that would be an accusation built on nothing');
+
+  // ── LA MÊME RÈGLE POUR LA LISTE DES SUJETS, qui vieillit pour exactement la même raison.
+  assert.match(F.formatEmpreinteLines(F.comparerLesEmpreintes({ obtenue: ['a'], reference: ['a'], jours: 30 })).join('\n'), /30 jours/, 'the subject list says its age too');
+  assert.ok(!F.formatEmpreinteLines(F.comparerLesEmpreintes({ obtenue: ['a'], reference: ['a'], jours: 1 })).join('\n').includes('jours'), 'and stays quiet when it is fresh');
+
+  // ── LE CROCHET LUI-MÊME : il doit lancer le parallèle, savoir retomber sur le séquentiel, et
+  // ne bloquer QUE si le séquentiel échoue aussi. Vérifié sur le texte du crochet, parce que
+  // c'est le seul endroit où cette décision existe (Article 24 : on lit, on ne suppose pas).
+  const crochet = fs.readFileSync('scripts/hooks/pre-commit', 'utf8');
+  assert.match(crochet, /filet-en-parts\.mjs/, 'the hook really launches the parallel runner');
+  assert.match(crochet, /lancer_sequentiel/, 'and it really holds a sequential fallback');
+  assert.match(crochet, /FILET_SEQUENTIEL/, 'with an escape hatch to force the old behaviour');
+  assert.match(crochet, /le séquentiel échoue AUSSI/, 'and it blocks only when the sequential fails too — otherwise the fault was the parallelism, never the code');
+  assert.match(crochet, /NODE_V8_COVERAGE="\$COV_DIR" node scripts\/filet-en-parts\.mjs/, 'MUST CATCH: the parallel run must stay under coverage instrumentation, or the post-commit AXA-CHECK pass reads an empty directory');
+
+  // ── LE CROCHET NOMME DÉSORMAIS DEUX FICHIERS, ET LA DÉTECTION DU FILET A FAILLI EN MOURIR.
+  // Elle exigeait UN SEUL lancement au crochet ; avec le repli, elle en voit deux et rendait
+  // « impossible de trancher » — l'outil le plus central du paysage ne trouvait plus le filet.
+  const E = await import('../scripts/ezechiel-les-tests.mjs');
+  const lireFixture = (c) => ({
+    'scripts/suite.mjs': 'assert.ok(1);'.repeat(30),
+    'scripts/lanceur.mjs': 'spawn(node, ["scripts/suite.mjs"]);',
+  }[c] ?? null);
+  const gagnant = E.departagerParLesAssertions(['scripts/lanceur.mjs', 'scripts/suite.mjs'], lireFixture);
+  assert.strictEqual(gagnant.chemin, 'scripts/suite.mjs', 'MUST CATCH: between a launcher and a test suite, the one carrying the assertions is the net — a file with none is a LAUNCHER, never a suite');
+  assert.strictEqual(E.departagerParLesAssertions(['scripts/a.mjs', 'scripts/b.mjs'], () => 'assert.ok(1);'.repeat(30)), null, 'and two candidates BOTH carrying assertions are not departed: it refuses rather than picking the first');
+  assert.strictEqual(E.departagerParLesAssertions(['scripts/a.mjs'], null), null, 'with no way to read the files it refuses too, rather than guessing');
+  assert.strictEqual(E.departagerParLesAssertions(['scripts/lanceur.mjs'], lireFixture), null, 'and a single candidate carrying no assertion is not promoted by default');
+
+  // ── LE PASSAGE RÉEL (Article 25) : sur CE dépôt, avec CE crochet à deux lancements, la
+  // détection retrouve bien le vrai filet, et par la piste FORTE — jamais par le dernier recours.
+  const detecte = E.filetResolu({ force: true });
+  assert.strictEqual(detecte, 'scripts/check-house.mjs', 'on this repository the detection must still find the real net, hook rewritten or not');
+  const d = E.derniereDetection();
+  assert.strictEqual(d.piste, 'crochet', 'and by the hook, which is the strongest evidence there is: what must pass before recording');
+  assert.ok(d.assertions > 1000, `the tie was broken on a real assertion count (${d.assertions})`);
+
+  console.log('Passed: le crochet passe au parallèle, et la barre de comparaison se met à vieillir (2026-10-03, tâche #1586). SA DÉCISION, PRISE EN FENÊTRE DÉDIÉE : « parallèle, repli auto si une part tombe ». Elle revient sur l\'arbitrage de septembre — « le séquentiel reste la référence » — et c\'est la MESURE qui l\'a rendue possible, jamais une préférence : le filet met 84 s en quatre parts contre 263 s en séquentiel, et la couverture lue est MEILLEURE en parallèle (41 outils à 81 % contre 30 à 42 %) depuis que le lecteur unit les relevés de processus. CE QUE LE REPLI PROTÈGE : quand une part tombe, on ne sait pas encore si la faute est au CODE ou au PARALLÉLISME, et le séquentiel est le seul juge. Le crochet le relance tout seul et ne bloque que si LUI aussi échoue — personne n\'a de décision à prendre le jour où ça arrive, ce qui est exactement ce qu\'on demande à un crochet. Le cas rare coûte 84 s + 263 s au lieu de 263 s, et ce prix ne se paie que sur un échec. ET LE RISQUE QUE CETTE DÉCISION CRÉE EST INVISIBLE SANS LE GARDE-FOU QUI L\'ACCOMPAGNE, c\'est pourquoi les deux sont livrés ensemble : plus rien ne produit de passage séquentiel vert spontanément, or c\'est LUI qui fait la barre de comparaison. Elle se fige au jour où elle a été prise, le filet continue de grossir, et la barre devient de plus en plus basse — un garde-fou qui s\'assouplit tout seul, c\'est-à-dire le contraire d\'un garde-fou. Le verdict afficherait « COMPLET, 460 succès contre 441 à la référence » et aurait l\'air parfaitement sain avec une référence de trois semaines. L\'ÂGE EST DONC IMPRIMÉ À CÔTÉ DU CHIFFRE, pour le compte comme pour la liste des sujets. IL NOMME, IL NE BLOQUE PAS : une référence vieille reste une référence, et refuser un commit sur l\'âge d\'un fichier serait crier au loup (leçon L4). Et une date illisible rend « je ne sais pas » plutôt que « tout frais » — les deux ne s\'écrivent jamais pareil.');
+}
+await testLeCrochetEnPartsEtLaBarreQuiVieillit();

@@ -148,9 +148,20 @@ exception par les règles de ce projet).
 
 ## Branchements réels
 
-- **Il ne remplace pas le crochet de commit** : le mode séquentiel (`node scripts/check-house.mjs`)
-  reste la référence, arbitrage explicite de l'utilisateur (« oui, gardé et lançable »). C'est le
-  seul moyen de trancher, quand une part échoue, entre une faute du code et une faute du parallélisme.
+- **IL EST LE CROCHET DE COMMIT DEPUIS LE 2026-10-03** (tâche #1586), et c'est un changement
+  d'arbitrage, pas une dérive : l'utilisateur avait tranché en septembre que « le séquentiel reste
+  la référence » ; il est revenu dessus en fenêtre dédiée, sur la mesure — 84 s contre 263 s, et une
+  couverture lue MEILLEURE en parallèle (41 outils à 81 % contre 30 à 42 %).
+  **Le séquentiel reste le juge, et le crochet l'appelle tout seul** : quand une part tombe, on ne
+  sait pas encore si la faute est au code ou au parallélisme, donc le crochet relance
+  `check-house.mjs` et ne bloque que si lui aussi échoue. Le cas rare coûte 84 s + 263 s, et ce
+  prix ne se paie que sur un échec. Porte de sortie : `FILET_SEQUENTIEL=1 git commit`.
+- **CE QUE CE CHANGEMENT A FAIT VIEILLIR, ET IL FAUT LE SAVOIR** : plus rien ne produit de passage
+  séquentiel vert spontanément, or c'est lui qui fait la barre de comparaison. Elle se fige, le
+  filet grossit, la barre devient trop basse. Le runner imprime donc l'ÂGE de sa référence au-delà
+  de sept jours, pour le compte comme pour la liste des sujets — il nomme, il ne bloque pas.
+  **Le geste qui la remet à jour est `node scripts/ezechiel-les-tests.mjs sante`**, et il n'a plus
+  de déclencheur automatique.
 - **Il lit `docs/ezechiel-les-tests/mesures.json`** pour équilibrer les parts par leur poids réel.
   Sans ce fichier il répartit à l'aveugle et le DIT, plutôt que de laisser croire à un équilibrage.
 - **Le motif de l'état commun s'importe d'Ezechiel**, jamais recopié (Article 24) : le jour où

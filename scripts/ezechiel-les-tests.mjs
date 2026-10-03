@@ -112,7 +112,30 @@ export function filetLePlusGros(fichiers = {}) {
 // soit là — un crochet recopié depuis un autre projet, un chemin renommé, une arborescence
 // différente. Rendre un chemin mort ferait dire à l'enquête « filet illisible » au lieu de
 // « filet introuvable », et ces deux phrases n'envoient pas au même endroit.
-export function detecterLeFilet({ option = null, sourceCrochet = null, paquet = null, fichiers = null, existe = null } = {}) {
+// LE CROCHET PEUT NOMMER DEUX FICHIERS, ET LE JOUR OÙ C'EST ARRIVÉ LA DÉTECTION A RENDU « RIEN »
+// (2026-10-03, tâche #1586). Le crochet de pré-commit lance désormais le runner parallèle, avec un
+// repli sur le filet séquentiel : deux lancements, donc deux candidats, donc « impossible de
+// trancher » — et l'outil le plus central du paysage s'est mis à ne plus trouver le filet.
+//
+// LA RÈGLE QUI TRANCHE, ET ELLE DIT QUELQUE CHOSE DE VRAI PLUTÔT QUE DE CHOISIR UN ORDRE :
+// **le filet est celui qui porte les ASSERTIONS ; un fichier qui n'en porte aucune est un
+// LANCEUR, pas une suite de tests.** Ce n'est pas un départage arbitraire — c'est la définition
+// même de ce qu'on cherche, appliquée à une liste que le crochet a déjà presque entièrement
+// triée. La force reste donc « forte » : le crochet a fait le gros du travail, l'assertion ne
+// fait que lever l'ambiguïté qu'il laisse.
+//
+// ET ELLE REFUSE ENCORE quand elle ne peut pas trancher : deux candidats porteurs d'assertions,
+// ou aucun moyen de lire leur contenu, et on retombe sur les pistes suivantes plutôt que de
+// désigner le premier venu.
+export function departagerParLesAssertions(candidats = [], lire = null) {
+  if (!lire) return null;
+  const comptes = candidats.map((c) => ({ chemin: c, assertions: (String(lire(c) ?? "").match(MOTIF_ASSERTION) ?? []).length }));
+  const avec = comptes.filter((c) => c.assertions >= 20).sort((x, y) => y.assertions - x.assertions);
+  if (avec.length !== 1) return null;
+  return avec[0];
+}
+
+export function detecterLeFilet({ option = null, sourceCrochet = null, paquet = null, fichiers = null, existe = null, lire = null } = {}) {
   const essais = [];
   const vraimentLa = (c) => (existe ? existe(c) : true);
   if (option) return { trouve: true, chemin: option, piste: "option", force: "certaine", essais };
@@ -120,7 +143,11 @@ export function detecterLeFilet({ option = null, sourceCrochet = null, paquet = 
 
   const parCrochet = (sourceCrochet ? filetDuCrochet(sourceCrochet) : []).filter(vraimentLa);
   if (parCrochet.length === 1) return { trouve: true, chemin: parCrochet[0], piste: "crochet", force: "forte", essais };
-  essais.push({ cle: "crochet", resultat: !sourceCrochet ? "aucun crochet de pré-commit lisible" : parCrochet.length ? `${parCrochet.length} lancements candidats, impossible de trancher : ${parCrochet.join(", ")}` : "le crochet ne lance aucun fichier reconnaissable" });
+  if (parCrochet.length > 1) {
+    const departage = departagerParLesAssertions(parCrochet, lire);
+    if (departage) return { trouve: true, chemin: departage.chemin, piste: "crochet", force: "forte", assertions: departage.assertions, departage: `${parCrochet.length} lancements au crochet, départagés par les assertions : un fichier qui n'en porte aucune est un LANCEUR, jamais une suite de tests`, essais };
+  }
+  essais.push({ cle: "crochet", resultat: !sourceCrochet ? "aucun crochet de pré-commit lisible" : parCrochet.length ? `${parCrochet.length} lancements candidats, et les assertions n'ont pas départagé : ${parCrochet.join(", ")}` : "le crochet ne lance aucun fichier reconnaissable" });
 
   const parPaquet = (paquet ? filetDuPaquet(paquet) : []).filter(vraimentLa);
   if (parPaquet.length === 1) return { trouve: true, chemin: parPaquet[0], piste: "paquet", force: "moyenne", essais };
@@ -144,7 +171,7 @@ export function filetResolu({ root = ROOT, argv = process.argv, force = false } 
   const lu = (f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } };
   let paquet = null;
   try { paquet = JSON.parse(lu("package.json") ?? "{}"); } catch { paquet = null; }
-  const d = detecterLeFilet({ option, sourceCrochet: lu(CROCHETS[0]), paquet, existe: (c) => lu(c) !== null });
+  const d = detecterLeFilet({ option, sourceCrochet: lu(CROCHETS[0]), paquet, existe: (c) => lu(c) !== null, lire: lu });
   _filetResolu = d.trouve ? d.chemin : FILET;
   _filetResolu_detection = d;
   return _filetResolu;

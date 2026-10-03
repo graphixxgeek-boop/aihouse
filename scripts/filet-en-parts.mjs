@@ -562,10 +562,29 @@ export function empreinteDeReference({ lire = null, root = "" } = {}) {
     const brut = lire ? lire(EMPREINTE_EZECHIEL) : readFileSync(new URL(`../${EMPREINTE_EZECHIEL}`, import.meta.url), "utf8");
     const o = JSON.parse(brut);
     if (!Array.isArray(o?.sujets) || !o.sujets.length) return { mesurable: false, pourquoi: `${EMPREINTE_EZECHIEL} ne porte aucun sujet` };
-    return { mesurable: true, sujets: o.sujets, quand: o.quand ?? null };
+    const jours = ageEnJours(o.quand);
+    return { mesurable: true, sujets: o.sujets, quand: o.quand ?? null, jours, perimee: jours !== null && jours > AGE_MAX_DE_LA_REFERENCE_JOURS };
   } catch {
     return { mesurable: false, pourquoi: `${EMPREINTE_EZECHIEL} est illisible ou absent — un passage séquentiel vert (\`node scripts/ezechiel-les-tests.mjs sante\`) l'écrit` };
   }
+}
+
+// LA RÉFÉRENCE VIEILLIT, ET C'EST LE CROCHET QUI LA FAIT VIEILLIR (2026-10-03, tâche #1586).
+//
+// LE RISQUE QUE SA DÉCISION CRÉE, et il faut le dire parce qu'il est invisible : depuis que le
+// crochet de commit lance le PARALLÈLE, plus rien ne produit de passage séquentiel vert
+// spontanément. Or c'est exactement ce passage-là qui fait la barre de comparaison. Elle se fige
+// au jour où elle a été prise, le filet continue de grossir, et la barre devient de plus en plus
+// basse — un garde-fou qui s'assouplit tout seul, c'est-à-dire le contraire d'un garde-fou.
+//
+// PERSONNE NE PEUT LE VOIR SANS QU'ON LE DISE : le verdict afficherait « COMPLET, 460 succès
+// contre 441 à la référence » et aurait l'air parfaitement sain, alors que les 441 dateraient de
+// trois semaines. D'où cet âge, imprimé À CÔTÉ du chiffre plutôt que caché dans le fichier.
+export const AGE_MAX_DE_LA_REFERENCE_JOURS = 7;
+
+export function ageEnJours(quand, maintenant = Date.now()) {
+  const t = Date.parse(String(quand ?? ""));
+  return Number.isFinite(t) ? (maintenant - t) / 86400000 : null;
 }
 
 export function referenceSequentielle({ lire = null, root = "" } = {}) {
@@ -580,7 +599,8 @@ export function referenceSequentielle({ lire = null, root = "" } = {}) {
   const verts = (Array.isArray(releves) ? releves : []).filter((r) => r && r.code === 0 && Number.isFinite(r.succes) && r.succes > 0);
   if (!verts.length) return { mesurable: false, pourquoi: "aucun passage séquentiel VERT dans l'historique : un passage rouge s'est arrêté en route, donc son compte décrirait un filet partiel et servirait de barre trop basse" };
   const dernier = verts[verts.length - 1];
-  return { mesurable: true, succes: dernier.succes, quand: dernier.quand };
+  const jours = ageEnJours(dernier.quand);
+  return { mesurable: true, succes: dernier.succes, quand: dernier.quand, jours, perimee: jours !== null && jours > AGE_MAX_DE_LA_REFERENCE_JOURS };
 }
 
 export function verdictDeCompletude({ distincts = 0, reference = {} } = {}) {
@@ -591,7 +611,14 @@ export function verdictDeCompletude({ distincts = 0, reference = {} } = {}) {
   if (manquants > 0) {
     return { mesurable: true, suffisant: false, manquants, message: `🚨 ${manquants} VÉRIFICATION(S) PERDUE(S) — ${distincts} succès distincts ici contre ${reference.succes} au dernier séquentiel vert (${String(reference.quand).slice(0, 10)}). Un filet plus RAPIDE qui vérifie MOINS n'est pas un gain : ne pas se fier à ce lancement, relancer en séquentiel.` };
   }
-  return { mesurable: true, suffisant: true, manquants: 0, message: `✅ COMPLET — ${distincts} succès distincts, contre ${reference.succes} au dernier séquentiel vert (${String(reference.quand).slice(0, 10)}) : aucune vérification perdue.${distincts > reference.succes ? ` (${distincts - reference.succes} de plus : des tests ont été ajoutés depuis.)` : ""}` };
+  // L'ÂGE DE LA BARRE SE DIT AVEC LE VERT, jamais à côté : un « COMPLET » dont la référence date
+  // de trois semaines a l'air d'un succès et n'en est pas un. Le garde-fou ne REFUSE pas pour
+  // autant — une référence vieille reste une référence, et bloquer un commit sur l'âge d'un
+  // fichier serait un garde-fou qui crie au loup (leçon L4). Il nomme, il ne bloque pas.
+  const vieillesse = reference.perimee
+    ? ` ⚠️ MAIS LA BARRE A ${Math.round(reference.jours)} JOURS : depuis que le crochet lance le parallèle, plus rien ne produit de passage séquentiel vert tout seul, donc cette barre se fige pendant que le filet grossit. Relancer \`node scripts/ezechiel-les-tests.mjs sante\` pour la remettre à jour.`
+    : "";
+  return { mesurable: true, suffisant: true, manquants: 0, vieillesse: Boolean(reference.perimee), message: `✅ COMPLET — ${distincts} succès distincts, contre ${reference.succes} au dernier séquentiel vert (${String(reference.quand).slice(0, 10)}) : aucune vérification perdue.${distincts > reference.succes ? ` (${distincts - reference.succes} de plus : des tests ont été ajoutés depuis.)` : ""}${vieillesse}` };
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -641,7 +668,7 @@ export function empreinteDesSucces(lignes = []) {
 
 // Ce que la comparaison de deux empreintes rend, et le PERDU est le seul qui accuse : un sujet
 // AJOUTÉ est le cas normal d'un dépôt vivant, jamais une anomalie.
-export function comparerLesEmpreintes({ obtenue = [], reference = [] } = {}) {
+export function comparerLesEmpreintes({ obtenue = [], reference = [], jours = null } = {}) {
   if (!reference.length) {
     return { mesurable: false, pourquoi: "aucune empreinte de référence : la comparaison par SUJET n'est pas possible, seul le compte l'est — et un compte ne voit pas « un test perdu, un test ajouté »" };
   }
@@ -649,13 +676,14 @@ export function comparerLesEmpreintes({ obtenue = [], reference = [] } = {}) {
   const obt = new Set(obtenue);
   const perdus = reference.filter((x) => !obt.has(x));
   const ajoutes = obtenue.filter((x) => !ref.has(x));
-  return { mesurable: true, perdus, ajoutes, intacts: reference.length - perdus.length };
+  return { mesurable: true, perdus, ajoutes, intacts: reference.length - perdus.length, jours, perimee: jours !== null && jours > AGE_MAX_DE_LA_REFERENCE_JOURS };
 }
 
 export function formatEmpreinteLines(c = {}) {
   if (!c.mesurable) return [`SUJETS — PAS MESURÉ : ${c.pourquoi}`];
   if (!c.perdus.length) {
-    return [`✅ SUJETS — les ${c.intacts} vérifications de la référence sont toutes là${c.ajoutes.length ? `, et ${c.ajoutes.length} de plus` : ""}. Un compte seul n'aurait pas pu le dire : il ne voit pas « un test perdu, un test ajouté ».`];
+    const vieille = c.perimee ? ` ⚠️ Mais cette liste a ${Math.round(c.jours)} jours : elle ne connaît pas les tests écrits depuis, donc elle ne peut pas dire s'ils ont disparu.` : "";
+    return [`✅ SUJETS — les ${c.intacts} vérifications de la référence sont toutes là${c.ajoutes.length ? `, et ${c.ajoutes.length} de plus` : ""}. Un compte seul n'aurait pas pu le dire : il ne voit pas « un test perdu, un test ajouté ».${vieille}`];
   }
   return [
     `🚨 SUJETS — ${c.perdus.length} vérification(s) de la référence ONT DISPARU. Le compte pouvait l'ignorer ; la liste ne le peut pas :`,
@@ -1008,7 +1036,7 @@ async function main() {
   // compte ne voit pas « un test perdu, un test ajouté », et la soirée a montré que les doublons
   // de l'épine peuvent gonfler ce compte de cinq lignes sur exactement le même code.
   const ref = empreinteDeReference();
-  const sujets = comparerLesEmpreintes({ obtenue: empreinteDesSucces(recolle.lignes), reference: ref.mesurable ? ref.sujets : [] });
+  const sujets = comparerLesEmpreintes({ obtenue: empreinteDesSucces(recolle.lignes), reference: ref.mesurable ? ref.sujets : [], jours: ref.jours ?? null });
   for (const l of formatEmpreinteLines(sujets)) console.log(l);
   if (sujets.mesurable && sujets.perdus.length) process.exitCode = 1;
 
