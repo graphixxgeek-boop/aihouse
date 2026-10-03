@@ -71,9 +71,15 @@ refusés.
 
 | Étape | Durée du filet en 4 parts | Plancher théorique |
 |---|---|---|
-| séquentiel | 266 s | — |
+| séquentiel | 263 s | — |
 | runner réparé (blocs seuls) | 167,0 s | 121,3 s |
-| **+ unités d'appel** | **82,2 s** | **6,4 s** |
+| + unités d'appel | 82,2 s | **6,4 s** |
+| **+ poids enfin justes (#1582)** | **84,4 s, et les parts à ±5 %** | 6,4 s |
+
+*(Les 82,2 s et les 84,4 s ne se comparent pas : le filet a gagné quatre groupes de tests entre
+les deux. Ce que #1582 a changé est l'ÉQUILIBRE — l'écart entre la part la plus longue et la plus
+courte passe de 48 s à 10 s, parce que le répartiteur équilibrait jusque-là sur des poids dont 83 %
+appartenaient à un autre groupe.)*
 
 **Le plancher change la forme du problème, pas seulement sa taille.** Tant qu'il valait 121 s,
 passer à huit parts n'avait aucun intérêt — la projection donnait 137 s, c'est-à-dire pire qu'à

@@ -1,5 +1,5 @@
 {
-  "quand": "2026-10-03T20:06:13.092Z",
+  "quand": "2026-10-03T20:39:49.420Z",
   "pourquoi": "la liste des SUJETS vérifiés par le dernier filet séquentiel vert. Un COMPTE ne voit pas « un test perdu, un test ajouté » ; cette liste, si.",
   "sujets": [
     "Passed: 18 % du registre échappait à tous les contrôles, en ",
@@ -174,6 +174,7 @@
     "Passed: l'arborescence existait depuis cinq jours et n'avait",
     "Passed: l'axe où « rendre plus clair » est interdit (2026-10",
     "Passed: l'exemption déclarée n'était lue que par la suite de",
+    "Passed: l'exécution suit les appels, pas l'ordre du texte (2",
     "Passed: l'index des fils à chaque fin de Ronde, et l'item ne",
     "Passed: l'issue que le plan proposait sans savoir la reconna",
     "Passed: l'organisation des lois, et pourquoi elle n'était pa",
@@ -221,6 +222,7 @@
     "Passed: le banc d'essai a trouvé deux défauts, et l'un d'eux",
     "Passed: le banc d'essai du témoin (2026-09-27, tâche #1034, ",
     "Passed: le banc témoin mesurait pour personne (2026-09-28, t",
+    "Passed: le brouillon d'une part qui survit à une part tombée",
     "Passed: le chaînon manquant de l'Article 28, construit (2026",
     "Passed: le chiffrage de la refonte (2026-10-01, tâche #1356)",
     "Passed: le chiffre ecrit a la main, confronte a ce que la ma",

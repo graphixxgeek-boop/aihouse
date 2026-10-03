@@ -308,8 +308,18 @@ export function decouperEnGroupes(src = "") {
       fin = j;
     }
     const corps = lignes.slice(debut, fin + 1);
+    // LE TITRE S'ARRÊTAIT AU PREMIER GUILLEMET, ET C'EST UNE APOSTROPHE QUI LE COUPAIT
+    // (2026-10-03, tâche #1582). Le motif `[^'"`]{0,120}` s'arrêtait net à la première
+    // apostrophe — or ce filet écrit ses messages entre apostrophes simples, donc toute apostrophe
+    // du texte y est échappée : `'Passed: l\'épine n\'était pas un plafond'` rendait le titre
+    // « l\ ». Mesuré sur le vrai filet, SIX groupes portaient ainsi un titre d'un ou deux
+    // caractères — « l », « axa-check », « le banc d » — et deux d'entre eux étaient devenus
+    // homonymes, donc indistinguables. Le défaut était invisible parce qu'un titre court ressemble
+    // à un titre court, jamais à un titre tronqué.
+    // LA CORRECTION LIT JUSQU'AU GUILLEMET FERMANT, en respectant les échappements : on retient le
+    // délimiteur d'ouverture et on avance tant qu'on ne le retrouve pas non échappé.
     const titres = corps.filter((l) => vraiGroupe(l))
-      .map((l) => (l.match(/Passed\s*:\s*([^'"`]{0,120})/) ?? [, ""])[1].trim()).filter(Boolean);
+      .map((l) => (l.match(/console\.log\(\s*(['"`])Passed\s*:\s*((?:\\.|(?!\1).){0,160})/) ?? [, , ""])[2].trim()).filter(Boolean);
     groupes.push({ ligne: i + 1, titre: titres.join(" · "), sujets: titres.length, corps, texte: corps.join("\n") });
     debut = fin + 1; i = fin;
   }
@@ -1083,6 +1093,109 @@ export function recollerLeChrono(groupes = [], lignesHorodatees = []) {
   // Le recollage est un fait vérifiable, pas une supposition : s'il reste des lignes « Passed » que
   // le découpage n'explique pas, la mesure est DÉCLARÉE incomplète plutôt que servie telle quelle.
   return { mesures, lignesPassed: passed.length, consommees: i, complet: i === passed.length && mesures.length === groupes.length };
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// LE RECOLLAGE PAR CONTENU — l'exécution suit les APPELS, pas l'ordre du texte (tâche #1582)
+//
+// CE QUE LA MESURE A MONTRÉ, ET C'EST LE PLUS GROS DÉFAUT DE MESURE TROUVÉ SUR CET OUTIL : sur
+// 421 groupes, 349 recevaient la durée d'un AUTRE groupe. Le recollage appariait la liste des
+// groupes lus dans le TEXTE avec la liste des lignes « Passed » vues à l'EXÉCUTION, par leur rang
+// — premier avec premier, deuxième avec deuxième. Ça ne tient que si les deux listes sont dans le
+// même ordre.
+//
+// ELLES NE LE SONT PAS, ET LA RAISON EST STRUCTURELLE. Ce filet est écrit en déclarant des
+// fonctions puis en les appelant : `async function testX() { … }` ligne 1735, `await testX();`
+// ligne 20000. Le texte voit testX au rang 62 ; l'exécution l'imprime bien plus tard. Une seule
+// fonction déclarée loin de son appel décale TOUT ce qui suit, et il y en a 147.
+//
+// L'OUTIL LE DISAIT DEPUIS TOUJOURS, ET C'EST CE QUI SAUVE LA SITUATION : il déclarait le
+// recollage « INCOMPLET » et refusait de servir le détail par groupe (tâche #1547). Il avait
+// raison de refuser ; il ne savait pas encore POURQUOI. Le total, lui, est resté juste — c'est une
+// somme, elle ne dépend pas de l'ordre.
+//
+// L'APPARIEMENT SE FAIT DONC PAR CONTENU : chaque ligne imprimée retrouve le groupe qui l'écrit
+// par son PRÉFIXE. Même principe que le recollage des sorties parallèles, qui fait ça depuis sa
+// naissance — le savoir existait dans le dépôt, à deux fichiers de là.
+//
+// TROIS REFUS PLUTÔT QU'UNE DEVINETTE, parce qu'une mesure fausse est pire qu'une mesure absente :
+// un préfixe porté par DEUX groupes n'apparie rien (on ne saurait pas lequel) · une ligne qu'aucun
+// groupe ne réclame est comptée à part · et le verdict reste INCOMPLET tant que tout n'est pas
+// apparié, exactement comme avant.
+export const LONGUEUR_D_APPARIEMENT = 60;
+
+// Le titre d'un groupe est lu dans le SOURCE, donc il porte les échappements de JavaScript
+// (`\'`) que l'exécution n'imprime pas. `titreLisible` les retire déjà pour l'affichage ; ici
+// c'est la même normalisation, au service de l'appariement.
+export function clefDAppariement(texte = "") {
+  // LA CONTRE-OBLIQUE DOUBLÉE EST UNE CONTRE-OBLIQUE SIMPLE À L'IMPRESSION, et l'oublier coûtait
+  // deux appariements : le source écrit `"\\|"` pour imprimer `"\|"`. `titreLisible` ne défait
+  // que les guillemets échappés — c'est son rôle d'affichage, et le changer casserait ses propres
+  // tests. La normalisation supplémentaire vit donc ICI, où elle ne sert qu'à l'appariement.
+  const net = String(texte).replace(/^Passed\s*:\s*/, "").replace(/\\\\/g, "\\");
+  return titreLisible(net, LONGUEUR_D_APPARIEMENT)
+    .trim().toLowerCase().replace(/\s+/g, " ").replace(/…$/, "");
+}
+
+export function recollerLeChronoParContenu(groupes = [], lignesHorodatees = []) {
+  const passed = lignesHorodatees.filter((l) => /^Passed\s*:/.test(String(l.texte).trim()));
+  // UN PRÉFIXE PORTÉ PAR DEUX GROUPES N'APPARIE RIEN. Les écarter est le seul choix honnête :
+  // attribuer au premier venu rendrait une durée fausse qui ressemble trait pour trait à une
+  // juste — et ce fichier a déjà payé une fois pour un dédoublonnage à 40 caractères.
+  // UN GROUPE QUI IMPRIME TROIS LIGNES A TROIS CLEFS, pas une. Son `titre` est la CONCATÉNATION
+  // des trois, jointe par « · » — ce qui n'apparaît dans aucune ligne imprimée. Ne poser que la
+  // clef du titre entier laissait 22 lignes orphelines, toutes secondaires d'un groupe multiple.
+  const parClef = new Map();
+  const ambigus = new Set();
+  const poser = (texte, g) => {
+    const c = clefDAppariement(texte);
+    if (!c) return;
+    if (parClef.has(c) && parClef.get(c) !== g) ambigus.add(c); else parClef.set(c, g);
+  };
+  for (const g of groupes) {
+    poser(g.titre, g);
+    if ((g.sujets ?? 1) > 1) for (const part of String(g.titre).split(" · ")) poser(part, g);
+  }
+  for (const c of ambigus) parClef.delete(c);
+
+  const cumul = new Map();
+  let precedent = 0, apparies = 0;
+  const orphelines = [];
+  for (const l of passed) {
+    const c = clefDAppariement(l.texte);
+    const g = parClef.get(c);
+    const duree = Math.max(0, l.ms - precedent);
+    precedent = l.ms;
+    if (!g) { orphelines.push(String(l.texte).slice(0, 70)); continue; }
+    cumul.set(g.ligne, (cumul.get(g.ligne) ?? 0) + duree);
+    apparies += 1;
+  }
+  const mesures = groupes.filter((g) => cumul.has(g.ligne)).map((g) => ({ ligne: g.ligne, titre: g.titre, ms: cumul.get(g.ligne) }));
+  // CERTAINS GROUPES SONT STRUCTURELLEMENT INAPPARIABLES, ET ÇA SE DÉRIVE PLUTÔT QUE DE S'ÉNUMÉRER
+  // (Article 24). Un message construit par concaténation — `console.log('Passed: ' + checked +
+  // ' routes…')` — ne porte AUCUN texte littéral dans le source : il n'y a rien à apparier, et
+  // aucune amélioration du motif n'y changera quoi que ce soit.
+  // POURQUOI LES COMPTER À PART PLUTÔT QUE DE LES SUBIR : sans ça, le verdict resterait
+  // éternellement « INCOMPLET » à 439 lignes appariées sur 440 — un voyant qui ne peut pas virer
+  // au vert cesse d'être lu (leçon L6), et celui-ci dirait « détail inexploitable » sur un détail
+  // juste à 99,8 %.
+  const sansClef = groupes.filter((g) => !clefDAppariement(g.titre)).length;
+  return {
+    mesures, lignesPassed: passed.length, apparies, sansClef,
+    ambigus: [...ambigus], orphelines,
+    tauxAppariement: passed.length ? apparies / passed.length : 0,
+    complet: !ambigus.size && orphelines.length <= sansClef && mesures.length >= groupes.length - sansClef,
+  };
+}
+
+export function formatRecollageLines(r = {}) {
+  const L = [`RECOLLAGE PAR CONTENU — ${r.apparies}/${r.lignesPassed} ligne(s) appariée(s) à leur groupe (${(100 * (r.tauxAppariement ?? 0)).toFixed(1)} %), ${r.mesures.length} groupe(s) mesuré(s).`];
+  if (r.ambigus?.length) L.push(`  ${r.ambigus.length} préfixe(s) porté(s) par DEUX groupes : écartés, parce qu'attribuer au premier venu rendrait une durée fausse qui ressemble à une juste.`);
+  if (r.sansClef) L.push(`  ${r.sansClef} groupe(s) sans texte littéral dans le source (message construit par concaténation) : structurellement inappariables, et aucun motif n'y changera rien.`);
+  if (r.orphelines?.length) L.push(`  ${r.orphelines.length} ligne(s) qu'aucun groupe ne réclame — comptée(s) à part plutôt que rangée(s) de force.`);
+  L.push(r.complet ? "  ✅ COMPLET : chaque ligne a trouvé son groupe, et chaque groupe sa durée." : "  ⚠️ INCOMPLET : le TOTAL reste juste (c'est une somme), le détail par groupe est à lire en le sachant.");
+  return L;
 }
 
 export function mesuresEnregistrees({ root = ROOT, lire = null } = {}) {
@@ -2067,7 +2180,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     enfant.stdout.on("data", avaler("normal")); enfant.stderr.on("data", avaler("erreur"));
     const code = await new Promise((r) => enfant.on("close", r));
     const groupes = decouperEnGroupes(readFileSync(join(ROOT, filetResolu()), "utf8"));
-    const recolle = recollerLeChrono(groupes, lignes);
+    // DEUX RECOLLAGES, ET LE CHOIX SE DIT (2026-10-03, tâche #1582). L'appariement par CONTENU est
+    // le bon — l'exécution suit les appels, pas l'ordre du texte — mais il repose sur des préfixes
+    // qu'un filet écrit autrement pourrait ne pas porter. On prend donc le contenu quand il se
+    // déclare complet, et on retombe sur l'ancien appariement par rang sinon, en disant lequel a
+    // servi : une mesure dont on ignore la méthode ne se re-vérifie pas.
+    const parContenu = recollerLeChronoParContenu(groupes, lignes);
+    const parRang = recollerLeChrono(groupes, lignes);
+    const recolle = parContenu.complet ? parContenu : parRang;
+    for (const l of formatRecollageLines(parContenu)) console.log(l);
+    if (!parContenu.complet) console.log("  ↩️ repli sur l'appariement par RANG, celui d'avant la tâche #1582 : il suppose que le texte et l'exécution sont dans le même ordre, ce qui est faux dès qu'une fonction est déclarée loin de son appel. À lire en le sachant.");
     const totalMs = Date.now() - depart;
     console.log(`Filet terminé en ${(totalMs / 1000).toFixed(1)} s (code ${code}).`);
     console.log(`${recolle.lignesPassed} ligne(s) « Passed » à l'exécution · ${groupes.length} groupe(s) dans le texte · recollage ${recolle.complet ? "COMPLET" : "INCOMPLET"}.`);

@@ -26,7 +26,7 @@ UNITÉS, les lancer en même temps, puis remettre la sortie dans l'ordre d'origi
 *(« Unité » et non « bloc » : il y en a au moins deux espèces, et ne chercher que la première est
 l'erreur la plus coûteuse de ce patron — voir la règle 6.)*
 
-## Les six règles de conception, et aucune n’est cosmétique
+## Les sept règles de conception, et aucune n’est cosmétique
 
 1. **NE JAMAIS MODIFIER LE FICHIER DE TESTS.** Le runner lit, il n'écrit que des copies. Le mode
    séquentiel reste donc disponible à tout instant — et c'est la seule façon de savoir, le jour où
@@ -114,6 +114,31 @@ la même formule dit désormais que dix cœurs suffisent à passer sous la demi-
 de durée est à juger contre le PLANCHER, jamais contre la durée du jour** : tant que le plancher
 est au-dessus de la cible, acheter des cœurs ne sert à rien, et c'est exactement ce qu'un chiffre
 non recalculé laisse croire.
+
+## La règle 7 : LES POIDS SUR LESQUELS ON ÉQUILIBRE SONT-ILS SEULEMENT LES BONS ?
+
+**La règle 4 dit « les plus lourds d'abord ». Elle suppose qu'on sache lesquels sont lourds.** Sur
+le dépôt témoin, cette supposition était fausse pour 83 % des groupes, et personne ne l'avait vu
+parce que le résultat est parfaitement plausible : des parts équilibrées sur le papier, et une qui
+finit quarante-huit secondes avant les autres.
+
+**La cause est exactement celle de la règle 6, prise par l'autre bout.** Le relevé de durées
+appariait la liste des groupes lus dans le TEXTE avec la liste des lignes de succès vues à
+l'EXÉCUTION, par leur rang — premier avec premier. Ça ne tient que si les deux listes sont dans le
+même ordre, et une suite écrite en « déclare puis appelle » ne l'est jamais : une fonction déclarée
+au début et appelée à la fin décale tout ce qui la suit.
+
+**L'appariement se fait donc par CONTENU** : chaque ligne imprimée retrouve son groupe par son
+préfixe. Trois pièges s'y présentent dans cet ordre, et chacun coûte des dizaines d'appariements :
+le texte lu dans le source porte les ÉCHAPPEMENTS du langage (`\'`, `\\`) que l'exécution
+n'imprime pas ; un groupe qui imprime plusieurs lignes a plusieurs clefs, pas une ; et un message
+construit par concaténation n'a AUCUN texte littéral dans le source, donc il est structurellement
+inappariable — à compter comme tel, sans quoi le verdict ne peut jamais virer au vert.
+
+**Et le signe qui aurait dû alerter plus tôt était déjà là** : l'outil déclarait son recollage
+« incomplet » depuis des semaines. Il avait raison de refuser de servir le détail ; ce qui manquait
+était d'aller voir POURQUOI. Un outil qui déclare honnêtement une limite finit par faire passer
+cette limite pour une fatalité.
 
 ## Les obstacles à chercher AVANT de paralléliser, jamais après
 

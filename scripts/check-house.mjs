@@ -27757,3 +27757,73 @@ async function testLeBrouillonDUnePart() {
   console.log('Passed: le brouillon d\'une part qui survit à une part tombée empoisonne tous les passages suivants (2026-10-03, tâche #1581). TROUVÉ EN POUSSANT LE RUNNER À HUIT PARTS, et le défaut était DÉTERMINISTE : la part 2 échouait au même endroit, deux fois de suite, en lisant HUIT événements d\'usage là où elle venait d\'en écrire DEUX. LA CAUSE N\'EST PAS CELLE QU\'ON SOUPÇONNE, ET C\'EST CE QUI REND CE DÉFAUT VICIEUX : il ressemble trait pour trait à une collision entre parts — deux processus qui écriraient le même fichier — et c\'est la première chose qu\'on va vérifier sur un runner parallèle. Les journaux étaient pourtant parfaitement séparés, un par part, depuis la tâche #1181. **Le coupable était le TEMPS, pas le parallélisme** : le runner nettoyait la copie du filet et le dossier de la part, jamais son journal d\'usage. Un journal qui survit à une part TOMBÉE garde les événements écrits avant la chute — et le test qui les relit SAUVEGARDE PUIS RESTAURE le fichier, donc il reconduit la pollution à chaque passage au lieu de la nettoyer. Six événements fantômes attendaient là depuis un passage interrompu. ET IL DORMAIT : à quatre parts le bloc concerné tombait dans une autre part, dont le journal était propre — le piège n\'attendait que le jour où la répartition changerait. LA CORRECTION PORTE SUR LA CLASSE (leçon L37, et Article 24) : la liste des brouillons d\'une part est désormais UNE, exportée et contre-testée, là où elle était énumérée dans les deux nettoyages qui ont justement divergé de la même façon. Et le nettoyage se fait AVANT autant qu\'APRÈS : après, c\'est de l\'hygiène ; avant, c\'est la seule chose qui protège du passage précédent qui s\'est mal terminé — c\'est-à-dire précisément du cas où personne n\'a nettoyé. VÉRIFIÉ EN VRAI : 8 parts vertes après correction, 439 succès distincts et les 438 sujets de la référence tous présents. Au passage, un résultat négatif mesuré : à huit parts sur quatre cœurs le filet met 107,9 s contre 96,2 s à quatre — la sur-réservation coûte, et le plafond du runner par défaut au nombre de cœurs est le bon.');
 }
 await testLeBrouillonDUnePart();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1582 — L'EXÉCUTION SUIT LES APPELS, PAS L'ORDRE DU TEXTE
+async function testLeRecollageParContenu() {
+  const E = await import('../scripts/ezechiel-les-tests.mjs');
+
+  // ── LE DÉFAUT, RÉDUIT À SA PLUS SIMPLE EXPRESSION : deux groupes, dont le second s'exécute en
+  // PREMIER parce que sa fonction est appelée plus haut. L'appariement par RANG donne à chacun la
+  // durée de l'autre ; l'appariement par CONTENU les remet d'aplomb.
+  const groupes = [
+    { ligne: 10, titre: 'alpha le premier dans le texte', sujets: 1 },
+    { ligne: 20, titre: 'beta le second dans le texte', sujets: 1 },
+  ];
+  const execution = [
+    { ms: 1000, texte: 'Passed: beta le second dans le texte', flux: 'normal' },
+    { ms: 1500, texte: 'Passed: alpha le premier dans le texte', flux: 'normal' },
+  ];
+  const parRang = E.recollerLeChrono(groupes, execution);
+  assert.strictEqual(parRang.mesures.find((m) => m.ligne === 10).ms, 1000, 'MUST CATCH: by RANK, alpha is credited with beta durée — 1000 ms that are not its own');
+  const parContenu = E.recollerLeChronoParContenu(groupes, execution);
+  assert.strictEqual(parContenu.mesures.find((m) => m.ligne === 10).ms, 500, 'by CONTENT, alpha gets the 500 ms it really took');
+  assert.strictEqual(parContenu.mesures.find((m) => m.ligne === 20).ms, 1000, 'and beta its own 1000 ms');
+  assert.strictEqual(parContenu.complet, true, 'with everything paired, the verdict is complete');
+
+  // ── UN PRÉFIXE PORTÉ PAR DEUX GROUPES N'APPARIE RIEN. Attribuer au premier venu rendrait une
+  // durée fausse qui ressemble trait pour trait à une juste — et c'est précisément le défaut que
+  // tout ce travail corrige, donc le reproduire ici serait absurde.
+  const jumeaux = E.recollerLeChronoParContenu(
+    [{ ligne: 1, titre: 'exactement le même début de phrase', sujets: 1 }, { ligne: 2, titre: 'exactement le même début de phrase', sujets: 1 }],
+    [{ ms: 10, texte: 'Passed: exactement le même début de phrase', flux: 'normal' }]);
+  assert.strictEqual(jumeaux.ambigus.length, 1, 'an ambiguous prefix is declared');
+  assert.strictEqual(jumeaux.complet, false, 'and the verdict refuses to be complete while one remains');
+
+  // ── UN GROUPE QUI IMPRIME TROIS LIGNES A TROIS CLEFS, pas une : son titre est leur
+  // CONCATÉNATION, qui n'apparaît dans aucune ligne imprimée. L'oublier laissait orphelines toutes
+  // les lignes secondaires d'un groupe multiple — 22 sur le vrai filet.
+  const multiple = E.recollerLeChronoParContenu(
+    [{ ligne: 5, titre: 'premier sujet du groupe · second sujet du groupe', sujets: 2 }],
+    [{ ms: 100, texte: 'Passed: premier sujet du groupe', flux: 'normal' }, { ms: 300, texte: 'Passed: second sujet du groupe', flux: 'normal' }]);
+  assert.strictEqual(multiple.apparies, 2, 'both lines of a two-subject group find their group');
+  assert.strictEqual(multiple.mesures[0].ms, 300, 'and the group is credited with the SUM of its subjects');
+
+  // ── LA CONTRE-OBLIQUE DOUBLÉE DU SOURCE EST SIMPLE À L'IMPRESSION, et l'oublier coûtait deux
+  // appariements sur le vrai filet.
+  assert.strictEqual(
+    E.clefDAppariement('splitTableRow() treats an escaped "\\\\|"'),
+    E.clefDAppariement('Passed: splitTableRow() treats an escaped "\\|"'),
+    'the source spelling and the printed spelling must produce the SAME key');
+  assert.strictEqual(E.clefDAppariement("l\\'épine"), E.clefDAppariement("Passed: l'épine"), 'and an escaped apostrophe likewise');
+
+  // ── UN GROUPE SANS TEXTE LITTÉRAL EST STRUCTURELLEMENT INAPPARIABLE, et ça se DÉRIVE plutôt que
+  // de s'énumérer (Article 24). Sans ce décompte, le verdict resterait éternellement « incomplet »
+  // à 439 lignes sur 440 — un voyant qui ne peut pas virer au vert cesse d'être lu (leçon L6).
+  const concatene = E.recollerLeChronoParContenu(
+    [{ ligne: 1, titre: '', sujets: 1 }],
+    [{ ms: 10, texte: 'Passed: 192 routes vérifiées', flux: 'normal' }]);
+  assert.strictEqual(concatene.sansClef, 1, 'a group with no literal text is counted as structurally unpairable');
+  assert.strictEqual(concatene.complet, true, 'so its orphan line does not keep the verdict red forever');
+
+  // ── LE PASSAGE RÉEL (Article 25) : le titre d'un groupe ne doit plus être coupé par une
+  // apostrophe échappée. Six l'étaient, dont deux devenus homonymes et donc indistinguables.
+  const vrai = fs.readFileSync('scripts/check-house.mjs', 'utf8');
+  const g = E.decouperEnGroupes(vrai);
+  const tronques = g.filter((x) => String(x.titre ?? '').trim().length > 0 && String(x.titre).trim().length < 15);
+  assert.deepStrictEqual(tronques.map((x) => x.ligne), [], `MUST CATCH: no group title may be cut short by an escaped quote (${tronques.map((x) => JSON.stringify(x.titre)).join(', ')})`);
+  assert.ok(g.length > 300, `and the real net really is cut into groups (${g.length})`);
+
+  console.log('Passed: l\'exécution suit les appels, pas l\'ordre du texte (2026-10-03, tâche #1582). LE PLUS GROS DÉFAUT DE MESURE TROUVÉ SUR CET OUTIL, ET IL ÉTAIT MASSIF : sur 421 groupes, 349 recevaient la durée d\'un AUTRE groupe. Le recollage appariait la liste des groupes lus dans le TEXTE avec la liste des lignes « Passed » vues à l\'EXÉCUTION, par leur RANG — premier avec premier. Ça ne tient que si les deux listes sont dans le même ordre, ET ELLES NE LE SONT PAS : ce filet déclare des fonctions puis les appelle, `async function testX()` ligne 1735 et `await testX();` ligne 20000. Une seule fonction déclarée loin de son appel décale TOUT ce qui suit, et il y en a 147. L\'OUTIL LE DISAIT DEPUIS TOUJOURS, ET C\'EST CE QUI SAUVE LA SITUATION : il déclarait le recollage « INCOMPLET » et refusait de servir le détail par groupe (#1547). Il avait raison de refuser ; il ne savait pas encore POURQUOI. Le TOTAL, lui, est resté juste — c\'est une somme, elle ne dépend pas de l\'ordre. TROIS DÉFAUTS EMPILÉS, CORRIGÉS DANS CET ORDRE, et chacun a fait bondir le taux d\'appariement : ① le titre d\'un groupe s\'arrêtait au premier guillemet, or ce filet écrit ses messages entre apostrophes, donc toute apostrophe du texte y est échappée — SIX titres réduits à « l », « axa-check », « le banc d », dont deux devenus homonymes (323/440) ; ② un groupe qui imprime trois lignes a TROIS clefs, pas une : son titre est leur concaténation, qui n\'apparaît dans aucune ligne imprimée (418/440) ; ③ la contre-oblique doublée du source est simple à l\'impression (439/440). ET LE DERNIER ORPHELIN NE SE CORRIGE PAS, IL SE DÉRIVE : son message est construit par concaténation, `console.log(\'Passed: \' + checked + \' routes…\')`, donc le source n\'en porte aucun texte littéral. Le compter comme structurellement inappariable, plutôt que de le subir, est ce qui permet au verdict de virer au vert — sans ça il resterait éternellement « incomplet » à 99,8 %, et un voyant qui ne peut pas virer au vert cesse d\'être lu (leçon L6). LE REPLI RESTE EN PLACE ET SE DIT : si l\'appariement par contenu ne se déclare pas complet, l\'ancien appariement par rang reprend la main, et la sortie NOMME celui qui a servi — une mesure dont on ignore la méthode ne se re-vérifie pas.');
+}
+await testLeRecollageParContenu();
