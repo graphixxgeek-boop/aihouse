@@ -249,6 +249,52 @@ export function findImportsIrresolus(texteDeLaPart = "", { existe = null, root =
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LE GARDE-FOU QUI MANQUAIT AU-DESSUS DE TOUS LES AUTRES (2026-10-03)
+// ————————————————————————————————————————————————————————————————————————
+//
+// CE QUE LE RUNNER FAISAIT : il imprimait « 436 succès distincts » et ne le comparait À RIEN. Une
+// part qui aurait silencieusement perdu cinquante vérifications aurait affiché « 386 succès
+// distincts · terminé en 169 s », et cette ligne se lit comme un succès.
+//
+// POURQUOI C'EST LE PLUS DANGEREUX DE TOUS LES DÉFAUTS DE CET OUTIL, et pas seulement un de plus :
+// tous les autres se voient. Un import non résolu fait tomber la part, une variable manquante
+// aussi, une collision d'écriture finit par mordre. CELUI-CI NE SE VOIT PAS — il rend un vert plus
+// RAPIDE, c'est-à-dire exactement ce qu'on venait chercher, en ayant moins vérifié. C'est la seule
+// façon dont ce runner pourrait coûter au projet au lieu de lui rendre service.
+//
+// LA RÉFÉRENCE EST LE DERNIER PASSAGE SÉQUENTIEL RÉEL, lu dans l'historique d'Ezechiel — jamais un
+// nombre écrit en dur, qui se périmerait au prochain test ajouté (Article 24). Et quand il n'y a
+// pas de référence, on le DIT : « je n'ai rien à quoi comparer » et « rien n'a été perdu » ne
+// s'écrivent jamais pareil (leçons L5/L11).
+export const HISTORIQUE_EZECHIEL = "docs/ezechiel-les-tests/historique.json";
+
+export function referenceSequentielle({ lire = null, root = "" } = {}) {
+  let brut;
+  try { brut = lire ? lire(HISTORIQUE_EZECHIEL) : readFileSync(new URL(`../${HISTORIQUE_EZECHIEL}`, import.meta.url), "utf8"); }
+  catch { return { mesurable: false, pourquoi: `aucun historique séquentiel (${HISTORIQUE_EZECHIEL}) : lancer \`node scripts/ezechiel-les-tests.mjs mesurer\` une fois pour avoir une référence` }; }
+  void root;
+  let releves;
+  try { releves = JSON.parse(brut); } catch { return { mesurable: false, pourquoi: `${HISTORIQUE_EZECHIEL} est illisible : un historique abîmé se lirait comme une absence de régression` }; }
+  // SEUL UN PASSAGE VERT FAIT RÉFÉRENCE : un passage rouge s'est arrêté en route, donc son compte
+  // de succès décrit un filet partiel et servirait de barre trop basse — l'inverse d'un garde-fou.
+  const verts = (Array.isArray(releves) ? releves : []).filter((r) => r && r.code === 0 && Number.isFinite(r.succes) && r.succes > 0);
+  if (!verts.length) return { mesurable: false, pourquoi: "aucun passage séquentiel VERT dans l'historique : un passage rouge s'est arrêté en route, donc son compte décrirait un filet partiel et servirait de barre trop basse" };
+  const dernier = verts[verts.length - 1];
+  return { mesurable: true, succes: dernier.succes, quand: dernier.quand };
+}
+
+export function verdictDeCompletude({ distincts = 0, reference = {} } = {}) {
+  if (!reference.mesurable) {
+    return { mesurable: false, suffisant: null, pourquoi: reference.pourquoi, message: `⚠️  COMPLÉTUDE PAS MESURÉE — ${reference.pourquoi}. Les ${distincts} succès de ce lancement ne se comparent donc à rien : ils ne prouvent pas qu'aucune vérification n'a été perdue.` };
+  }
+  const manquants = reference.succes - distincts;
+  if (manquants > 0) {
+    return { mesurable: true, suffisant: false, manquants, message: `🚨 ${manquants} VÉRIFICATION(S) PERDUE(S) — ${distincts} succès distincts ici contre ${reference.succes} au dernier séquentiel vert (${String(reference.quand).slice(0, 10)}). Un filet plus RAPIDE qui vérifie MOINS n'est pas un gain : ne pas se fier à ce lancement, relancer en séquentiel.` };
+  }
+  return { mesurable: true, suffisant: true, manquants: 0, message: `✅ COMPLET — ${distincts} succès distincts, contre ${reference.succes} au dernier séquentiel vert (${String(reference.quand).slice(0, 10)}) : aucune vérification perdue.${distincts > reference.succes ? ` (${distincts - reference.succes} de plus : des tests ont été ajoutés depuis.)` : ""}` };
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LE PLANCHER — ce que la parallélisation ne pourra JAMAIS faire descendre (2026-10-03)
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -527,6 +573,11 @@ async function main() {
   console.log("\n=== LES PARTS ===");
   for (const [i, r] of resultats.entries()) console.log(`  part ${i + 1} : ${r.code === 0 ? "✅" : "🚨 CODE " + r.code} en ${(r.ms / 1000).toFixed(1)} s`);
   console.log(`\nFilet en ${combien} parts terminé en ${(total / 1000).toFixed(1)} s · ${recolle.lignes.length} succès distincts · ${recolle.doublons} doublon(s) de l'épine (attendus).`);
+  // LE VERDICT DE COMPLÉTUDE VIENT APRÈS LA DURÉE, ET C'EST VOLONTAIRE : la durée est ce qu'on
+  // vient chercher, la complétude est ce qui décide si on a le droit de s'en réjouir.
+  const completude = verdictDeCompletude({ distincts: recolle.lignes.length, reference: referenceSequentielle() });
+  console.log(completude.message);
+  if (completude.suffisant === false) process.exitCode = 1;
 
   const rate = resultats.filter((r) => r.code !== 0);
   if (rate.length) {

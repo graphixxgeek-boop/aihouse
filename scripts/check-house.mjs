@@ -27460,3 +27460,45 @@ async function testLeFiletEnPartsRepare() {
   console.log('Passed: le runner parallèle était CASSÉ, et son plafond est désormais un chiffre (2026-10-03, tâche #1567). IL NE DÉMARRAIT PLUS DEPUIS QUATRE JOURS : le filet importe ses voisins de deux façons mélangées, et les vingt-huit imports en `./x.mjs` ajoutés après l\'écriture du runner ne se résolvent pas depuis la copie. **Un outil qu\'on n\'utilise pas ne signale jamais qu\'il est cassé** — c\'est la leçon L2 par son autre bout, et elle a coûté quatre jours pendant lesquels le seul levier connu contre le temps du filet était mort sans que personne le sache. RÉPARÉ ET VÉRIFIÉ EN VRAI : 4 parts vertes, 266 s → 169 s, soit 37 % de moins. LA RÉÉCRITURE A DÛ DEVENIR CHIRURGICALE EN COURS DE ROUTE, et l\'erreur était instructive : la première version a modifié un chemin CITÉ DANS UNE CHAÎNE, dans l\'éprouvette qui vérifie justement la détection de dépendances — le runner cassait le test qu\'il lançait, pour la seconde fois de sa vie. La distinction qui tranche est que le CHEMIN d\'un vrai import est toujours dans une chaîne : c\'est le MOT-CLÉ qu\'il faut regarder, et le détecteur de chaînes existait déjà chez Ezechiel. LE PLAFOND EST MAINTENANT CHIFFRÉ ET CORROBORÉ DEUX FOIS : l\'épine — le code écrit au niveau du fichier, rejoué dans chaque part — pèse 120,4 s sur 247,8, soit 49 %. Elle pesait 18,6 s le 29 septembre : multipliée par 6,5 en quatre jours. Le plancher est à 121 s, et huit parts ne descendraient qu\'à 137 s. Le calcul par plages de lignes et le lancement réel à quatre parts se rejoignent à 3 s près. ET LE DÉTECTEUR DE COUPLAGES REFUSE DE CONCLURE, ce qui est le résultat le plus utile de la session : deux versions essayées, l\'une rendant 7 couplages en ratant le cas connu, l\'autre 45 dont « a » et « n ». Séparer une variable de portée fichier d\'une locale homonyme demande un analyseur de portées. ET L\'ESSAI A CORRIGÉ LE DIAGNOSTIC : la variable qui fait tomber trois parts sur quatre est déclarée DANS UN BLOC, pas dans l\'épine — le couplage est BLOC → BLOC, et le détecteur de socle ne voit que les blocs qui touchent `post`, `db` ou `world`. Le trou est ailleurs que là où on allait creuser.');
 }
 await testLeFiletEnPartsRepare();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1576 — UN FILET PLUS RAPIDE QUI VÉRIFIE MOINS N'EST PAS UN GAIN
+async function testLaCompletudeDuFiletEnParts() {
+  const F = await import('../scripts/filet-en-parts.mjs');
+
+  // ── LE DÉFAUT QUE CE GARDE-FOU FERME EST LE SEUL DE CET OUTIL QUI NE SE VOIT PAS. Tous les
+  // autres mordent : un import non résolu fait tomber la part, une variable manquante aussi, une
+  // collision d'écriture finit par se manifester. Celui-ci rend un vert PLUS RAPIDE — exactement
+  // ce qu'on venait chercher — en ayant moins vérifié. Le runner imprimait « 436 succès
+  // distincts » et ne le comparait À RIEN.
+  const ref = { mesurable: true, succes: 430, quand: '2026-10-03T00:00:00Z' };
+  assert.strictEqual(F.verdictDeCompletude({ distincts: 430, reference: ref }).suffisant, true, 'the same count is complete');
+  assert.strictEqual(F.verdictDeCompletude({ distincts: 437, reference: ref }).suffisant, true, 'more is complete too — tests were added since the reference');
+  const perdu = F.verdictDeCompletude({ distincts: 380, reference: ref });
+  assert.strictEqual(perdu.suffisant, false, 'FEWER is a loss, and the runner must refuse to be trusted');
+  assert.strictEqual(perdu.manquants, 50, 'and it says how many');
+  assert.match(perdu.message, /n'est pas un gain/, 'with the sentence that matters: a faster net that checks less is not a gain');
+
+  // ── « JE N'AI RIEN À QUOI COMPARER » ET « RIEN N'A ÉTÉ PERDU » NE S'ÉCRIVENT JAMAIS PAREIL
+  // (leçons L5/L11). Sans référence le verdict est PAS MESURÉ, jamais un succès par défaut.
+  const sansRef = F.verdictDeCompletude({ distincts: 436, reference: { mesurable: false, pourquoi: 'aucun historique' } });
+  assert.strictEqual(sansRef.suffisant, null, 'no reference is not a pass');
+  assert.match(sansRef.message, /PAS MESURÉE/, 'and it says so rather than staying silent');
+
+  // ── LA RÉFÉRENCE EST LE DERNIER PASSAGE VERT, jamais un nombre écrit en dur qui se périmerait
+  // au prochain test ajouté (Article 24). Et un passage ROUGE ne fait jamais référence : il s'est
+  // arrêté en route, donc son compte servirait de barre trop basse — l'inverse d'un garde-fou.
+  const histo = (x) => F.referenceSequentielle({ lire: () => JSON.stringify(x) });
+  assert.strictEqual(histo([{ code: 0, succes: 100, quand: 'a' }, { code: 0, succes: 430, quand: 'b' }]).succes, 430, 'the most recent green run is the reference');
+  assert.strictEqual(histo([{ code: 0, succes: 430, quand: 'a' }, { code: 1, succes: 165, quand: 'b' }]).succes, 430, 'a RED run never becomes the reference, however recent: it stopped partway, so its count would be a bar set too low');
+  assert.strictEqual(histo([{ code: 1, succes: 165, quand: 'a' }]).mesurable, false, 'with only red runs there is no reference at all');
+  assert.strictEqual(histo('pas du json').mesurable, false, 'a damaged history reads as an absence of reference, never as an absence of regression');
+  assert.strictEqual(F.referenceSequentielle({ lire: () => { throw new Error('absent'); } }).mesurable, false, 'and a missing one too, naming the command that would create it');
+
+  // ── LE PASSAGE RÉEL (Article 25) : la référence existe et le dernier lancement était complet.
+  const reel = F.referenceSequentielle();
+  if (reel.mesurable) assert.ok(reel.succes > 300, `the real reference comes from a real green sequential run (${reel.succes} successes)`);
+
+  console.log('Passed: un filet plus rapide qui vérifie moins n\'est pas un gain (2026-10-03, tâche #1576). LE RUNNER IMPRIMAIT « 436 SUCCÈS DISTINCTS » ET NE LE COMPARAIT À RIEN. Une part qui aurait silencieusement perdu cinquante vérifications aurait affiché « 386 succès distincts · terminé en 169 s », et cette ligne-là se lit comme un succès. C\'EST LE SEUL DÉFAUT DE CET OUTIL QUI NE SE VOIT PAS, et c\'est ce qui le rend le plus dangereux de tous : les autres mordent — un import non résolu fait tomber la part, une variable manquante aussi, une collision d\'écriture finit par se manifester. Celui-ci rend un vert PLUS RAPIDE, c\'est-à-dire exactement ce qu\'on venait chercher, en ayant moins vérifié. C\'est la seule façon dont ce runner pouvait coûter au projet au lieu de lui rendre service. LA RÉFÉRENCE EST LE DERNIER PASSAGE SÉQUENTIEL VERT, lu dans l\'historique d\'Ezechiel et jamais un nombre écrit en dur qui se périmerait au prochain test ajouté (Article 24). UN PASSAGE ROUGE NE FAIT JAMAIS RÉFÉRENCE, si récent soit-il : il s\'est arrêté en route, donc son compte décrit un filet partiel et servirait de barre trop basse — un garde-fou calé sur un échec valide tous les échecs suivants. ET SANS RÉFÉRENCE LE VERDICT EST « PAS MESURÉ », jamais un succès par défaut : « je n\'ai rien à quoi comparer » et « rien n\'a été perdu » ne s\'écrivent pas pareil. Vérifié en vrai : 4 parts, 159,6 s, 437 succès distincts contre 430 à la référence — complet, et sept de plus parce que des tests ont été ajoutés dans la journée.');
+}
+await testLaCompletudeDuFiletEnParts();

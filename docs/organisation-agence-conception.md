@@ -484,3 +484,48 @@ manuel — c'est l'état exact que le garde-fou d'évolutivité existe pour inte
 
 **Les deux rejoignent l'ordre déjà fixé par lui** : le schéma AVANT CASSANDRA, et rien ne
 s'applique sans qu'il ait tranché (Article 16).
+
+---
+
+## Son arbitrage du 2026-10-03 — la carte cible est celle de l'organisation CONSTATÉE
+
+*(Tranché en fenêtre dédiée le soir du 2026-10-03, tâche **#1574**. Consigné ici parce qu'un
+garde-fou l'a réclamé dans l'heure : une décision d'organisation qui ne vit que dans le suivi n'est
+pas dans le document qui la porte.)*
+
+**Sa phrase, et elle tranche une question restée ouverte depuis la tâche #1420** — « laquelle des
+deux cartes cibles fait foi ? » :
+
+> « c'est la carte de l'organisation **CONSTATÉE** pas INVENTÉE : on oublie ce qui a été inventé
+> (ce qui sous entend qu'il y aura une mise à jour des équipes, de leur logique d'équipements
+> – postes de travail – logique de nivellement, intégration, etc.) ça correspond à une **refonte de
+> l'organisation, de l'organigramme**. »
+
+**L'option retenue, confirmée par lui : la refonte COMPLÈTE, pas par étapes.** On repart de ce que
+le dépôt FAIT réellement, et on reconstruit équipes, nivellement et intégration sur cette base.
+
+### Ce que cet arbitrage rend caduc, et il faut le dire avant de s'en servir
+
+| Ce qui tombe | Pourquoi |
+|---|---|
+| les **familles déclarées à la main** | elles sont une invention de classement, pas un constat — et il avait déjà dit de les oublier |
+| les **postes de travail recopiés** | même raison ; ils se dérivent ou ils ne valent rien |
+| la partie **inventée** de la carte cible des modules (#1420) | la partie DÉRIVÉE du catalogue reste, parce qu'elle constate |
+
+### Ce que la mesure dit déjà de l'organisation constatée
+
+Deux chiffres mesurés le même jour, et ils cadrent la refonte plutôt qu'ils ne la décorent :
+
+- **71 prestations sur 76 ne sont portées que par UN seul outil** (tâche #1538). Sa définition d'un
+  module — « un ensemble d'agents qui œuvrent dans un sens commun » — décrit donc une CIBLE, pas
+  l'état actuel.
+- **Le cœur dérivé du graphe réel fait QUATRE fichiers** : `lib-json`, `tool-usage`, `lib-shell`,
+  `report-template`. Prise au mot, la « partie indétachable » n'en rend qu'UN — l'Agence est déjà
+  presque entièrement modulaire, et ce qui lui manque n'est pas la modularité mais le cœur.
+
+### L'ordre des chantiers que cet arbitrage impose
+
+**Le renommage vient APRÈS, et c'est sa décision explicite** *(tâche #1573)* : « on va calquer le
+renommage et les séries sur l'organisation cible, et lorsqu'on aura atteint l'orga cible on pourra
+renommer en toute facilité ». Les 75 noms non validés (#1020) et le code de nomenclature (#747)
+dépendent donc de l'orga cible, et jamais l'inverse.
