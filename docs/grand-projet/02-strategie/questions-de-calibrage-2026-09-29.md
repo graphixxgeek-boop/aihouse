@@ -1,5 +1,19 @@
 # LES QUESTIONS DE CALIBRAGE — niveau ① de l'escalade
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── grand-projet/02-strategie/le-chemin-2026-09-29
+            └── ▣ grand-projet/02-strategie/questions-de-calibrage-2026-09-29   ← CE DOCUMENT
+                (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Nuit du 2026-09-29 — heure LUE, source système. Tâches #1144 · #1151. Sa demande : « on reprend
 tout demain avec **50 questions ou plus** pour enchaîner sur la suite ».)*
 

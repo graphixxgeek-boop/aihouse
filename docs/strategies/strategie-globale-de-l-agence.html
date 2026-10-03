@@ -19,6 +19,18 @@
        deux constantes au fichier réel à chaque exécution. */
     --lia: #f29bc3; --noe: #55dbe5;
   }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
   * { box-sizing: border-box; }
   /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
      l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
@@ -106,12 +118,16 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-02T22:11:33.589Z</div>
+    <div class="date">2026-10-03T07:50:04.698Z</div>
     <h1>LA STRATÉGIE GLOBALE DE L'AGENCE — comme si elle était seule</h1>
-    <p class="sub">Hybride — base écrite à la main, bloc dérivé régénéré automatiquement</p>
+    <p class="sub">Page générée depuis docs/strategies/strategie-globale-de-l-agence.md — jamais écrite à la main.</p>
   </header>
   <div class="divider"></div>
-  <main><p><em>(Créée le 2026-10-02, tâche <strong>#1482</strong>, à sa demande : « Je veux 3 belles stratégies globales, livrées en HTML, parfaitement coherente dans la cascade de PHILO à taches ».)</em></p>
+  <main><p><strong>Où ce document se situe dans la cascade</strong> — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :</p>
+<pre><code>philosophie-et-politique
+    └── ▣ strategies/strategie-globale-de-l-agence   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)</code></pre>
+<p><em>(Créée le 2026-10-02, tâche <strong>#1482</strong>, à sa demande : « Je veux 3 belles stratégies globales, livrées en HTML, parfaitement coherente dans la cascade de PHILO à taches ».)</em></p>
 <div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/philosophie-et-politique.md</code>
 <em>la philosophie dit POURQUOI, celle-ci dit COMMENT on s'y prend — à l'échelle de l'Agence seule.</em></p></div>
 <div class="highlight"><p><strong>SŒUR DE :</strong> <code>docs/strategies/strategie-globale-du-jeu.md</code>
@@ -152,8 +168,8 @@ serait la dette que l'Article 24 interdit.</p></div>
 <p><strong>L'ordre n'est pas négociable, et il suit une seule règle : prouver avant d'élaguer.</strong></p>
 <ul><li><strong>Prouver l'export</strong> — faire tourner l'Agence entière contre un dépôt d'accueil, pas seulement <code>fonder</code>. C'est la seule mesure qui dise si « il suffira de l'exporter » est vrai <em>(#1481 est le premier pas, fait)</em>.</li><li><strong>Loger ce qui n'a pas de domicile</strong> — les 3 règles, puis chercher ce que la mesure ne voit pas <em>(#1484, #1493)</em>.</li><li><strong>Trancher la licence</strong> — elle bloque les testeurs, donc elle bloque toute validation extérieure <em>(#1368)</em>.</li><li><strong>Alléger les obligations, pas le code</strong> — les 10 fichiers du groupe facile d'abord <em>(#1496)</em>.</li><li><strong>Puis seulement</strong> : le renommage en masse, qu'il a explicitement refusé d'infliger au code pendant un chantier complexe.</li></ul>
 <h4>⟳ CE QUE LA FILE DIT AUJOURD'HUI — L'AGENCE SEULE</h4>
-<table><thead><tr><th>Mesure</th><th>Valeur</th></tr></thead><tbody><tr><td>Tâches ouvertes sur ce périmètre</td><td><strong>152</strong></td></tr><tr><td>Dont critiques</td><td>10</td></tr><tr><td>Thèmes couverts</td><td>27</td></tr><tr><td>La plus ancienne encore ouverte</td><td>2026-09-22T11:50Z</td></tr><tr><td>Stratégies de chantier qui en descendent</td><td>0</td></tr><tr><td></td><td><em>(aucune ne déclare découler de celle-ci — elle est neuve)</em></td></tr></tbody></table>
-<p><em>(Bloc DÉRIVÉ, régénéré par <code>node scripts/data-archangel.mjs strategies --ranger</code> — dernier passage 2026-10-02T22:11Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)</em></p></main>
+<table><thead><tr><th>Mesure</th><th>Valeur</th></tr></thead><tbody><tr><td>Tâches ouvertes sur ce périmètre</td><td><strong>153</strong></td></tr><tr><td>Dont critiques</td><td>10</td></tr><tr><td>Thèmes couverts</td><td>27</td></tr><tr><td>La plus ancienne encore ouverte</td><td>2026-09-22T11:50Z</td></tr><tr><td>Stratégies de chantier qui en descendent</td><td>0</td></tr><tr><td></td><td><em>(aucune ne déclare découler de celle-ci — elle est neuve)</em></td></tr></tbody></table>
+<p><em>(Bloc DÉRIVÉ, régénéré par <code>node scripts/data-archangel.mjs strategies --ranger</code> — dernier passage 2026-10-02T22:31Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)</em></p></main>
   <div class="divider"></div><footer><p>Dérivé de docs/strategies/strategie-globale-de-l-agence.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
 </div>
 </body>

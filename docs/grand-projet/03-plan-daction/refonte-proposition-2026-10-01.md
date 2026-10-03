@@ -1,5 +1,18 @@
 # Faut-il tout reprendre à zéro ? — la proposition de plan d'action
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── ▣ grand-projet/03-plan-daction/refonte-proposition-2026-10-01   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`
 > *un plan d'action ne se juge que contre la stratégie qu'il sert — et la voie proposée (reconstruire le NOYAU) découle directement de la séparation des deux cas de figure.*
 

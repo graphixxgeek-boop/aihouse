@@ -25345,6 +25345,89 @@ async function testTableauDesConvictions() {
 await testTableauDesConvictions();
 
 // ─────────────────────────────────────────────────────────────────────────────
+// #1531 — L'ARBORESCENCE EXISTAIT DEPUIS CINQ JOURS ET N'AVAIT JAMAIS ÉTÉ DESSINÉE
+// ─────────────────────────────────────────────────────────────────────────────
+// SA QUESTION P01, LA PREMIÈRE DE SON FICHIER : « Arborescence de la GRANDE STRATEGIE mais
+// existe-t-il pour chaque stratégie une arborescence incluse également ? ». Réponse mesurée :
+// zéro sur treize — pas un caractère de dessin d'arbre dans docs/strategies/.
+//
+// ET LA DONNÉE EXISTAIT DÉJÀ, c'est ça le vrai constat. mesurerLAlignement() lit depuis le
+// 2026-09-29 les déclarations « DÉCOULE DE » de 69 documents et vérifie que chacun remonte à la
+// racine — 69 sur 69, zéro écart. L'arbre était entièrement connu et jamais DESSINÉ : la forme la
+// plus discrète du gaspillage dans ce dépôt, une mesure juste que personne ne peut lire.
+async function testArborescenceDeLaCascade() {
+  const K = await import('../scripts/the-king.mjs');
+
+  assert.equal(K.arbreDeLaCascade({ mesurable: false, pourquoi: 'rien lu' }).mesurable, false, 'a tree drawn on an unmeasured cascade would show an empty one, which is not the same as a cascade nobody read (L11)');
+
+  const faux = { mesurable: true, racine: 'R', objets: [
+    { chemin: 'A', parent: 'R', etat: 'ALIGNE', remontee: ['A', 'R'] },
+    { chemin: 'B', parent: 'A', etat: 'ALIGNE', remontee: ['B', 'A', 'R'] },
+    { chemin: 'C', parent: null, etat: 'INTERROMPU', remontee: ['C'] },
+  ] };
+  const arbre = K.arbreDeLaCascade(faux);
+  assert.equal(arbre.rattaches, 2);
+  assert.deepEqual(arbre.orphelins, ['C'], 'a document declaring no parent is NAMED rather than vanishing: declaring is not compulsory, disappearing silently is the defect');
+  const dessin = K.dessinerLArbre(arbre).join('\n');
+  assert.ok(dessin.includes('├──') || dessin.includes('└──'), 'the output must actually be DRAWN — a 69-line list is exact and unreadable, which is the whole point of his question');
+  assert.ok(dessin.includes('A') && dessin.includes('B'), 'and carry the real hierarchy');
+
+  // LA PROFONDEUR SE BORNE SANS MENTIR : un sous-arbre coupé le DIT.
+  const profond = K.dessinerLArbre(arbre, { profondeurMax: 1 }).join('\n');
+  assert.ok(/non dessiné/.test(profond), 'a truncated subtree must say so — a tree that stops without saying it reads as a leaf');
+
+  // LA BRANCHE D'UN SEUL DOCUMENT, qui est « l'arborescence incluse » qu'il demande : l'arbre
+  // entier dans chaque fichier ferait treize copies du même dessin.
+  const b = K.brancheDe('B', arbre, faux);
+  assert.equal(b.mesurable, true);
+  assert.deepEqual(b.ancetres, ['A', 'R'], 'the ancestry is the one the tool already computes, never recomputed here (L29)');
+  assert.equal(K.brancheDe('INCONNU', arbre, faux).mesurable, false, 'a document outside the alignable populations gets an honest refusal, never an invented branch');
+  assert.ok(K.dessinerLaBranche(b).join('\n').includes('← CE DOCUMENT'), 'and the drawing marks which node is the reader\'s own');
+
+  // L'INSERTION EST IDEMPOTENTE ET REFUSE PLUTÔT QUE DE DEVINER.
+  const vierge = K.insererLaBranche('# Titre\n\nDu texte.\n', ['```', 'arbre', '```']);
+  assert.equal(vierge.change, true);
+  assert.ok(vierge.texte.indexOf('# Titre') < vierge.texte.indexOf(K.MARQUEUR_ARBRE_DEBUT), 'the block goes AFTER the title: the title must stay the first thing one reads');
+  const deuxieme = K.insererLaBranche(vierge.texte, ['```', 'arbre', '```']);
+  assert.equal(deuxieme.change, false, 'a second pass with the same content changes nothing — a block that stacks would grow the document at every run');
+  const remplace = K.insererLaBranche(vierge.texte, ['```', 'autre arbre', '```']);
+  assert.ok(remplace.texte.includes('autre arbre') && !remplace.texte.includes('\narbre\n'), 'and new content REPLACES the block rather than appending a second one');
+  assert.ok(remplace.texte.includes('Du texte.'), 'the prose written by hand around it is never touched');
+  const casse = K.insererLaBranche(`# T\n${K.MARQUEUR_ARBRE_DEBUT}\nbloc sans fin\n`, ['x']);
+  assert.equal(casse.change, false, 'an opening marker with no closing one is REFUSED rather than guessed: overwriting to end-of-file would carry away hand-written prose');
+  assert.ok(casse.pourquoi.includes('refusé'), 'and it says why');
+
+  // EN DIRECT (Article 25).
+  const a = K.mesurerLAlignement();
+  const reel = K.arbreDeLaCascade(a);
+  assert.equal(reel.mesurable, true);
+  assert.ok(reel.total > 50, `the real cascade must be read (currently ${reel.total} documents)`);
+  const strategie = K.brancheDe('docs/strategies/gestion-des-taches-strategie.md', reel, a);
+  assert.equal(strategie.mesurable, true, 'and a real strategy must find its place in it — the very question he asked');
+  assert.ok(strategie.ancetres.length >= 1, 'with at least one real ancestor above it');
+  const surDisque = fs.readFileSync('docs/strategies/gestion-des-taches-strategie.md', 'utf8');
+  assert.ok(surDisque.includes(K.MARQUEUR_ARBRE_DEBUT), 'and the block is really ON DISK, not only computable — a drawing nobody can open answers nothing (L2)');
+
+  // ── LE BLOC INSÉRÉ NE DOIT PAS FAIRE SE RESSEMBLER LES DOCUMENTS, et c'est arrivé : poser le
+  //    même dessin dans 69 fichiers a fait passer le détecteur de documents jumeaux de 6 paires à
+  //    10. Le dépôt savait déjà écarter un bloc généré — pour UNE seule paire de marqueurs, celle
+  //    des sommaires. La correction porte sur la CLASSE (leçon L37) : la liste BLOCS_GENERES, où
+  //    un troisième bloc n'aura qu'à se déclarer.
+  const sh = await import('../scripts/lib-shell.mjs');
+  assert.ok(sh.BLOCS_GENERES.length >= 2, 'there is more than one kind of generated block, and the stripper must know them all');
+  assert.ok(sh.BLOCS_GENERES.every((b) => b.debut && b.fin && b.quoi), 'each declares its markers AND what it is — a marker pair nobody can name is one nobody can challenge');
+  const avecDeux = `prose${sh.DEBUT_BLOC_GENERE}sommaire${sh.FIN_BLOC_GENERE}milieu${K.MARQUEUR_ARBRE_DEBUT}arbre${K.MARQUEUR_ARBRE_FIN}fin`;
+  const nu = sh.sansLeBlocGenere(avecDeux);
+  assert.equal(nu, 'prosemilieufin', 'both generated blocks are stripped, not just the first one');
+  assert.equal(sh.sansLeBlocGenere('aucun bloc ici'), 'aucun bloc ici', 'and a document carrying none comes back untouched');
+  const deuxFois = sh.sansLeBlocGenere(`a${K.MARQUEUR_ARBRE_DEBUT}x${K.MARQUEUR_ARBRE_FIN}b${K.MARQUEUR_ARBRE_DEBUT}y${K.MARQUEUR_ARBRE_FIN}c`);
+  assert.equal(deuxFois, 'abc', 'a block appearing twice (a botched insertion) is removed every time — leaving the rest would keep skewing the comparison in silence');
+
+  console.log(`Passed: l'arborescence existait depuis cinq jours et n'avait jamais été dessinée (2026-10-03, tâche #1531). Sa question P01, la première de son fichier : « existe-t-il pour chaque stratégie une arborescence incluse ? ». Réponse mesurée : ZÉRO sur treize. ET LA DONNÉE EXISTAIT DÉJÀ — mesurerLAlignement() lit les déclarations « DÉCOULE DE » de ${reel.total} documents depuis le 2026-09-29 et vérifie que chacun remonte à la racine, ${a.couverture} % sans un écart. L'arbre était entièrement connu et jamais DESSINÉ : la forme la plus discrète du gaspillage ici, une mesure juste que personne ne peut lire. CE QUI EST INSÉRÉ EST LA BRANCHE, PAS L'ARBRE : l'arbre entier dans chaque fichier ferait treize copies du même dessin, donc chaque document reçoit ce qui est au-dessus de lui et ce qui pend en dessous. L'INSERTION SE FAIT ENTRE MARQUEURS, même patron que les index : un second passage remplace au lieu d'empiler, la prose écrite à la main n'est jamais touchée, et un marqueur d'ouverture sans fermeture est REFUSÉ plutôt que deviné — écraser jusqu'à la fin du fichier emporterait du texte écrit par un humain. Un sous-arbre coupé par la borne de profondeur le DIT, parce qu'un arbre qui s'arrête sans le dire se lit comme une feuille.`);
+}
+await testArborescenceDeLaCascade();
+
+// ─────────────────────────────────────────────────────────────────────────────
 // L'ORGANISATION DES LOIS — numéroter n'est pas citer (2026-10-02, tâche #1445)
 // ─────────────────────────────────────────────────────────────────────────────
 async function testLOrganisationDesLois() {

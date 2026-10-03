@@ -1,5 +1,19 @@
 # La planche des schémas de process
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── strategies/process-et-ronde-strategie
+            └── ▣ plans/schemas-de-process   ← CE DOCUMENT
+                (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/process-et-ronde-strategie.md`
 > *(Déclaré le 2026-09-29, tâche #1178 — c'est la planche des schémas de process, générée par god-of-all-process.)*
 

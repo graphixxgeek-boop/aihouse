@@ -1,5 +1,19 @@
 # Enquête — les 29 clusters de CLONE-HUNTER sont-ils réels ?
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── strategies/outillage-et-garde-fous-strategie
+            └── ▣ plans/enquete-clone-hunter-2026-09-22   ← CE DOCUMENT
+                (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/outillage-et-garde-fous-strategie.md`
 > *(Déclaré le 2026-09-29, tâche #1178 — c'est l'enquête sur les trouvailles d'un Gardien sacré.)*
 

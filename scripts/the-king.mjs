@@ -492,6 +492,145 @@ export function mesurerLAlignement({ populations = POPULATIONS_ALIGNABLES, root 
   };
 }
 
+// ============================================================================
+// L'ARBORESCENCE DE LA CASCADE — sa question P01 (tâche #1531)
+// ============================================================================
+// SA QUESTION, LA PREMIÈRE DE SON FICHIER DU 3 OCTOBRE : « Arborescence de la GRANDE STRATEGIE
+// mais existe-t-il pour chaque stratégie une arborescence incluse également ? »
+//
+// LA RÉPONSE MESURÉE ÉTAIT ZÉRO SUR TREIZE : pas un seul des treize documents de `docs/strategies/`
+// ne portait un caractère de dessin d'arbre. L'arborescence qu'il a vue vit ailleurs, dans
+// `docs/grand-projet/04-arborescence-des-taches/`.
+//
+// ⚠️ ET LA DONNÉE EXISTAIT DÉJÀ, C'EST ÇA LE VRAI CONSTAT. `mesurerLAlignement()` lit depuis le
+// 2026-09-29 les déclarations « DÉCOULE DE » de 69 documents et vérifie que chacun remonte jusqu'à
+// la racine — 69 sur 69, zéro écart. L'arbre était donc entièrement connu et jamais DESSINÉ.
+// C'est la forme la plus discrète du gaspillage dans ce dépôt : une mesure juste que personne ne
+// peut lire.
+//
+// POURQUOI UN ARBRE PLUTÔT QU'UNE LISTE : une liste de 69 lignes « X remonte à Y en 2 sauts » est
+// exacte et illisible. Ce qu'il demande — et c'est la même demande que pour la carte des modules —
+// c'est de VOIR la forme. Un document qui a douze enfants et un autre qui n'en a aucun se
+// distinguent d'un coup d'œil sur un arbre, jamais sur une liste triée par ordre alphabétique.
+export function arbreDeLaCascade(alignement, { profondeurMax = 8 } = {}) {
+  if (!alignement?.mesurable) {
+    return { mesurable: false, pourquoi: alignement?.pourquoi ?? "alignement non mesuré : un arbre dessiné sur zéro objet montrerait une cascade vide, ce qui n'est pas la même chose qu'une cascade non lue (L11)" };
+  }
+  const enfants = new Map();
+  const orphelins = [];
+  for (const o of alignement.objets) {
+    if (!o.parent) { orphelins.push(o.chemin); continue; }
+    if (!enfants.has(o.parent)) enfants.set(o.parent, []);
+    enfants.get(o.parent).push(o.chemin);
+  }
+  for (const l of enfants.values()) l.sort();
+  const compterSousArbre = (n, vus = new Set()) => {
+    if (vus.has(n)) return 0;
+    vus.add(n);
+    return (enfants.get(n) ?? []).reduce((acc, e) => acc + 1 + compterSousArbre(e, vus), 0);
+  };
+  return {
+    mesurable: true,
+    racine: alignement.racine,
+    enfants,
+    // UN DOCUMENT QUI NE DÉCLARE RIEN n'est pas fautif — l'Article 24 ne demande pas que tout le
+    // monde déclare, il demande qu'une déclaration ne puisse pas devenir fausse en silence. Mais
+    // il ne figure dans aucun arbre, donc on le NOMME plutôt que de le laisser disparaître.
+    orphelins,
+    total: alignement.objets.length,
+    rattaches: alignement.objets.length - orphelins.length,
+    profondeurMax,
+    poidsDe: (n) => compterSousArbre(n),
+  };
+}
+
+export function dessinerLArbre(arbre, { depuis = null, profondeurMax = null } = {}) {
+  if (!arbre?.mesurable) return [`❓ PAS MESURÉ — ${arbre?.pourquoi}`];
+  const max = profondeurMax ?? arbre.profondeurMax;
+  const out = [];
+  const nomCourt = (c) => String(c).replace(/^docs\//, "").replace(/\.md$/, "");
+  const marcher = (noeud, prefixe, dernier, niveau, vus) => {
+    if (vus.has(noeud)) { out.push(`${prefixe}${dernier ? "└── " : "├── "}⟲ ${nomCourt(noeud)} (déjà vu — cycle)`); return; }
+    vus.add(noeud);
+    const kids = arbre.enfants.get(noeud) ?? [];
+    if (niveau === 0) out.push(nomCourt(noeud));
+    else out.push(`${prefixe}${dernier ? "└── " : "├── "}${nomCourt(noeud)}${kids.length ? `  (${kids.length})` : ""}`);
+    if (niveau >= max) { if (kids.length) out.push(`${prefixe}${dernier ? "    " : "│   "}└── … ${kids.length} enfant(s) non dessiné(s)`); return; }
+    const suivant = niveau === 0 ? "" : prefixe + (dernier ? "    " : "│   ");
+    kids.forEach((k, i) => marcher(k, suivant, i === kids.length - 1, niveau + 1, vus));
+  };
+  marcher(depuis ?? arbre.racine, "", true, 0, new Set());
+  return out;
+}
+
+// LA BRANCHE D'UN SEUL DOCUMENT : ce qui est au-dessus de lui jusqu'à la racine, et ce qui pend
+// en dessous. C'est exactement « l'arborescence incluse » qu'il demande pour CHAQUE stratégie —
+// l'arbre entier dans chaque fichier serait illisible et ferait treize copies du même dessin.
+export function brancheDe(chemin, arbre, alignement) {
+  if (!arbre?.mesurable || !alignement?.mesurable) {
+    return { mesurable: false, pourquoi: "arbre ou alignement non mesuré : une branche dessinée sans eux montrerait un document isolé, ce qui est faux et rassurant à tort" };
+  }
+  const o = alignement.objets.find((x) => x.chemin === chemin);
+  if (!o) return { mesurable: false, pourquoi: `« ${chemin} » n'est dans aucune population alignable : il n'a pas de place dans la cascade, et le dire vaut mieux que de dessiner une branche inventée` };
+  const remontee = o.remontee ?? [];
+  return {
+    mesurable: true,
+    chemin,
+    etat: o.etat,
+    // La remontée telle que l'outil la calcule déjà, jamais recalculée ici (leçon L29).
+    ancetres: remontee.filter((c) => c !== chemin),
+    enfants: arbre.enfants.get(chemin) ?? [],
+    racine: arbre.racine,
+  };
+}
+
+export function dessinerLaBranche(b) {
+  if (!b?.mesurable) return [`❓ PAS MESURÉ — ${b?.pourquoi}`];
+  const nomCourt = (c) => String(c).replace(/^docs\//, "").replace(/\.md$/, "");
+  const out = ["```"];
+  const chaine = [...b.ancetres].reverse();
+  chaine.forEach((a, i) => out.push(`${"    ".repeat(i)}${i ? "└── " : ""}${nomCourt(a)}`));
+  const base = "    ".repeat(chaine.length);
+  out.push(`${base}${chaine.length ? "└── " : ""}▣ ${nomCourt(b.chemin)}   ← CE DOCUMENT`);
+  b.enfants.forEach((e, i) => {
+    const dernier = i === b.enfants.length - 1;
+    out.push(`${base}    ${dernier ? "└── " : "├── "}${nomCourt(e)}`);
+  });
+  if (!b.enfants.length) out.push(`${base}    (aucun document ne déclare découler de celui-ci)`);
+  out.push("```");
+  return out;
+}
+
+// L'INSERTION SE FAIT ENTRE DEUX MARQUEURS, et c'est la seule forme acceptable (même patron que
+// les index de data-archangel) : un second passage REMPLACE le bloc au lieu de l'empiler, et la
+// prose écrite à la main autour n'est jamais touchée. Un dessin recopié une fois dans treize
+// fichiers serait treize copies à tenir à jour — très exactement ce que l'Article 24 interdit.
+export const MARQUEUR_ARBRE_DEBUT = "<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->";
+export const MARQUEUR_ARBRE_FIN = "<!-- /ARBORESCENCE -->";
+
+export function insererLaBranche(texte, lignes, { debut = MARQUEUR_ARBRE_DEBUT, fin = MARQUEUR_ARBRE_FIN } = {}) {
+  const bloc = [debut, "", "**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :", "", ...lignes, "", fin].join("\n");
+  const t = String(texte ?? "");
+  const i = t.indexOf(debut);
+  if (i !== -1) {
+    const j = t.indexOf(fin, i);
+    if (j === -1) {
+      // Un marqueur d'ouverture sans fermeture : on REFUSE plutôt que de deviner où le bloc
+      // s'arrête — écraser jusqu'à la fin du fichier emporterait de la prose écrite à la main.
+      return { change: false, pourquoi: "marqueur d'ouverture sans marqueur de fin : refusé plutôt que de deviner où le bloc s'arrête, ce qui emporterait de la prose écrite à la main", texte: t };
+    }
+    const nouveau = t.slice(0, i) + bloc + t.slice(j + fin.length);
+    return { change: nouveau !== t, texte: nouveau, remplace: true };
+  }
+  // PREMIÈRE INSERTION : juste après le titre de niveau 1, jamais en tête du fichier — le titre
+  // doit rester la première chose qu'on lit.
+  const lignesTexte = t.split("\n");
+  let pos = lignesTexte.findIndex((l) => /^#\s/.test(l));
+  pos = pos === -1 ? 0 : pos + 1;
+  lignesTexte.splice(pos, 0, "", bloc);
+  return { change: true, texte: lignesTexte.join("\n"), remplace: false };
+}
+
 export function formatAlignementLines(a, { limite = 12 } = {}) {
   if (!a?.mesurable) return ["=== ALIGNEMENT EN CASCADE : PAS MESURÉ ===", `  ${a?.pourquoi}`, "", "  Ce n'est PAS « tout est aligné »."];
   const L = [`=== ALIGNEMENT EN CASCADE — ${a.couverture} % des objets remontent jusqu'à la racine ===`, "", `  ${a.pourquoi}`, ""];
@@ -2024,6 +2163,49 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
   // SA DEMANDE DE FORME (2026-10-03, tâche #1534) : « la liste des 104 convictions sous forme
   // résumée, en tableau, 5 par ligne ». Le livrable est le FICHIER, et il porte le tableau ET la
   // liste intégrale : un résumé qui remplacerait sa source ferait perdre ce que la conviction dit.
+  // `cascade` (2026-10-03, tâche #1531) — sa question P01 : « existe-t-il pour chaque stratégie une
+  // arborescence incluse ? ». La réponse était zéro sur treize, alors que la donnée existait depuis
+  // le 2026-09-29 et n'était jamais dessinée.
+  if (process.argv[2] === "cascade") {
+    const a = mesurerLAlignement();
+    const arbre = arbreDeLaCascade(a);
+    const lignes = ["# L'arborescence de la cascade", "", ...formatAlignementLines(a), "", "## L'arbre entier", "", "```", ...dessinerLArbre(arbre), "```"];
+    for (const l of lignes) console.log(l);
+    // AUCUN FICHIER SÉPARÉ N'EST DÉPOSÉ, ET C'EST UNE DÉCISION PLUTÔT QU'UN OUBLI. Le livrable
+    // (Article 31) est bien un fichier : ce sont les documents EUX-MÊMES, chacun portant sa
+    // branche entre marqueurs — c'est très exactement ce qu'il a demandé, « une arborescence
+    // INCLUSE » dans chaque stratégie. Un document séparé reprenant l'arbre entier serait un
+    // SECOND porteur de la même information, qui finirait par diverger (leçon L29) ; mesuré en
+    // le faisant, il créait en plus une paire de documents jumeaux avec `docs/plans/index.md`,
+    // parce qu'une liste de tous les chemins du dépôt ressemble forcément à un index.
+
+    const inserer = process.argv.includes("--inserer");
+    let touches = 0; const refus = [];
+    if (inserer && arbre.mesurable) {
+      for (const o of a.objets) {
+        const b = brancheDe(o.chemin, arbre, a);
+        if (!b.mesurable) continue;
+        const abs = join(ROOT, o.chemin);
+        let texte = "";
+        try { texte = readFileSync(abs, "utf8"); } catch { continue; }
+        const r = insererLaBranche(texte, dessinerLaBranche(b));
+        if (r.pourquoi) { refus.push(`${o.chemin} — ${r.pourquoi}`); continue; }
+        if (r.change) { writeFileSync(abs, r.texte, "utf8"); touches += 1; }
+      }
+      console.log(`\n${touches} document(s) portent désormais leur arborescence, entre marqueurs régénérables.`);
+      for (const x of refus) console.log(`   ⚠️ ${x}`);
+    } else if (!inserer) {
+      console.log("\n(Rien n'a été écrit dans les documents. Ajouter --inserer pour y poser le bloc d'arborescence.)");
+    }
+
+    const constats = [];
+    if (!arbre.mesurable) constats.push({ constat: `cascade non mesurée : ${arbre.pourquoi}`, etat: "retenu", tache: 1531 });
+    else if (arbre.orphelins.length) constats.push({ constat: `${arbre.orphelins.length} document(s) ne déclarent aucun parent : ils ne figurent dans aucun arbre`, etat: "a-trancher", pourquoi: "déclarer un parent n'est pas obligatoire — ce qui l'est, c'est qu'une déclaration ne devienne pas fausse en silence. Savoir lesquels ne déclarent rien est une information, pas un reproche" });
+    for (const x of refus) constats.push({ constat: x, etat: "retenu", tache: 1531 });
+    console.log("");
+    imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
+    return;
+  }
   if (process.argv[2] === "convictions") {
     const t = tableauDesConvictions(revelerLaPhilosophie());
     const lignes = formatTableauDesConvictionsLines(t);

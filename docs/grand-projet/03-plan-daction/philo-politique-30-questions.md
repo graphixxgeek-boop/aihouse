@@ -1,5 +1,17 @@
 # PHILO & POLITIQUE — les 30 questions de FINALISATION
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── ▣ grand-projet/03-plan-daction/philo-politique-30-questions   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/philosophie-et-politique.md`
 > *ces questions ne portent que sur la finalisation de ce document : elles en découlent
 > directement, et elles disparaissent avec lui une fois répondues.*

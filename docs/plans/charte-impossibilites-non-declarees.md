@@ -1,5 +1,19 @@
 # Treize règles de la charte n'ont aucun mécanisme — et ne le disent pas
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── strategies/charte-et-referentiel-strategie
+            └── ▣ plans/charte-impossibilites-non-declarees   ← CE DOCUMENT
+                (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/charte-et-referentiel-strategie.md`
 > *(Déclaré le 2026-09-29, tâche #1178 — il recense les obligations de la charte qu'aucun mécanisme ne porte.)*
 

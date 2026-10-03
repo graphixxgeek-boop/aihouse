@@ -1,5 +1,17 @@
 # LES CINQ IMPOSSIBLES — notre philosophie, révélée plutôt qu'inventée
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+grand-projet/01-absorption/syntheses/PHILOSOPHIE_ET_POLITIQUE
+    └── ▣ grand-projet/02-strategie/les-cinq-impossibles   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Écrit le 2026-09-29 au soir. **Aucune de ces réponses n'a été inventée** : chacune existait déjà
 dans la charte, dans une leçon, ou dans un mécanisme qui REFUSE pour de vrai. Ce document les
 rassemble, il ne les crée pas.)*

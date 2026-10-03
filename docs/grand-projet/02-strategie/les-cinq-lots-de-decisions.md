@@ -1,5 +1,21 @@
 # LES DÉCISIONS QUI T'ATTENDENT, EN CINQ LOTS — au lieu de dix-sept questions isolées
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── grand-projet/02-strategie/le-chemin-2026-09-29
+            └── grand-projet/03-plan-daction/ou-va-chaque-chose
+                └── grand-projet/02-strategie/ce-qui-ralentit-le-projet
+                    └── ▣ grand-projet/02-strategie/les-cinq-lots-de-decisions   ← CE DOCUMENT
+                        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche **#1259**.
 Ce document n'est pas une demande de plus : **c'est la réparation d'un défaut que la nuit a
 mesuré, et il est de mon côté.**)*

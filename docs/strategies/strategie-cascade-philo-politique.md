@@ -1,5 +1,17 @@
 # Stratégie — la cascade philo/politique, et le double mouvement
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── ▣ strategies/strategie-cascade-philo-politique   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 **DÉCOULE DE :** `docs/philosophie-et-politique.md`
 
 *(Ouvert le 2026-10-01. Tâches #1418, #1419, #1422, #1423. **Ce document est une note de

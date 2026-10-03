@@ -1,5 +1,17 @@
 # LE FILET MORD-IL VRAIMENT ? — et comment ma propre mesure a commis trois fois l'erreur qu'elle cherchait
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+referentiel/lecons
+    └── ▣ grand-projet/02-strategie/le-filet-mord-il-vraiment   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche **#1267**.
 Personne ne l'a demandé : c'est la leçon **L47**, écrite une heure plus tôt, transformée en mesure
 plutôt que laissée en maxime.)*

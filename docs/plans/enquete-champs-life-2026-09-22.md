@@ -1,5 +1,19 @@
 # Enquête — les 6 champs `lib/life.ts` signalés par ARGUS
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── strategies/le-jeu-et-le-site-strategie
+            └── ▣ plans/enquete-champs-life-2026-09-22   ← CE DOCUMENT
+                (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/le-jeu-et-le-site-strategie.md`
 > *(Déclaré le 2026-09-29, tâche #1178 — il enquête sur six champs de `lib/life.ts`, c'est-à-dire sur le moteur du jeu.)*
 

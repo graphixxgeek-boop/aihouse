@@ -1,5 +1,17 @@
 # Modifier un document de référence : le process qui manque (proposition)
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── ▣ plans/process-documents-de-reference-proposition   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/philosophie-et-politique.md`
 > *une proposition de process pour les documents de référence découle de la politique d'harmonisation : une seule source de vérité par sujet, les autres y renvoient.*
 

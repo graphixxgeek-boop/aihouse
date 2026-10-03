@@ -1060,15 +1060,43 @@ export function memeChose(a, b) {
 export const DEBUT_BLOC_GENERE = "<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->";
 export const FIN_BLOC_GENERE = "<!-- FIN DU SOMMAIRE GÉNÉRÉ -->";
 
-// Rend le texte SANS son bloc généré. Un fichier qui n'en porte pas ressort inchangé — c'est la
+// IL Y A PLUSIEURS SORTES DE BLOCS GÉNÉRÉS, ET LA LISTE EST LE SEUL MONTAGE QUI TIENT
+// (2026-10-03, tâche #1531). La version d'origine ne connaissait qu'une paire de marqueurs, celle
+// des sommaires. Le jour où un SECOND bloc généré est apparu — l'arborescence de la cascade,
+// insérée dans 69 documents — le détecteur de documents jumeaux est passé de 6 paires à 10 : les
+// documents se ressemblaient par un dessin que personne n'avait écrit. Exactement le défaut que
+// cette fonction existe pour empêcher, revenu par la porte d'à côté.
+//
+// LA CORRECTION PORTE SUR LA CLASSE, PAS SUR L'OCCURRENCE (leçon L37) : la fonction prend
+// désormais une LISTE, et un troisième bloc généré n'aura qu'à s'y déclarer — jamais à rouvrir
+// cette fonction. C'est l'Article 24 dans sa formule exacte : un nouveau venu hérite de ce que
+// l'équipe sait déjà faire.
+export const BLOCS_GENERES = [
+  { debut: DEBUT_BLOC_GENERE, fin: FIN_BLOC_GENERE, quoi: "le sommaire généré d'un index (data-archangel)" },
+  { debut: "<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->", fin: "<!-- /ARBORESCENCE -->", quoi: "l'arborescence de la cascade (THE-KING)" },
+];
+
+// Rend le texte SANS ses blocs générés. Un fichier qui n'en porte aucun ressort inchangé — c'est la
 // condition pour que n'importe quel lecteur puisse l'appliquer sans se demander d'abord si le
 // document est concerné.
-export function sansLeBlocGenere(texte = "") {
-  const t = String(texte);
-  const i = t.indexOf(DEBUT_BLOC_GENERE);
-  if (i === -1) return t;
-  const j = t.indexOf(FIN_BLOC_GENERE, i);
-  return j === -1 ? t.slice(0, i) : t.slice(0, i) + t.slice(j + FIN_BLOC_GENERE.length);
+export function sansLeBlocGenere(texte = "", { blocs = BLOCS_GENERES } = {}) {
+  let t = String(texte);
+  for (const b of blocs) {
+    // Un même document peut porter plusieurs fois le même bloc si une insertion a mal tourné :
+    // on les retire tous plutôt que le premier, sans quoi le reste continuerait de fausser la
+    // comparaison en silence.
+    for (;;) {
+      const i = t.indexOf(b.debut);
+      if (i === -1) break;
+      const j = t.indexOf(b.fin, i);
+      // Ouverture sans fermeture : on coupe à l'ouverture. C'est le choix prudent pour une
+      // COMPARAISON (mieux vaut comparer moins que comparer du gabarit) — à l'opposé de
+      // l'insertion, qui refuse d'écrire dans ce cas plutôt que d'emporter de la prose.
+      t = j === -1 ? t.slice(0, i) : t.slice(0, i) + t.slice(j + b.fin.length);
+      if (j === -1) break;
+    }
+  }
+  return t;
 }
 
 

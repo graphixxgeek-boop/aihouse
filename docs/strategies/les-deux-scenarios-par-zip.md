@@ -1,5 +1,18 @@
 # Les deux façons de livrer l'Agence par ZIP — laquelle tient aujourd'hui
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── ▣ strategies/les-deux-scenarios-par-zip   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`
 > *elle instruit la SÉPARATION DES DEUX CAS posée par la stratégie globale — chez nous deux projets, chez un acheteur un seul — appliquée à la question concrète de la livraison.*
 

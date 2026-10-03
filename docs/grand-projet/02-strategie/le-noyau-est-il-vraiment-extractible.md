@@ -1,5 +1,17 @@
 # NOS TROIS ZONES MESURENT-ELLES LA BONNE CHOSE ? — trois mesures, trois réponses
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+grand-projet/01-absorption/relecture-de-la-bibliotheque
+    └── ▣ grand-projet/02-strategie/le-noyau-est-il-vraiment-extractible   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche **#1262**.
 Il n'a pas demandé ce document : il vérifie une phrase de SES documents qui accusait le manifeste
 que j'ai écrit il y a deux jours — *« un fichier séparé n'est pas automatiquement un module

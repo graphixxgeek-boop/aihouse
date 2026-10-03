@@ -1,5 +1,17 @@
 # LA SÉANCE SUR L'OBJECTIF ULTIME — tout est prêt, il ne manque que toi
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+grand-projet/01-absorption/syntheses/FIXER_UN_OBJECTIF_ULTIME
+    └── ▣ grand-projet/02-strategie/seance-objectif-ultime   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Préparée le 2026-09-29 à 22h01 UTC, heure LUE, pendant qu'il lisait. **Ce document ne tranche
 rien** : il rassemble tout ce qu'il faut pour que la séance dure une heure au lieu d'une soirée.)*
 

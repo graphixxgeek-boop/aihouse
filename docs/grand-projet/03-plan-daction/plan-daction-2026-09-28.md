@@ -1,5 +1,18 @@
 # PLAN D'ACTION DU GRAND CHANGEMENT
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── ▣ grand-projet/03-plan-daction/plan-daction-2026-09-28   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Tâches #1100 · #1101 · #1113 · #1114 · #1116. Réécrit dans la nuit du 2026-09-28 au 29, sur sa
 consigne : « je veux que tu prennes du temps pour approfondir ta réflexion [...] je ne veux pas un
 

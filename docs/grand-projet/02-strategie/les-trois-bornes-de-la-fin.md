@@ -1,5 +1,18 @@
 # Quand pourra-t-on dire « l'Agence est terminée » ? — trois bornes, à choisir
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── ▣ grand-projet/02-strategie/les-trois-bornes-de-la-fin   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`
 > *« terminé » ne se définit qu'une fois su ce qu'on cherche à obtenir : les trois bornes se mesurent contre les trois objectifs ultimes que la stratégie globale porte.*
 

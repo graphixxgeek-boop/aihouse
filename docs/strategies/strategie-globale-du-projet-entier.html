@@ -19,6 +19,18 @@
        deux constantes au fichier réel à chaque exécution. */
     --lia: #f29bc3; --noe: #55dbe5;
   }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
   * { box-sizing: border-box; }
   /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
      l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
@@ -106,12 +118,28 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-02T22:11:33.794Z</div>
+    <div class="date">2026-10-03T07:50:04.845Z</div>
     <h1>LA STRATÉGIE GLOBALE DU PROJET ENTIER</h1>
-    <p class="sub">Hybride — base écrite à la main, bloc dérivé régénéré automatiquement</p>
+    <p class="sub">Page générée depuis docs/strategies/strategie-globale-du-projet-entier.md — jamais écrite à la main.</p>
   </header>
   <div class="divider"></div>
-  <main><div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/philosophie-et-politique.md</code>
+  <main><p><strong>Où ce document se situe dans la cascade</strong> — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :</p>
+<pre><code>philosophie-et-politique
+    └── ▣ strategies/strategie-globale-du-projet-entier   ← CE DOCUMENT
+        ├── grand-projet/02-strategie/les-trois-bornes-de-la-fin
+        ├── grand-projet/03-plan-daction/refonte-proposition-2026-10-01
+        ├── strategies/charte-et-referentiel-strategie
+        ├── strategies/classification-et-nivellement-strategie
+        ├── strategies/donnees-et-mesure-strategie
+        ├── strategies/export-et-commercialisation-strategie
+        ├── strategies/gestion-des-taches-strategie
+        ├── strategies/le-jeu-et-le-site-strategie
+        ├── strategies/les-deux-scenarios-par-zip
+        ├── strategies/organisation-de-l-agence-strategie
+        ├── strategies/outillage-et-garde-fous-strategie
+        ├── strategies/process-et-ronde-strategie
+        └── strategies/renommage-en-masse-strategie</code></pre>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/philosophie-et-politique.md</code>
 <em>elle est la première marche SOUS la boussole : la philosophie dit pourquoi, celle-ci dit comment on s'y prend à l'échelle de tout le projet. Les dix stratégies de CHANTIER passent par elle.</em></p></div>
 <div class="highlight"><p><strong>SE RÈGLE SUR :</strong> <code>docs/grand-projet/02-strategie/la-cible-2026-09-29.md</code>
 *la cible dit CE QU'ON CHERCHE À OBTENIR, ce document dit COMMENT on s'y prend. Les deux sont à la
@@ -186,8 +214,8 @@ demande ou à chaque Ronde »*.</p></div>
 <h3>Plan d'action — passage du 2026-10-02 <em>(activation de la cascade, tâche #1434)</em></h3>
 <table><thead><tr><th>État</th><th>Constat</th><th>Ce qui en découle</th></tr></thead><tbody><tr><td><strong>RETENU</strong></td><td>ce document affirmait que « les dix stratégies de CHANTIER passent par elle », pendant que les dix déclaraient toutes la cible en parent direct. Les deux ne pouvaient pas être vrais</td><td><strong>FAIT</strong> le 2026-10-02 — les dix re-rattachées à ce document, qui déclare à son tour la cible sur laquelle il se règle, pour que l'alignement soit HÉRITÉ et non perdu</td></tr><tr><td><strong>RETENU</strong></td><td>la section ① posait trois niveaux, puis tout le reste repartait en un seul bloc — sous ①, AGENCE et JEU n'apparaissaient plus qu'une fois, dans un titre</td><td><strong>FAIT</strong> le 2026-10-02 — section ①bis, forme hybride (prose pour la direction, tableau pour les jalons), chaque jalon nommant son instrument</td></tr><tr><td><strong>RETENU</strong></td><td>132 garde-fous exportés sans une ligne d'explication, sur 119 fichiers source (SAFE-EXPORT, sonde X6)</td><td>c'est le chantier ouvert du niveau AGENCE, inscrit comme jalon plutôt que comme remarque</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>renuméroter ②③④ pour intercaler la déclinaison en ②</td><td><strong>raison écrite</strong> : une renumérotation casse les renvois existants, exactement la dette que l'Article 13 interdit. Le suffixe <code>bis</code> coûte un caractère et ne casse rien</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>insérer la cible comme parent de ce document plutôt que comme règle</td><td><strong>raison écrite</strong> : la cible dit CE QU'ON CHERCHE, ce document dit COMMENT. Aucun des deux ne découle de l'autre — les empiler aurait rendu fausse la phrase « première marche SOUS la boussole », pour corriger une incohérence par une autre</td></tr></tbody></table>
 <h4>⟳ CE QUE LA FILE DIT AUJOURD'HUI — LES DEUX ENSEMBLE</h4>
-<table><thead><tr><th>Mesure</th><th>Valeur</th></tr></thead><tbody><tr><td>Tâches ouvertes sur ce périmètre</td><td><strong>157</strong></td></tr><tr><td>Dont critiques</td><td>10</td></tr><tr><td>Thèmes couverts</td><td>31</td></tr><tr><td>La plus ancienne encore ouverte</td><td>2026-09-22T11:50Z</td></tr><tr><td>Stratégies de chantier qui en descendent</td><td>10</td></tr></tbody></table>
-<p><em>(Bloc DÉRIVÉ, régénéré par <code>node scripts/data-archangel.mjs strategies --ranger</code> — dernier passage 2026-10-02T22:11Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)</em></p></main>
+<table><thead><tr><th>Mesure</th><th>Valeur</th></tr></thead><tbody><tr><td>Tâches ouvertes sur ce périmètre</td><td><strong>158</strong></td></tr><tr><td>Dont critiques</td><td>10</td></tr><tr><td>Thèmes couverts</td><td>31</td></tr><tr><td>La plus ancienne encore ouverte</td><td>2026-09-22T11:50Z</td></tr><tr><td>Stratégies de chantier qui en descendent</td><td>10</td></tr></tbody></table>
+<p><em>(Bloc DÉRIVÉ, régénéré par <code>node scripts/data-archangel.mjs strategies --ranger</code> — dernier passage 2026-10-02T22:31Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)</em></p></main>
   <div class="divider"></div><footer><p>Dérivé de docs/strategies/strategie-globale-du-projet-entier.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
 </div>
 </body>

@@ -1,5 +1,17 @@
 # LES TROIS OBJECTIFS ULTIMES — reformulés à partir de ses jets du 2026-09-30
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+grand-projet/00-sources/01-sa-demande/reponses-2026-09-30-soir-philo
+    └── ▣ grand-projet/02-strategie/les-trois-objectifs-ultimes   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Écrit le 2026-09-30 à 22h22 UTC, heure LUE, source système. Sa demande : *« j'attends en retour
 que tu me reformules les 3 objectifs ultimes, en tenant compte de mes commentaires »*. Il se situe
 lui-même **à 60 %** — donc ceci est une PROPOSITION à corriger, jamais une décision.)*

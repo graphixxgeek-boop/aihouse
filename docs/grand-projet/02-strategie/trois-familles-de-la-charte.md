@@ -1,5 +1,17 @@
 # Les trois familles de la charte — ou : 75 % de nos Articles ne parlent pas du Jeu
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+loi-de-l-agence
+    └── ▣ grand-projet/02-strategie/trois-familles-de-la-charte   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Écrit le 2026-09-29 à 19h19 UTC, heure LUE. Né d'une remarque de l'utilisateur qui a renversé ma
 propre proposition : « il y a beaucoup de lois présentes dans la charte qui sont CRUCIALES pour le
 fonctionnement de l'agence […] ta question est elle-même remise en question ».)*

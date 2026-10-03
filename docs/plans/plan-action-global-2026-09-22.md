@@ -1,5 +1,20 @@
 # Plan d'action global — mardi 22 septembre 2026
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── ▣ plans/plan-action-global-2026-09-22   ← CE DOCUMENT
+        ├── plans/nuit-2026-09-23-plan
+        ├── plans/nuit-2026-09-24-plan
+        ├── plans/nuit-2026-09-25-plan
+        └── plans/nuit-2026-09-29-plan
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/philosophie-et-politique.md`
 > *un plan d'action global applique la politique du projet : il descend de la gouvernance vers les tâches, et c'est le premier maillon de cette descente.*
 

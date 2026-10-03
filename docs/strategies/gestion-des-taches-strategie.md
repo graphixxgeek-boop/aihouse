@@ -1,5 +1,18 @@
 # STRATÉGIE DE CHANTIER — GESTION DES TACHES
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── ▣ strategies/gestion-des-taches-strategie   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Créée le 2026-09-26 05:44Z, liée à la tâche **#805**.)*
 
 > **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`

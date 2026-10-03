@@ -1,5 +1,17 @@
 # Mes réponses à tes questions — nuit du 2026-09-23
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+regles-de-travail
+    └── ▣ plans/reponses-aux-questions-2026-09-23   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/regles-de-travail.md`
 > *répondre point par point à une série de questions est un geste de MÉTHODE, pas de contenu : c'est la règle de travail sur les demandes numérotées qui en fixe la forme.*
 

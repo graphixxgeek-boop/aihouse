@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHILO &amp; POLITIQUE — les 30 questions de finalisation</title>
+<title>PHILO &amp; POLITIQUE — les 30 questions de FINALISATION</title>
 <style>
   :root {
     --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
@@ -19,6 +19,18 @@
        deux constantes au fichier réel à chaque exécution. */
     --lia: #f29bc3; --noe: #55dbe5;
   }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
   * { box-sizing: border-box; }
   /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
      l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
@@ -106,12 +118,19 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-01T23:04:44.347Z</div>
-    <h1>PHILO &amp; POLITIQUE — les 30 questions de finalisation</h1>
-    <p class="sub">Plus un questionnaire : les arbitrages qui ferment le document</p>
+    <div class="date">2026-10-03T07:50:10.609Z</div>
+    <h1>PHILO &amp; POLITIQUE — les 30 questions de FINALISATION</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/03-plan-daction/philo-politique-30-questions.md — jamais écrite à la main.</p>
   </header>
   <div class="divider"></div>
-  <main><p><em>(Réécrit le 2026-10-01 à 23h03 UTC, tâche #1425. <strong>La version précédente de ce fichier était un questionnaire philosophique — elle est obsolète et remplacée.</strong> Sa raison, dans ses mots : « la philo est a REVELER de l'ensemble de notre travail, pas de reponses isolées qui sont des jets ». Il avait raison, et ma propre synthèse du 2026-09-29 le disait déjà.)</em></p>
+  <main><p><strong>Où ce document se situe dans la cascade</strong> — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :</p>
+<pre><code>philosophie-et-politique
+    └── ▣ grand-projet/03-plan-daction/philo-politique-30-questions   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)</code></pre>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/philosophie-et-politique.md</code>
+*ces questions ne portent que sur la finalisation de ce document : elles en découlent
+directement, et elles disparaissent avec lui une fois répondues.*</p></div>
+<p><em>(Réécrit le 2026-10-01 à 23h03 UTC, tâche #1425. <strong>La version précédente de ce fichier était un questionnaire philosophique — elle est obsolète et remplacée.</strong> Sa raison, dans ses mots : « la philo est a REVELER de l'ensemble de notre travail, pas de reponses isolées qui sont des jets ». Il avait raison, et ma propre synthèse du 2026-09-29 le disait déjà.)</em></p>
 <p><strong>CE QUI A CHANGÉ ENTRE LES DEUX VERSIONS, ET C'EST TOUT LE SUJET.</strong> La première version te demandait de <strong>déclarer</strong> ta philosophie en cochant des options. Celle-ci ne te demande plus rien de tel : la philosophie a été <strong>extraite</strong> de 5 843 convictions lues dans 334 fichiers, et elle est écrite dans <code>docs/philosophie-et-politique-v2.md</code>. Les 30 questions ci-dessous servent uniquement à <strong>finaliser ce document</strong> — trancher les petits points, fermer ce que la mesure ne pouvait pas fermer. Sa consigne : <em>« pour que tout soit bien impeccable »</em>.</p>
 <p><strong>Huit groupes indépendants.</strong> Tu peux répondre au groupe 1 seul : il contient les quatre arbitrages qui débloquent tout le reste.</p>
 <hr>

@@ -1,5 +1,20 @@
 # LA ROUTE VERS 50 OBLIGATIONS — mesurée, pas estimée
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── grand-projet/02-strategie/le-chemin-2026-09-29
+            └── grand-projet/03-plan-daction/ou-va-chaque-chose
+                └── ▣ grand-projet/02-strategie/la-route-vers-50-obligations   ← CE DOCUMENT
+                    (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâches **#1247** et **#1248**.
 Sa consigne du coucher, mot pour mot : « la cible : 50 obligations pour l'agence, ça me semble bien
 du point de vue utilisateur, sinon : effet déceptif en découvrant ça » et « la mutualisation des

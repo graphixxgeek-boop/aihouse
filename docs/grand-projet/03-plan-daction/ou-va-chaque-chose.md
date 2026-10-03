@@ -1,5 +1,24 @@
 # OÙ VA CHAQUE CHOSE — le plan qui se construit pendant qu'on discute
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── grand-projet/02-strategie/le-chemin-2026-09-29
+            └── ▣ grand-projet/03-plan-daction/ou-va-chaque-chose   ← CE DOCUMENT
+                ├── grand-projet/02-strategie/ce-qui-ralentit-le-projet
+                ├── grand-projet/02-strategie/la-route-vers-50-obligations
+                ├── grand-projet/02-strategie/les-deux-agents-experience
+                ├── grand-projet/02-strategie/plaquette-de-l-agence
+                ├── grand-projet/02-strategie/propriete-et-securite-du-projet
+                └── grand-projet/02-strategie/questions-de-degrossissage
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Ouvert le 2026-09-29 à 19h35 UTC, heure LUE. Sa consigne du soir, mot pour mot : « garde en tête
 que nous allons tout bousculer, donc pas la peine de perdre du temps à faire puis défaire, place
 chaque chose au meilleur moment, **construis ton plan en même temps qu'on discute, mets bien chaque

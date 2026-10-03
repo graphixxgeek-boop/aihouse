@@ -1,5 +1,18 @@
 # LES DÉCISIONS QUI T'ATTENDENT — présentées par lots
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── ▣ grand-projet/02-strategie/decisions-qui-attendent   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Nuit du 2026-09-29 — heure LUE, source système. Tâche #1163. JESUS le dit lui-même : « les lui
 présenter par lots est le seul geste qui reste de mon côté ».)*
 

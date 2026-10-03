@@ -1,5 +1,18 @@
 # LA VUE GLOBALE — ce que j'ai compris, ce que j'en pense, et ce que je recommande
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── ▣ grand-projet/02-strategie/vue-globale-2026-09-28   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Tâches #1111 absorption · #1112 questions · #1113 point de non-retour · #1114 lien tâche↔chantier.
 Écrit le 2026-09-28 après lecture des 20 documents, et pas une minute avant : c'est son ordre —
 

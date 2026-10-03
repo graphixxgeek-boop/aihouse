@@ -1,5 +1,19 @@
 # Les modifications de CLAUDE.md qui attendent ton accord
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── strategies/charte-et-referentiel-strategie
+            └── ▣ plans/charte-diffs-a-approuver-2026-09-28   ← CE DOCUMENT
+                (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/charte-et-referentiel-strategie.md`
 > *(Déclaré le 2026-09-29, tâche #1178 — il ne contient que des diffs de CLAUDE.md en attente de son accord.
 > Il passait pour déclaré à ma première passe : une ligne plus bas CITE la syntaxe `DÉCOULE DE` pour

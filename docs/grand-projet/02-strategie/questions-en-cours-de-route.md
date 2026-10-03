@@ -1,5 +1,18 @@
 # Ses questions posées en cours de route — et ce qu'elles ont changé
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── ▣ grand-projet/02-strategie/questions-en-cours-de-route   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`
 > *les questions qui surgissent en chemin se rapportent à la cible qu'on vise : sans elle, une question de route n'a pas d'objet.*
 

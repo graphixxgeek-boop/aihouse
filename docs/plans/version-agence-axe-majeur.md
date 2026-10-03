@@ -1,5 +1,19 @@
 # La version de l'Agence entière — quel axe fait monter le majeur ?
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── strategies/export-et-commercialisation-strategie
+            └── ▣ plans/version-agence-axe-majeur   ← CE DOCUMENT
+                (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/export-et-commercialisation-strategie.md`
 > *(Déclaré le 2026-09-29, tâche #1178 — il pose la question du numéro de version de l'Agence entière, qui n'a de sens que pour ce qui PART.)*
 

@@ -1,5 +1,18 @@
 # LES GRANDS AXES DE DÉPART DU GRAND CHANGEMENT
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── ▣ grand-projet/02-strategie/grands-axes-de-depart-2026-09-28   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Écrit le mardi 29 septembre 2026 à 01h41, heure de Paris — heure LUE, source système. Tâches
 #1141 · #1143 · #1144. Il a demandé de « poser les grands axes de départ de cet énorme chantier »,
 

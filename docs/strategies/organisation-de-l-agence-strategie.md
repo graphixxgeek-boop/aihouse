@@ -1,5 +1,18 @@
 # STRATÉGIE DE CHANTIER — organisation-de-l-agence
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── ▣ strategies/organisation-de-l-agence-strategie   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Créée le 2026-09-27 03:31Z, liée à la tâche **#1002**.)*
 
 > **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`

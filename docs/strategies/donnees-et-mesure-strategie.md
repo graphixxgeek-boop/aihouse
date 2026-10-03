@@ -1,5 +1,18 @@
 # STRATÉGIE DE CHANTIER — Donnees et mesure
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── ▣ strategies/donnees-et-mesure-strategie   ← CE DOCUMENT
+            └── plans/audit-gardiens-donnees-absentes-2026-09-23
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Créée le 2026-09-26 06:15Z, liée à la tâche **#904**.)*
 
 > **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`

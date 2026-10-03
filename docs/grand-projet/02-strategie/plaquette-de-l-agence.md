@@ -1,5 +1,20 @@
 # LA PLAQUETTE COMMERCIALE DE L'AGENCE — écrite aujourd'hui, avec l'écart écrit en face
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── grand-projet/02-strategie/le-chemin-2026-09-29
+            └── grand-projet/03-plan-daction/ou-va-chaque-chose
+                └── ▣ grand-projet/02-strategie/plaquette-de-l-agence   ← CE DOCUMENT
+                    (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche **#1255**.
 **CHIFFRES REPRODUITS LE 2026-09-30 à 18h35 UTC, tâche #1307** — il l'a demandée « mise à jour »,
 et une plaquette dont les chiffres ont vieilli est exactement le mensonge poli que ses étiquettes

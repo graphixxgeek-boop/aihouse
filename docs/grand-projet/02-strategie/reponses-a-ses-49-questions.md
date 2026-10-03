@@ -1,5 +1,18 @@
 # RÉPONSES À SES 49 QUESTIONS — avec la demande inavouée, et l'action en face
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── ▣ grand-projet/02-strategie/reponses-a-ses-49-questions   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Nuit du 2026-09-29 — heure LUE, source système. Tâches #1112 · #1153. Sa consigne : « livre-moi
 les réponses aux questions […] sonde quelles sont mes questions et inquiétudes inavouées » et
 « pour chaque question et réponse du fichier, ou groupe de réponses, il y a des actions en face, en

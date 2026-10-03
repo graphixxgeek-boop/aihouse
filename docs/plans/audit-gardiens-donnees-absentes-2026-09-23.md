@@ -1,5 +1,19 @@
 # Les Gardiens peuvent-ils dire « tout va bien » sur des données absentes ? (tâche #206)
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── strategies/donnees-et-mesure-strategie
+            └── ▣ plans/audit-gardiens-donnees-absentes-2026-09-23   ← CE DOCUMENT
+                (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/donnees-et-mesure-strategie.md`
 > *(Déclaré le 2026-09-29, tâche #1178 — il demande si un Gardien peut dire « tout va bien » sur une donnée ABSENTE : c'est la question de la mesure, prise par son bout le plus dangereux.)*
 

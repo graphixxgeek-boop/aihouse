@@ -1,5 +1,17 @@
 # LA STRATÉGIE GLOBALE DE L'AGENCE — comme si elle était seule
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── ▣ strategies/strategie-globale-de-l-agence   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Créée le 2026-10-02, tâche **#1482**, à sa demande : « Je veux 3 belles stratégies globales,
 livrées en HTML, parfaitement coherente dans la cascade de PHILO à taches ».)*
 

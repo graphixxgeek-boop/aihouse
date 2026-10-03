@@ -1,5 +1,29 @@
 # LA STRATÉGIE GLOBALE DU PROJET ENTIER
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── ▣ strategies/strategie-globale-du-projet-entier   ← CE DOCUMENT
+        ├── grand-projet/02-strategie/les-trois-bornes-de-la-fin
+        ├── grand-projet/03-plan-daction/refonte-proposition-2026-10-01
+        ├── strategies/charte-et-referentiel-strategie
+        ├── strategies/classification-et-nivellement-strategie
+        ├── strategies/donnees-et-mesure-strategie
+        ├── strategies/export-et-commercialisation-strategie
+        ├── strategies/gestion-des-taches-strategie
+        ├── strategies/le-jeu-et-le-site-strategie
+        ├── strategies/les-deux-scenarios-par-zip
+        ├── strategies/organisation-de-l-agence-strategie
+        ├── strategies/outillage-et-garde-fous-strategie
+        ├── strategies/process-et-ronde-strategie
+        └── strategies/renommage-en-masse-strategie
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/philosophie-et-politique.md`
 > *elle est la première marche SOUS la boussole : la philosophie dit pourquoi, celle-ci dit comment on s'y prend à l'échelle de tout le projet. Les dix stratégies de CHANTIER passent par elle.*
 

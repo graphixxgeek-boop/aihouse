@@ -1,5 +1,17 @@
 # CE QUI RESTE VRAIMENT À FAIRE — sa question, mesurée sur les 114 tâches ouvertes
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+fils/fil-14-usage-et-refonte
+    └── ▣ grand-projet/02-strategie/ce-qui-reste-vraiment   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(2026-10-01, heure LUE, source système. Sa question : **« qu'est-ce qu'il manque en vrai ? »** —
 posée après avoir répondu (a) à Q14.5 : la refonte vaut le coup.)*
 

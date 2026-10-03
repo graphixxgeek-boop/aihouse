@@ -1,5 +1,20 @@
 # LES DEUX AGENTS QU'IL A DEMANDÉS — la conception, et pourquoi je ne les construis pas cette nuit
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── grand-projet/02-strategie/le-chemin-2026-09-29
+            └── grand-projet/03-plan-daction/ou-va-chaque-chose
+                └── ▣ grand-projet/02-strategie/les-deux-agents-experience   ← CE DOCUMENT
+                    (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche **#1260**.
 Sa demande : deux nouveaux agents, un pour l'**expérience client** et un pour l'**expérience IA**
 — « ou un pour les deux ? », sa question, restée ouverte.)*

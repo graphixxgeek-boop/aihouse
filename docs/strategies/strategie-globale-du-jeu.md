@@ -1,5 +1,17 @@
 # LA STRATÉGIE GLOBALE DU JEU — comme s'il était seul
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── ▣ strategies/strategie-globale-du-jeu   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Créée le 2026-10-02, tâche **#1482**. C'est la troisième partie de sa commande du 2026-09-28,
 restée **jamais écrite** jusqu'ici — la tâche #1137 le disait, et elle avait raison.)*
 

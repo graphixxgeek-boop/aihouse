@@ -1,5 +1,18 @@
 # STRATÉGIE DE CHANTIER — RENOMMAGE EN MASSE
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── ▣ strategies/renommage-en-masse-strategie   ← CE DOCUMENT
+            └── plans/plan-complet-jusquau-renommage
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Créée le 2026-09-26 05:44Z, liée à la tâche **#775**.)*
 
 > **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`

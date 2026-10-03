@@ -1,5 +1,19 @@
 # Les motifs de déplacement cassés à l'affichage — mesure, cause, et correction proposée
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── strategies/le-jeu-et-le-site-strategie
+            └── ▣ plans/motifs-de-deplacement-proposition   ← CE DOCUMENT
+                (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/le-jeu-et-le-site-strategie.md`
 > *(Déclaré le 2026-09-29, tâche #1178 — il porte sur ce que le VISITEUR voit — les motifs de déplacement affichés.)*
 

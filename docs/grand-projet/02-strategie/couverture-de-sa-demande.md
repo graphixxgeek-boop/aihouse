@@ -1,5 +1,18 @@
 # Couverture de sa demande — chaque chose qu'il a écrite, et où le plan y répond
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── ▣ grand-projet/02-strategie/couverture-de-sa-demande   ← CE DOCUMENT
+            (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Sa consigne du 2026-09-28, avant d'aller dormir : « je veux que tu prennes du temps pour
 approfondir ta réflexion [...] te demander si tous les sujets couverts par mes idées / questions /
 

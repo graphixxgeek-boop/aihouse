@@ -1,5 +1,20 @@
 # À QUI EST CE PROJET, ET QUI PEUT TE LE PRENDRE
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── grand-projet/02-strategie/le-chemin-2026-09-29
+            └── grand-projet/03-plan-daction/ou-va-chaque-chose
+                └── ▣ grand-projet/02-strategie/propriete-et-securite-du-projet   ← CE DOCUMENT
+                    (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâches **#1253** et **#1254**.
 Ses deux questions nouvelles, dans ses mots : la **sécurité du projet** — copie, vol, piratage —
 et la **propriété juridique, prouvable devant un tribunal**.)*

@@ -1,5 +1,20 @@
 # CE QUI RALENTIT LE PROJET — mesuré sur ses quatre axes, et ce que ça dit des « plusieurs versions »
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── grand-projet/02-strategie/le-chemin-2026-09-29
+            └── grand-projet/03-plan-daction/ou-va-chaque-chose
+                └── ▣ grand-projet/02-strategie/ce-qui-ralentit-le-projet   ← CE DOCUMENT
+                    └── grand-projet/02-strategie/les-cinq-lots-de-decisions
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâches **#1250** et **#1251**.
 Sa demande, mot pour mot : « je veux une analyse complète du sujet : qu'est-ce qui ralentit le
 codage ET/OU l'IA ET/OU le jeu ET/OU l'agence […] POURQUOI : pour définir correctement si on va

@@ -1,5 +1,20 @@
 # DEUX BLOCS DE 15 QUESTIONS POUR DÉGROSSIR
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── grand-projet/02-strategie/la-cible-2026-09-29
+        └── grand-projet/02-strategie/le-chemin-2026-09-29
+            └── grand-projet/03-plan-daction/ou-va-chaque-chose
+                └── ▣ grand-projet/02-strategie/questions-de-degrossissage   ← CE DOCUMENT
+                    (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(Écrit le 2026-09-29 à 20h06 UTC, heure LUE. Sa demande : « je pense que tu peux préparer au moins
 2 blocs de 15 questions pour dégrossir avant de passer les suivantes ».)*
 

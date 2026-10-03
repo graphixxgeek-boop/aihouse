@@ -1,5 +1,17 @@
 # Ronde ↔ État des tâches — comparaison côte à côte
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+systeme-de-suivi
+    └── ▣ plans/comparaison-ronde-vs-etat-des-taches   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/systeme-de-suivi.md`
 > *comparer deux vues de la même file de tâches est une question de SUIVI : c'est la structure du suivi qui dit ce qu'une vue doit montrer, et donc ce qu'un écart entre deux vues signifie.*
 

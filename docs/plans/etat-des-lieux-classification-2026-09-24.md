@@ -1,5 +1,19 @@
 # État des lieux après classification — 2026-09-24
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+philosophie-et-politique
+    └── strategies/strategie-globale-du-projet-entier
+        └── strategies/classification-et-nivellement-strategie
+            └── ▣ plans/etat-des-lieux-classification-2026-09-24   ← CE DOCUMENT
+                (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 > **DÉCOULE DE :** `docs/strategies/classification-et-nivellement-strategie.md`
 > *(Déclaré le 2026-09-29, tâche #1178 — c'est l'état des lieux du même sujet.)*
 

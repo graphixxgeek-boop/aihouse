@@ -1,5 +1,17 @@
 # LA PORTABILITÉ, VRAIMENT MESURÉE — et la correction d'un chiffre que j'ai répété toute la soirée
 
+<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->
+
+**Où ce document se situe dans la cascade** — remonté des déclarations « DÉCOULE DE » réelles, jamais dessiné à la main :
+
+```
+fils/fil-06-export-versions-noyau
+    └── ▣ grand-projet/02-strategie/la-portabilite-vraiment-mesuree   ← CE DOCUMENT
+        (aucun document ne déclare découler de celui-ci)
+```
+
+<!-- /ARBORESCENCE -->
+
 *(2026-10-01 à 00h43 UTC, heure LUE. Né de sa consigne : **« complète la portabilité des
 fichiers »** — qui est aussi sa réponse à la question Q6.1, en attente depuis la veille : quand
 traiter les chemins écrits en dur ? Réponse : maintenant.)*
