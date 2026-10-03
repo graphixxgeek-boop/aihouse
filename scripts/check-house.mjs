@@ -27994,3 +27994,59 @@ async function testLePlancherDuGrain() {
   console.log('Passed: une unité ne se coupe pas en deux, et le plancher l\'oubliait (2026-10-03, tâche #1589). LA FORMULE SUPPOSAIT UN TRAVAIL INFINIMENT DIVISIBLE : `socle + épine + divisible ÷ parts`. Mais la plus grosse unité tombe dans UNE part, entière, et cette part ne peut pas finir avant elle. Le vrai plancher est donc `socle + épine + la plus lourde`. CE N\'EST DEVENU VISIBLE QU\'APRÈS LA RÉPARATION DU CHRONOMÈTRE (#1582), ET L\'ENCHAÎNEMENT EST CE QU\'IL FAUT RETENIR : tant que 83 % des durées étaient attribuées au mauvais groupe, « la plus lourde » ne voulait strictement rien dire. Une fois les poids justes, elle se lit — 32,3 s pour un seul bloc, celui qui fait parler THE-KING sur deux cents fichiers normatifs — et le plancher passe de 20 s à 52 s. **Réparer une mesure fait apparaître un plafond que personne ne voyait**, ce qui est l\'inverse de ce qu\'on attend d\'une réparation, et c\'est pourtant le cas le plus fréquent. CE QUE ÇA CORRIGE DE CONCRET : la projection « à 16 parts → 21 s » était un mensonge arithmétique, et j\'avais répondu sur cette base à sa contrainte des 30 secondes. Aucun nombre de parts ne descendra sous 52 s tant qu\'un seul test en coûtera 32. LA VALIDATION EST CE QUI REND CE CORRECTIF CROYABLE : l\'ancienne formule annonçait 66,8 s à quatre parts pour un filet qui en met réellement 80,5 ; la nouvelle annonce 80,8 s. Le modèle colle désormais au chronomètre à trois dixièmes de seconde, là où il se trompait de quatorze. ET LE PROCHAIN LEVIER N\'EST PLUS LE DÉCOUPAGE : c\'est le coût des quelques tests qui balaient tout le dépôt — dix d\'entre eux pèsent 57 % du filet, vingt en pèsent 73 %.');
 }
 await testLePlancherDuGrain();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1591 — LE TEST LE PLUS LOURD DU FILET FAISAIT 57 MILLIONS DE COMPARAISONS POUR RIEN
+async function testLIndexDesConvictions() {
+  const K = await import('../scripts/the-king.mjs');
+
+  // ── LA SEULE CHOSE QUI COMPTE : les deux chemins doivent rendre LE MÊME OBJET. Une optimisation
+  // qui change le résultat n'est pas une optimisation, c'est un bug plus rapide.
+  const convictions = [
+    { phrase: 'le code doit toujours rester simple et lisible', chemin: 'a.md', zone: 'code', motsUtiles: ['code', 'simple', 'lisible'] },
+    { phrase: 'un code simple se relit sans effort', chemin: 'b.md', zone: 'doc', motsUtiles: ['code', 'simple', 'relit'] },
+    { phrase: 'rien à voir avec le sujet précédent', chemin: 'c.md', zone: 'autre', motsUtiles: ['sujet', 'precedent'] },
+    { phrase: 'le code lisible et simple reste la règle', chemin: 'd.md', zone: 'code', motsUtiles: ['code', 'lisible', 'simple'] },
+  ];
+  const index = K.indexerLesConvictions(convictions);
+  for (const c of convictions) {
+    const lent = K.representativite(c.phrase, convictions, {});
+    const vite = K.representativite(c.phrase, convictions, { index });
+    assert.deepStrictEqual(vite, lent, `MUST CATCH: indexed and scanned paths must agree exactly, including the ORDER of listeZones — « ${c.phrase.slice(0, 30)} »`);
+  }
+
+  // ── L'ORDRE DE listeZones EST SIGNIFICATIF, et c'est la comparaison avant/après sur le vrai
+  // corpus qui l'a révélé : le chemin indexé visitait les convictions dans l'ordre des MOTS, le
+  // chemin lent dans l'ordre du TABLEAU. Même contenu, autre ordre — donc une sortie qui change.
+  const multi = K.representativite('le code doit toujours rester simple et lisible', convictions, { index });
+  assert.deepStrictEqual(multi.listeZones, K.representativite('le code doit toujours rester simple et lisible', convictions, {}).listeZones, 'the zone list comes out in the same order on both paths');
+
+  // ── UN INDEX CONSTRUIT SUR UNE AUTRE LISTE NE DOIT PAS SERVIR. Mieux vaut retomber sur le chemin
+  // lent que rendre un résultat calculé sur le mauvais corpus : c'est le genre de faux qui
+  // ressemble trait pour trait à un juste.
+  const autreListe = convictions.slice(0, 2);
+  const avecMauvaisIndex = K.representativite(convictions[0].phrase, autreListe, { index });
+  const sansIndex = K.representativite(convictions[0].phrase, autreListe, {});
+  assert.deepStrictEqual(avecMauvaisIndex, sansIndex, 'MUST CATCH: an index built on another list is ignored, never trusted — it would silently answer about a corpus nobody asked about');
+
+  // ── LE SEUIL DE RECOUVREMENT SE COMPORTE PAREIL DES DEUX CÔTÉS, y compris le court-circuit
+  // « pas assez de mots » qui rend zéro avant même de regarder le corpus.
+  for (const recouvrement of [1, 2, 3, 9]) {
+    assert.deepStrictEqual(
+      K.representativite('code simple', convictions, { recouvrement, index }),
+      K.representativite('code simple', convictions, { recouvrement }),
+      `both paths agree at recouvrement=${recouvrement}`);
+  }
+  assert.strictEqual(K.indexerLesConvictions([]).parMot.size, 0, 'an empty corpus indexes to nothing, and does not throw');
+  assert.strictEqual(K.indexerLesConvictions([{ chemin: 'x.md' }]).parMot.size, 0, 'a conviction with no useful word adds no posting');
+
+  // ── LE PASSAGE RÉEL (Article 25) : sur le vrai corpus, les deux chemins doivent encore
+  // s'accorder — une éprouvette de quatre phrases ne prouve rien d'un corpus de 7 565.
+  const reel = K.revelerLaPhilosophie();
+  assert.strictEqual(reel.mesurable, true, 'the real revelation still runs');
+  assert.ok(reel.convictions > 1000, `on a real corpus of ${reel.convictions} convictions`);
+  assert.ok(reel.seuil && reel.seuil.max > 0, 'and the derived threshold is still computed from the real distribution');
+
+  console.log('Passed: le test le plus lourd du filet faisait 57 millions de comparaisons pour rien (2026-10-03, tâche #1591). LE CHEMIN QUI MÈNE ICI EST CE QUI COMPTE, parce qu\'aucune de ses étapes n\'était visible la veille : réparer le chronomètre (#1582) a rendu le classement des coûts fiable POUR LA PREMIÈRE FOIS ; ce classement a montré que DIX tests pèsent 57 % du filet ; corriger le plancher (#1589) a montré que le plus lourd d\'entre eux, à 32,3 s, fixe à lui seul le sol du parallélisme. Trois réparations de mesure pour arriver à un seul vrai coupable. CE QU\'IL FAISAIT : la révélation de la philosophie lit 383 fichiers normatifs et en extrait 7 565 convictions, puis demande pour chacune « combien d\'autres partagent assez de vocabulaire avec elle ? » EN LES VISITANT TOUTES. Cinquante-sept millions de paires, et deux fois — une pour dériver le seuil, une pour couvrir le cadre. LES LECTURES N\'Y SONT POUR RIEN, ET C\'EST MESURÉ : relancer avec tous les fichiers déjà en mémoire ne change pas la durée d\'un dixième. Le temps est du CALCUL, donc aucune couche de cache ne l\'aurait touché — c\'est exactement la conclusion que la marche #1040 avait tirée en septembre, vérifiée ici une seconde fois. LE RENVERSEMENT EST CLASSIQUE ET SANS PERTE : au lieu de demander à chaque conviction de visiter toutes les autres, on demande à chaque MOT quelles convictions le portent. La quasi-totalité des paires ne partage aucun mot et n\'est donc jamais visitée. **14,2 s → 2,3 s.** L\'INDEX EST OPTIONNEL, ET C\'EST CE QUI REND LE CHANGEMENT SÛR : sans lui, la fonction se comporte ligne pour ligne comme avant ; un index construit sur une autre liste est IGNORÉ plutôt que cru. ET LA VÉRIFICATION QUI DÉCIDE N\'EST PAS UNE ÉPROUVETTE : la sortie complète de la révélation sur le vrai corpus a été capturée avant et après, et comparée OCTET POUR OCTET. Le premier essai a échoué sur 304 lignes — même contenu, autre ordre, parce que `listeZones` sort d\'un Set et que le chemin indexé visitait les convictions dans l\'ordre des mots au lieu de l\'ordre du tableau. Une sortie qui change d\'ordre est une sortie qui change ; corrigé, puis identique octet pour octet.');
+}
+await testLIndexDesConvictions();

@@ -103,10 +103,19 @@ parce que l'enchaînement est l'information** :
 
 | Parts | Projection corrigée |
 |---|---|
-| 2 | 141,5 s |
-| 4 | 80,8 s *(réel mesuré : 80,5 s)* |
-| 6 | 60,5 s |
-| 8 et au-delà | **52,3 s, et jamais moins** |
+| 2 | 125,7 s |
+| 4 | 72,9 s *(réel mesuré : 75,1 s)* |
+| 6 | 55,4 s |
+| 8 et au-delà | **50,6 s, et jamais moins** |
+
+*(Chiffres du 2026-10-03 en fin de soirée, après l'optimisation #1591. Ils bougent à chaque test
+ajouté : la commande qui fait foi reste `node scripts/filet-en-parts.mjs --plancher`.)*
+
+**ET LE PLANCHER N'A PRESQUE PAS BOUGÉ ALORS QUE LE FILET A PERDU 32 SECONDES**, ce qui est la
+leçon de cette étape : diviser par six le test le plus lourd a fait descendre le plancher de 52,3 à
+50,6 s seulement, parce qu'un AUTRE test de 30,4 s a aussitôt pris sa place. Un plancher fixé par
+le maximum ne cède pas à une correction, il cède à l'aplatissement de toute la tête de la
+distribution.
 
 **La conséquence est plus utile que l'ancienne réponse** : acheter des cœurs ne mènera jamais sous
 la demi-minute. **Le prochain levier n'est plus le découpage, c'est le COÛT des quelques tests qui

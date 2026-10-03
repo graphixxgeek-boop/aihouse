@@ -1108,10 +1108,62 @@ export function vocabulaireDuCorpus(textes, { root = ROOT, plafondRatio = 0.4, p
 // représentative est celle que le projet redit ailleurs sans le savoir — exactement l'inavoué.
 export const RECOUVREMENT_MINIMAL = 3;
 
-export function representativite(phrase, convictions, { recouvrement = RECOUVREMENT_MINIMAL, vocab = null } = {}) {
+// L'INDEX INVERSÉ — le même résultat, sans les 57 millions de comparaisons (2026-10-03, #1591).
+//
+// CE QUE LA MESURE A MONTRÉ : la révélation coûte 13,6 s, et ce temps est du CALCUL PUR — les
+// lectures sont gratuites, le système garde les 383 fichiers en mémoire. Le coupable est une
+// boucle qui, pour CHACUNE des 7 565 convictions, reparcourt les 7 565 autres : 57 millions de
+// paires, deux fois (la dérivation du seuil, puis la couverture du cadre).
+//
+// LE RENVERSEMENT EST CLASSIQUE ET SANS PERTE : au lieu de demander « quelles convictions
+// partagent assez de mots avec celle-ci ? » en les visitant toutes, on demande à chaque MOT quelles
+// convictions le portent. Seules les convictions qui partagent au moins un mot sont visitées, et
+// la quasi-totalité des paires n'en partage aucun.
+//
+// IL EST OPTIONNEL, ET C'EST CE QUI REND LE CHANGEMENT SÛR : sans index, cette fonction se
+// comporte EXACTEMENT comme avant, ligne pour ligne. Avec index, elle doit rendre le même objet —
+// et c'est vérifié sur le vrai corpus, pas sur une éprouvette : les deux chemins sont comparés
+// conviction par conviction. Une optimisation qui change le résultat n'est pas une optimisation,
+// c'est un bug plus rapide.
+export function indexerLesConvictions(convictions = []) {
+  const parMot = new Map();
+  convictions.forEach((c, i) => {
+    for (const w of c.motsUtiles ?? []) {
+      let a = parMot.get(w);
+      if (!a) parMot.set(w, (a = []));
+      a.push(i);
+    }
+  });
+  return { parMot, convictions };
+}
+
+export function representativite(phrase, convictions, { recouvrement = RECOUVREMENT_MINIMAL, vocab = null, index = null } = {}) {
   const mots = new Set(significantWords(phrase).filter((w) => !vocab || vocab.has(w)));
   if (mots.size < recouvrement) return { fichiers: 0, zones: 0, listeZones: [], mots: mots.size };
   const vus = new Set(); const zones = new Set();
+  // UN INDEX CONSTRUIT SUR UNE AUTRE LISTE NE VAUT RIEN, et le vérifier coûte une comparaison de
+  // référence : mieux vaut retomber sur le chemin lent que rendre un résultat calculé sur le
+  // mauvais corpus — c'est très exactement le genre de faux qui ressemble à un juste.
+  const utilisable = index && index.convictions === convictions;
+  if (utilisable) {
+    const compte = new Map();
+    for (const w of mots) {
+      const postes = index.parMot.get(w);
+      if (!postes) continue;
+      for (const i of postes) compte.set(i, (compte.get(i) ?? 0) + 1);
+    }
+    // L'ORDRE DE VISITE EST CELUI DE LA LISTE, PAS CELUI DE L'INDEX, et ce détail a été attrapé
+    // par la comparaison avant/après : `listeZones` est construite à partir d'un Set, donc elle
+    // sort dans l'ordre où les zones ont été VUES. Le chemin lent visite les convictions dans
+    // l'ordre du tableau ; le chemin indexé les visitait dans l'ordre des mots. Même contenu,
+    // autre ordre — et une sortie qui change d'ordre est une sortie qui change.
+    for (const i of [...compte.keys()].sort((x, y) => x - y)) {
+      if (compte.get(i) < recouvrement) continue;
+      const c = convictions[i];
+      vus.add(c.chemin); zones.add(c.zone ?? "autre");
+    }
+    return { fichiers: vus.size, zones: zones.size, listeZones: [...zones], mots: mots.size };
+  }
   for (const c of convictions) {
     let n = 0;
     for (const w of c.motsUtiles ?? []) if (mots.has(w) && ++n >= recouvrement) break;
@@ -1155,7 +1207,10 @@ export function couvertureDuCadre({ convictions = [], unites = [], familles = CA
   const cases = familles.map((f) => {
     const miennes = convictions.filter((c) => c.familles.includes(f.cle));
     const fichiers = new Set(miennes.map((c) => c.chemin));
-    const notees = miennes.map((c) => ({ ...c, rep: representativite(c.phrase, miennes, { vocab }) }))
+    // UN INDEX PAR FAMILLE, parce que la représentativité se mesure DANS la famille et non dans
+    // tout le corpus : un index global rendrait d'autres chiffres, donc un autre classement.
+    const indexDeLaFamille = indexerLesConvictions(miennes);
+    const notees = miennes.map((c) => ({ ...c, rep: representativite(c.phrase, miennes, { vocab, index: indexDeLaFamille }) }))
       .filter((c) => c.rep.fichiers >= seuilEtendue)
       // LES ZONES D'ABORD, LES FICHIERS ENSUITE : traverser trois contextes d'écriture vaut plus
       // que revenir quatre fois dans le même (voir zoneDuFichier ci-dessus).
@@ -1292,7 +1347,9 @@ export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS,
   // LE SEUIL SE DÉRIVE DE LA DISTRIBUTION RÉELLE, il ne se choisit pas (BP5). Le 75e centile des
   // représentativités observées reste par construction DANS le nuage : il ne peut donc jamais
   // passer au-dessus de tout ce qu'il observe, la faute corrigée deux fois plus haut.
-  const reps = convictions.map((c) => representativite(c.phrase, convictions, { vocab: vocabulaire.mots }).fichiers).sort((a, b) => a - b);
+  // L'INDEX EST CONSTRUIT UNE FOIS POUR LES 7 565 CONVICTIONS, puis réutilisé par chacune.
+  const indexGlobal = indexerLesConvictions(convictions);
+  const reps = convictions.map((c) => representativite(c.phrase, convictions, { vocab: vocabulaire.mots, index: indexGlobal }).fichiers).sort((a, b) => a - b);
   const derive = reps.length ? reps[Math.floor(reps.length * 0.75)] : 0;
   const maxObserve = reps[reps.length - 1] ?? 0;
   // LE PLANCHER DE 3 SORTAIT DU NUAGE SUR UN PETIT CORPUS, ET IL A FALLU LANCER L'OUTIL CONTRE UN
