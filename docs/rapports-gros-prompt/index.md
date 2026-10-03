@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-03. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**13 fichier(s).**
+**16 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -19,3 +19,6 @@
 | [E-nuit-2026-09-28.html](E-nuit-2026-09-28.html) | — |
 | [E-nuit-2026-09-28.json](E-nuit-2026-09-28.json) | — |
 | [E-nuit-2026-09-28.txt](E-nuit-2026-09-28.txt) | — |
+| [F-reponses-2026-10-03.html](F-reponses-2026-10-03.html) | — |
+| [F-reponses-2026-10-03.json](F-reponses-2026-10-03.json) | — |
+| [F-reponses-2026-10-03.txt](F-reponses-2026-10-03.txt) | — |
