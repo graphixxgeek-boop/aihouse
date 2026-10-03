@@ -7396,10 +7396,23 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     assert.ok(/retirerait aux autres/.test(partage.avec[0].raisons[0]), 'a shared mechanism is the strongest reason of all: absorbing it into one host would take it away from every other caller');
     const horsEnTete = se.findRaisonsDeSeparation(['h'], { root: '/x', readFileImpl: () => Array.from({ length: se.LIGNES_DEN_TETE + 5 }, () => '// ligne de remplissage').join('\n') + '\n// demande explicite de l\'utilisateur' });
     assert.equal(horsEnTete.sans.length, 1, 'COUNTER-TEST: only the HEADER is read — a reason written beside a function explains a gesture, never why the file exists, and counting it would turn any mention into a veto');
-    // La dérivation des candidats se LIT dans le dépôt, jamais recopiée (Article 24).
-    const derives = se.candidatsALaFusion({ root: '/x', listDirImpl: () => ['court.mjs', 'long.mjs', 'pas-un-script.md'],
+    // L'EN-TÊTE EST APLATI AVANT D'ÊTRE CHERCHÉ (corrigé le 2026-10-03, deux heures après l'écriture).
+    // Les en-têtes de ce dépôt sont coupés à ~95 caractères : « demande\n// explicite de l'utilisateur »
+    // s'écrit sur deux lignes, et aucun motif de plusieurs mots ne pouvait le voir. Trois fichiers le
+    // portaient en toutes lettres et ressortaient « sans raison ». Le premier réflexe — allonger la
+    // liste des motifs — traitait l'occurrence ; aplatir traite la CLASSE (L37).
+    const coupe = se.findRaisonsDeSeparation(['w'], { root: '/x', readFileImpl: () => '// un outil né le 2026-09-18 sur demande\n// explicite de l\'utilisateur, pour une bonne raison.' });
+    assert.equal(coupe.avec.length, 1, 'a reason split across a wrapped comment line is found: the repo hard-wraps its headers, so a matcher that reads line by line is blind to most of what it looks for');
+    assert.ok(/demande explicite/.test(coupe.avec[0].extrait), 'and the quoted excerpt is read from the FLATTENED text too — read line by line it would show the half that does not contain the reason');
+
+    // DEUX CRITÈRES DE CANDIDATURE, PAS UN (même jour, même correctif). La première version ne
+    // filtrait que sur la taille et rendait donc check-spirit — le porteur de l'Article 0 — comme
+    // candidat à la fusion. Une absurdité pareille discrédite l'outil entier (L4).
+    const derives = se.candidatsALaFusion({ root: '/x',
+      listDirImpl: (c) => (String(c).endsWith('scripts') ? ['court.mjs', 'long.mjs', 'pas-un-script.md', 'avec-registre.mjs']
+        : String(c).endsWith('avec-registre') ? ['index.md'] : []),
       readFileImpl: (c) => (c.includes('long') ? 'x\n'.repeat(se.LIGNES_MAX_ABSORBABLE + 10) : 'x\ny') });
-    assert.deepEqual(derives, ['court'], 'the candidate list is DERIVED from the real repo — a short script qualifies, a long one does not, and a non-script is ignored: a hand-copied list would go stale at the next tool (Article 24)');
+    assert.deepEqual(derives, ['court'], 'the candidate list is DERIVED from the real repo — short enough AND no registry to migrate: a long script is out, a non-script is ignored, and a short tool that already keeps a registry is out too, because a registry is exactly what makes absorption expensive (Article 24: the convention is READ on disk, never a copied list of tools)');
 
     // LA BANNIÈRE DU CROCHET COMPTAIT CE QUI AVAIT DÉJÀ ÉTÉ TRANCHÉ (2026-10-02, tâche #1502).
     // Elle affichait « CLONE-HUNTER ⚠️4 » à CHAQUE commit pendant que l'outil lancé à la main

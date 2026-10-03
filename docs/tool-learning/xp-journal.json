@@ -578,5 +578,14 @@
     "declencheur": "fin de compte rendu de travail",
     "rienARetenir": false,
     "date": "2026-10-03T00:05:56.625Z"
+  },
+  {
+    "nature": "captation",
+    "titre": "Un détecteur neuf se trompait sur son SILENCE, pas sur ses trouvailles — et mon premier réflexe traitait l occurrence",
+    "quoi": "findRaisonsDeSeparation() rendait 12/34. Les huit premiers classés « sans raison » en portaient tous une. Cause réelle : les en-têtes du dépôt sont coupés à ~95 caractères, donc tout motif de plusieurs mots est aveugle dès qu'une phrase passe à la ligne. Au passage, la dérivation des candidats n'appliquait qu'un des trois critères et proposait check-spirit, porteur de l'Article 0, comme candidat à la fusion.",
+    "pourquoi": "Trois choses à garder. (1) Mon premier geste a été d'ALLONGER la liste des motifs — ça marchait sur les cas lus et aurait raté le suivant : c'est la leçon L37, corriger la classe et pas l'occurrence, et je ne l'ai vue qu'au deuxième fichier. (2) Un détecteur réglé EN LISANT l'échantillon qu'il ratait ne peut pas être validé par cet échantillon ; il faut une seconde passe sur des fichiers jamais lus, et c'est elle qui mesure. (3) Le défaut le plus grave n'était pas le silence faux mais la liste de candidats : un outil qui propose de fondre le porteur de l'Article 0 se fait ignorer en entier (L4), et ça venait d'avoir implémenté UN critère sur les TROIS que la revue avait posés — relire la source du critère, pas sa reformulation.",
+    "declencheur": "resultat-vert-qui-detonne",
+    "rienARetenir": false,
+    "date": "2026-10-03T01:35:00.988Z"
   }
 ]

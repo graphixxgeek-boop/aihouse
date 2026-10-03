@@ -2921,14 +2921,36 @@ export function formatReglesSansDomicileLines(r) {
 // de raison écrite ne prouve rien — elle dit seulement que personne n'a encore écrit pourquoi, donc
 // qu'il faut aller lire. C'est un TRIEUR, pas un juge (même discipline que findReglesSansDomicile :
 // il nomme, il ne tranche pas).
+// ÉLARGIS LE 2026-10-03, QUELQUES HEURES APRÈS LEUR ÉCRITURE, ET LA RAISON COMPTE PLUS QUE LA
+// LISTE. La première version rendait 12 raisons sur 34 candidats. En lisant à la main les HUIT
+// premiers qu'elle classait « sans raison écrite », les huit en portaient une — un taux de silence
+// faux de 8 sur 8 sur l'échantillon lu. Le détecteur ne se trompait pas sur ce qu'il trouvait ; il
+// se trompait sur ce que son silence voulait dire, et c'est la leçon L5 : « aucun de mes motifs
+// n'a reconnu quelque chose » n'est pas « il n'y a rien ». Deux corrections, jamais une seule :
+// les motifs ci-dessous (ce que je cherchais était trop étroit) ET le libellé de la colonne muette
+// (ce que j'en disais était trop affirmatif).
+//
+// CE QUE LES HUIT PORTAIENT, ET QU'AUCUN DES SEPT PREMIERS MOTIFS NE VOYAIT : un nom donné par
+// l'utilisateur (the-ghost, tasks-process-guardian) · une frontière déclarée avec un voisin nommé
+// (the-ghost ↔ check-tasks-details) · un « POURQUOI CE FICHIER EXISTE » en toutes lettres
+// (modes-de-travail) · un « POURQUOI UN OUTIL PLUTÔT QU'UNE ESTIMATION » (cout-de-la-refonte) · un
+// propriétaire déjà déclaré, c'est-à-dire un fichier qui EST déjà l'extension d'un autre
+// (priorites, implémentation de check-tasks-details) · un point de déclaration unique dont
+// l'absorption recréerait la copie qu'il supprime (modes-de-travail remplaçait un booléen recopié
+// dans 31 endroits) · un banc d'essai isolé (check-profile).
 export const MARQUEURS_DE_SEPARATION = [
   [/extrait de[^.\n]{0,60}(le|le\s)?\s*\d{4}-\d{2}-\d{2}/i, "extraction datée d'un autre fichier"],
   [/ne doivent plus [êe]tre r[ée]unis|ne doit plus [êe]tre r[ée]uni/i, "séparation demandée explicitement"],
-  [/demande explicite de l'utilisateur/i, "décision explicite de l'utilisateur"],
-  [/formulation explicite de l'utilisateur/i, "décision explicite de l'utilisateur"],
-  [/scission|s[ée]par[ée] (de|d')/i, "scission déclarée"],
-  [/(jamais|ne) (confondre|confondu|se confondent)[^.\n]{0,60}(avec|et)/i, "distinction déclarée avec un voisin"],
-  [/m[ée]canisme PARTAG[ÉE]|logique commune|partag[ée] (par|entre)/i, "mécanisme partagé par plusieurs outils — l'absorber le retirerait aux autres"],
+  [/(demande|formulation|d[ée]cision|consigne|proposition) (explicite )?(de l'utilisateur|du 20\d\d-\d{2}-\d{2})/i, "né d'une demande de l'utilisateur"],
+  [/(nomm[ée]|nom donn[ée]|bapti[sz][ée])[^.\n]{0,20}par l'utilisateur/i, "nommé par l'utilisateur — un nom lui appartient, le fondre le ferait disparaître"],
+  [/scission|s[ée]par[ée] (de|d')|banc d'essai isol[ée]/i, "scission ou isolement déclaré"],
+  [/(jamais|ne) (confondre|confondu|se confondent)[^.\n]{0,60}(avec|et)|fronti[èe]re (stricte|claire|nette|d[ée]clar[ée])/i, "frontière déclarée avec un voisin"],
+  [/m[ée]canisme PARTAG[ÉE]|logique commune|partag[ée] (par|entre)|utilis[ée]e?s? par plusieurs|par plusieurs outils/i, "mécanisme partagé par plusieurs outils — l'absorber le retirerait aux autres"],
+  [/POURQUOI CE (FICHIER|MODULE|SCRIPT|MODULE)[^.\n]{0,20}EXISTE/i, "sa raison d'exister est écrite en toutes lettres dans son en-tête"],
+  [/POURQUOI UN (OUTIL|MODULE|SCRIPT|FICHIER)[^.\n]{0,40}(PLUT[ÔO]T|S[ÉE]PAR[ÉE])/i, "sa raison d'être un fichier à part est écrite en toutes lettres"],
+  [/PROPRI[ÉE]TAIRE D[ÉE]CLAR[ÉE]|jamais un second d[ée]cideur|son impl[ée]mentation, jamais/i, "déjà déclaré comme l'implémentation d'un autre outil — c'est DÉJÀ une extension"],
+  [/d[ée]clar[ée]s? une fois et lus? partout|recopi[ée] dans \d+ (endroits|fichiers)/i, "point de déclaration unique — l'absorber recréerait la copie qu'il a supprimée"],
+  [/LA DEMANDE[^.\n]{0,60}#\d+|n[ée]e? (le \d{4}-\d{2}-\d{2} )?de sa (proposition|demande)/i, "la demande qui l'a fait naître est citée en tête, avec sa tâche"],
 ];
 
 // Combien de lignes de tête on lit. Le POURQUOI de ce projet vit dans l'en-tête du fichier, par
@@ -2942,6 +2964,16 @@ export const LIGNES_DEN_TETE = 40;
 export const LIGNES_MAX_ABSORBABLE = 300;
 
 export function candidatsALaFusion({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, maxLignes = LIGNES_MAX_ABSORBABLE } = {}) {
+  // DEUX CRITÈRES, PAS UN — ET LE SECOND MANQUAIT (corrigé le 2026-10-03, le jour même). La revue
+  // #1479 en posait trois : moins de 300 lignes · registre vide ou inexistant · un kit complet
+  // quand même. Je n'avais implémenté que le premier, et la liste rendait donc check-spirit, qui
+  // est le PORTEUR DE L'ARTICLE 0 — proposer de le fondre dans un voisin aurait été absurde, et
+  // c'est le genre d'absurdité qui discrédite un outil entier (leçon L4).
+  //
+  // Le registre se lit à la convention du projet, énoncée une fois dans CLAUDE.md : un outil qui
+  // écrit quelque chose a son dossier `docs/<nom>/`. Un dossier présent et non vide = un registre
+  // à migrer = plus un candidat à bas coût. La convention se LIT sur le disque, jamais une liste
+  // d'outils recopiée (Article 24).
   const noms = [];
   let fichiers = [];
   try { fichiers = listDirImpl(join(root, "scripts")); } catch { return []; }
@@ -2949,7 +2981,12 @@ export function candidatsALaFusion({ root = ROOT, listDirImpl = readdirSync, rea
     if (!f.endsWith(".mjs")) continue;
     let src = "";
     try { src = String(readFileImpl(join(root, "scripts", f), "utf8")); } catch { continue; }
-    if (src.split("\n").length <= maxLignes) noms.push(f.replace(/\.mjs$/, ""));
+    if (src.split("\n").length > maxLignes) continue;
+    const nom = f.replace(/\.mjs$/, "");
+    let registre = [];
+    try { registre = listDirImpl(join(root, "docs", nom)); } catch { /* pas de dossier = pas de registre */ }
+    if (registre.length) continue;
+    noms.push(nom);
   }
   return noms.sort();
 }
@@ -2964,11 +3001,22 @@ export function findRaisonsDeSeparation(candidats = [], { root = ROOT, readFileI
     let src = "";
     try { src = String(readFileImpl(join(root, chemin), "utf8")); }
     catch { illisibles.push({ nom, chemin, pourquoi: "fichier introuvable — jamais compté comme « sans raison »" }); continue; }
-    const tete = src.split("\n").slice(0, LIGNES_DEN_TETE).join("\n");
+    const lignes = src.split("\n").slice(0, LIGNES_DEN_TETE);
+    // LE DÉFAUT ÉTAIT STRUCTUREL, PAS DANS LA LISTE DES MOTIFS (2026-10-03, corrigé deux heures
+    // après l'écriture). Les en-têtes de ce dépôt sont coupés à ~95 caractères : « demande\n//
+    // explicite de l'utilisateur » s'écrit sur DEUX lignes, et aucun motif de plusieurs mots ne
+    // pouvait le reconnaître. Trois candidats lus à la main le portaient en toutes lettres et
+    // ressortaient « sans raison ». J'ai d'abord élargi la liste des motifs — le bon geste était
+    // d'aplatir le texte AVANT de chercher (leçon L37 : corriger la CLASSE, pas l'occurrence).
+    const tete = lignes.join("\n").replace(/^\s*\/\/ ?/gm, "").replace(/\s+/g, " ");
     const trouves = MARQUEURS_DE_SEPARATION.filter(([motif]) => motif.test(tete)).map(([, quoi]) => quoi);
     if (trouves.length) {
-      const phrase = tete.split("\n").find((l) => MARQUEURS_DE_SEPARATION.some(([m]) => m.test(l))) ?? "";
-      avec.push({ nom, chemin, raisons: [...new Set(trouves)], extrait: phrase.replace(/^\s*\/\/\s?/, "").trim().slice(0, 150) });
+      // L'extrait se relit sur le texte APLATI pour la même raison : découpé, il couperait la
+      // phrase en deux et montrerait la moitié qui ne contient pas la raison.
+      const premier = MARQUEURS_DE_SEPARATION.find(([m]) => m.test(tete));
+      const pos = tete.search(premier[0]);
+      const phrase = tete.slice(Math.max(0, pos - 40), pos + 110);
+      avec.push({ nom, chemin, raisons: [...new Set(trouves)], extrait: phrase.trim().slice(0, 150) });
     } else sans.push({ nom, chemin });
   }
   return { mesurable: true, avec, sans, illisibles, examines: candidats.length };
@@ -2978,7 +3026,10 @@ export function formatRaisonsDeSeparationLines(r) {
   if (!r?.mesurable) return [`🧩 RAISONS DE RESTER SÉPARÉ : PAS MESURÉ — ${r?.pourquoi ?? "raison non fournie"}`];
   const L = [`🧩 AVANT TOUTE FUSION — ${r.avec.length} candidat(s) sur ${r.examines} portent une raison ÉCRITE de vivre seuls.`];
   for (const x of r.avec) L.push(`   🛑 ${x.nom} — ${x.raisons.join(" · ")} : « ${x.extrait} »`);
-  for (const x of r.sans) L.push(`   ❔ ${x.nom} — aucune raison écrite trouvée dans son en-tête : à LIRE, jamais à fusionner sur ce seul silence`);
+  // LE LIBELLÉ EST LA MOITIÉ DU CORRECTIF (leçon L5). « Aucune raison écrite » affirmait qu'il n'y
+  // en avait pas ; sur les huit premiers lus à la main, les huit en portaient une. Ce que la ligne
+  // peut honnêtement dire est beaucoup plus petit : aucun de MES motifs n'a reconnu quelque chose.
+  for (const x of r.sans) L.push(`   ❔ ${x.nom} — aucun de mes ${MARQUEURS_DE_SEPARATION.length} motifs n'a reconnu de raison dans son en-tête, ce qui ne veut PAS dire qu'il n'y en a pas : à LIRE`);
   for (const x of r.illisibles) L.push(`   ⚠️  ${x.nom} — ${x.pourquoi}`);
   L.push("   Ce tri NOMME, il ne juge pas : une raison écrite n'interdit pas une fusion, elle oblige à la discuter ; son absence n'en autorise aucune.");
   return L;

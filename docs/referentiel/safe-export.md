@@ -1076,11 +1076,26 @@ vit à côté du QUOI (Article 27, exigence X6), déjà porté ici par `findRais
 posé en le mesurant à la revue #1479 — jamais une liste recopiée qui se périmerait au prochain outil
 (Article 24).
 
-**Sept marqueurs de séparation**, cherchés dans les 40 premières lignes seulement : extraction
-datée · séparation demandée explicitement · décision ou formulation explicite de l'utilisateur ·
-scission déclarée · distinction déclarée avec un voisin · mécanisme partagé par plusieurs outils.
+**Deux critères de candidature, jamais un** : moins de `LIGNES_MAX_ABSORBABLE` lignes **et** aucun
+registre à migrer (`docs/<nom>/` absent ou vide, convention du projet lue sur le disque). La
+première version n'appliquait que le premier et rendait donc `check-spirit` — le porteur de
+l'Article 0 — comme candidat à la fusion. Une absurdité pareille discrédite l'outil entier
+(leçon L4).
+
+**Douze marqueurs de séparation**, cherchés dans les 40 premières lignes seulement : extraction
+datée · séparation demandée explicitement · demande, décision, consigne ou proposition de
+l'utilisateur · nom donné par lui · scission ou isolement déclaré · frontière déclarée avec un
+voisin · mécanisme partagé ou utilisé par plusieurs outils · « POURQUOI CE FICHIER EXISTE » écrit
+en toutes lettres · « POURQUOI UN OUTIL PLUTÔT QUE… » · propriétaire déjà déclaré (le fichier EST
+déjà une extension) · point de déclaration unique · la demande fondatrice citée avec sa tâche.
 **Seul l'en-tête est lu** : un commentaire près d'une fonction explique un geste, jamais l'existence
 du fichier — l'y chercher transformerait n'importe quelle mention en veto.
+
+**L'en-tête est APLATI avant d'être cherché, et c'est la correction qui comptait.** Les en-têtes de
+ce dépôt sont coupés à ~95 caractères : « demande\n// explicite de l'utilisateur » s'écrit sur deux
+lignes, et aucun motif de plusieurs mots ne pouvait le reconnaître. Trois fichiers portaient leur
+raison en toutes lettres et ressortaient « sans raison ». Le premier réflexe — allonger la liste des
+motifs — traitait l'occurrence ; aplatir traite la classe (leçon L37).
 
 ### Ce qu'il a trouvé à son premier passage, et c'est la raison d'en faire un mécanisme
 
@@ -1090,9 +1105,27 @@ raison écrite de rester séparés**, dont **trois citent l'utilisateur**. Le pl
 scripts ne doivent plus etre reunis dans le meme script, pour plus de clarté ». Le proposer aurait
 défait sa décision.
 
-Sur les 34 candidats dérivés du dépôt entier : **12 portent une raison écrite**, dont quatre que
-personne n'avait relevées à la main (`simulation-visiteur`, `corpus-mesure`, `route-booster`,
+Sur les candidats dérivés du dépôt entier : **14 sur 20 portent une raison écrite**, dont plusieurs
+que personne n'avait relevées à la main (`simulation-visiteur`, `corpus-mesure`, `route-booster`,
 `summarize-simulation-log`).
+
+### Son taux de silence faux, mesuré et déclaré plutôt que supposé
+
+**Première version : 12 raisons sur 34.** Les HUIT premiers qu'elle classait « sans raison » ont été
+lus à la main : **les huit en portaient une.** Un silence faux de 8 sur 8 — le détecteur ne se
+trompait pas sur ce qu'il trouvait, il se trompait sur ce que son silence voulait dire.
+
+**Après élargissement et aplatissement : 14 sur 20 candidats réels**, et les six restants sont
+`check-argus` (la moitié mécanique d'un Gardien sacré du code déjà nommé), `check-profil-utilisateur` (seul vrai cas à
+instruire par lecture) et quatre outils d'environnement (`execution-profile`, `install-ci`,
+`run-framework`, `sites-env`) déjà couverts par la tâche #1496.
+
+**Une honnêteté qui s'impose ici** : les motifs ont été élargis EN LISANT l'échantillon qu'ils
+rataient. Un détecteur réglé sur son échantillon ne peut pas être validé par cet échantillon. Un
+second échantillon FRAIS de cinq fichiers jamais lus a donc été passé après coup : trois raisons
+manquées (toutes par coupure de ligne, d'où l'aplatissement), une légitimement muette
+(`run-framework` n'a aucun commentaire d'en-tête), une à la frontière (`check-argus`). C'est cette
+seconde passe, pas la première, qui mesure quelque chose.
 
 ### Ce qu'il ne fait pas, et la limite est nette
 
