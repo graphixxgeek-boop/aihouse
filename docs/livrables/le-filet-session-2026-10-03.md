@@ -98,9 +98,16 @@ pris lui-même (« le mode séquentiel reste la référence, gardé et lançable
 décision, pas la mienne.
 
 **Ce que la mesure dit de la faisabilité, puisque c'est elle qui tranche** : le runner parallèle
-tourne très bien sous instrumentation de couverture, et la couverture lue est de **98 % contre 99 %
-en séquentiel** — j'avais prédit un effondrement, la mesure dit un point. Le passage est donc
-techniquement ouvert.
+tourne très bien sous instrumentation de couverture, et la couverture lue est **exactement la même
+qu'en séquentiel** — 99 % sur les 21 fichiers du jeu, 41 outils mesurés à 81 % de moyenne des deux
+côtés. Le passage est donc techniquement ouvert, et il ne coûte rien en mesure.
+
+**J'ai dû me corriger deux fois en chemin, et autant le dire** : j'avais d'abord prédit que la
+couverture s'effondrerait en parallèle — faux. Puis j'ai annoncé l'inverse, que le parallèle
+mesurait STRICTEMENT MIEUX (41 outils à 81 % contre 30 à 42 %) — faux aussi : ce chiffre-là venait
+d'un relevé séquentiel incomplet, deux fichiers de processus au lieu de trois. Refait proprement,
+les deux modes sont à égalité. **Ça ne change pas la conclusion, et ça la rend même plus propre** :
+le parallèle n'est pas meilleur, il est égal, et trois fois plus rapide.
 
 **Les trois options :**
 

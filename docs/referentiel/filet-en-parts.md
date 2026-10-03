@@ -150,8 +150,10 @@ exception par les règles de ce projet).
 
 - **IL EST LE CROCHET DE COMMIT DEPUIS LE 2026-10-03** (tâche #1586), et c'est un changement
   d'arbitrage, pas une dérive : l'utilisateur avait tranché en septembre que « le séquentiel reste
-  la référence » ; il est revenu dessus en fenêtre dédiée, sur la mesure — 84 s contre 263 s, et une
-  couverture lue MEILLEURE en parallèle (41 outils à 81 % contre 30 à 42 %).
+  la référence » ; il est revenu dessus en fenêtre dédiée, sur la mesure — 84 s contre 263 s, à
+  couverture ÉGALE (99 % sur les 21 fichiers du jeu et 41 outils à 81 % des deux côtés, une fois
+  le lecteur de couverture réparé par la tâche #1583). Un premier chiffre annonçait le parallèle
+  MEILLEUR que le séquentiel ; il venait d'un relevé séquentiel incomplet et a été corrigé.
   **Le séquentiel reste le juge, et le crochet l'appelle tout seul** : quand une part tombe, on ne
   sait pas encore si la faute est au code ou au parallélisme, donc le crochet relance
   `check-house.mjs` et ne bloque que si lui aussi échoue. Le cas rare coûte 84 s + 263 s, et ce
