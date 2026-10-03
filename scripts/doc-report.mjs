@@ -31,7 +31,8 @@ import { toolsNeverUsed, recordCliUsage, horizonDuJournal, formatHorizonLine } f
 import { recommendFindBooster } from "./find-booster.mjs";
 import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, regimeDEcriture, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage, lireLesScriptsDuDepot, sh } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName, primaryToolName, PRESTATIONS, normaliserNomDOutil } from "./le-coordinateur.mjs";
-import { findFamillesNonCorroborees, formatFamillesNonCorroboreesLines, findZonesDePreuveAbsentes, formatZonesDePreuveLines } from "./le-classificateur.mjs";
+import { findFamillesNonCorroborees, formatFamillesNonCorroboreesLines, findZonesDePreuveAbsentes, formatZonesDePreuveLines, findZonesDePreuveSansExclusion, formatZonesDePreuveSansExclusionLines } from "./le-classificateur.mjs";
+import { HORS_PORTEE_DOCUMENTS as HORS_PORTEE_DOCUMENTS_ABRAHAM } from "./abraham-les-references.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -534,6 +535,12 @@ export const HORS_PORTEE_SCHEMAS = [
   { motif: /^docs\/suivi\//, pourquoi: "journal de tâches : ses lignes ne portent pas de schéma, et une ligne de tableau n'est pas un dessin" },
   { motif: /\/archives?\//, pourquoi: "une archive garde l'état du jour où elle a été faite : la corriger détruirait ce qu'elle existe pour préserver" },
   { motif: /^docs\/simulations\//, pourquoi: "transcripts de parties : ce sont des conversations enregistrées, pas des documents que nous rédigeons" },
+  // LES COPIES VERBATIM, ET LA RAISON EST LA MÊME QUE POUR LE CORPUS DES JUMEAUX (2026-10-03,
+  // tâche #1555) : on ne peut pas réclamer une correction de forme dans une zone où TOUCHER est
+  // interdit (#1548). Trouvé en faisant entrer deux états anciens de la charte dans le dépôt :
+  // l'un d'eux portait un schéma sans titre, écrit avant que la règle existe, et personne n'a le
+  // droit de le corriger — c'est le propre d'une archive.
+  { motif: /^docs\/contexte-projet\//, pourquoi: "zone de preuve VERBATIM (#1548) : y corriger un format reviendrait à modifier une archive, ce que sa propre règle interdit" },
 ];
 
 // ============================================================================
@@ -1346,6 +1353,12 @@ function main() {
   // parce que doc-report est déjà le lieu où la forme et l'intégrité des documents se vérifient —
   // page périmée, document jumeau, famille corroborée, schéma sans titre. Un quarantième outil
   // pour une ligne aurait ajouté un rendez-vous de plus (Article 31 : étendre plutôt qu'ajouter).
+  // LE LIEN ENTRE LES ZONES VERBATIM ET LE CORPUS DES JUMEAUX, vérifié ici parce que doc-report
+  // est le seul endroit qui importe déjà les deux côtés sans créer de cycle (tâche #1555).
+  const sync = findZonesDePreuveSansExclusion({ listes: { "corpus des documents jumeaux": HORS_PORTEE_DOCUMENTS_ABRAHAM, "contrôle des schémas sans titre": HORS_PORTEE_SCHEMAS } });
+  for (const l of formatZonesDePreuveSansExclusionLines(sync)) console.log(l);
+  for (const z of sync?.oubliees ?? []) ecartsMuets.push({ fichier: z.chemin, defaut: `zone de preuve VERBATIM non exclue de « ${z.liste} » : un contrôle de forme y réclamera une correction que sa propre règle interdit`, tache: `ajouter ${z.chemin} à la liste d'exclusion « ${z.liste} »`, fausseUneMesure: true });
+
   const preuves = findZonesDePreuveAbsentes();
   for (const l of formatZonesDePreuveLines(preuves)) console.log(l);
   for (const z of preuves?.absentes ?? []) ecartsMuets.push({ fichier: z.chemin, defaut: "déclaré zone de PREUVE JURIDIQUE et absent du dépôt : une zone de preuve qui pointe vers un dossier disparu est pire qu'une absence de déclaration", tache: `rétablir ${z.chemin} ou retirer sa déclaration de ZONES_DE_PREUVE`, fausseUneMesure: true });

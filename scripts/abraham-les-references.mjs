@@ -1588,6 +1588,24 @@ export const HORS_PORTEE_DOCUMENTS = [
   // Les simulations sont des ARCHIVES de conversations. Deux transcripts se ressemblent parce que
   // c'est le même jeu, et c'est doc-report qui les compare, sur leur substance exacte.
   { motif: /^docs\/simulations\//, pourquoi: "archives de conversations : leur ressemblance est normale, et doc-report les compare déjà" },
+  // LES COPIES VERBATIM, ET C'EST LA MÊME DOCTRINE QUE LES ARCHIVES (2026-10-03, tâche #1555).
+  // `docs/contexte-projet/` garde des copies VERBATIM — l'ancien référentiel affiché en jeu, les
+  // états antérieurs de la charte. Une copie verbatim ressemble forcément à son original : c'est
+  // sa définition, pas un défaut, et la « corriger » voudrait dire la résumer, c'est-à-dire
+  // détruire exactement ce qu'elle existe pour préserver.
+  //
+  // MESURÉ LE JOUR OÙ DEUX ÉTATS ANCIENS DE LA CHARTE SONT ENTRÉS DANS LE DÉPÔT (pour rendre le
+  // filet exportable, #1555) : le détecteur est passé de 6 paires à 11, et les CINQ nouvelles
+  // étaient toutes « une archive ↔ le document dont elle est l'ancêtre ».
+  //
+  // ⚠️ POURQUOI CE MOTIF EST ÉCRIT ICI ET NON DÉRIVÉ DE `ZONES_DE_PREUVE` (tâche #1548), alors
+  // que la dérivation serait plus propre au sens de l'Article 24 : l'importer créerait un CYCLE
+  // — ce fichier est lui-même importé par la chaîne du classificateur, et le cycle casse
+  // l'initialisation du module (« Cannot access NATURES before initialization »). Essayé,
+  // constaté, annulé. Le lien est donc tenu par `findZonesDePreuveSansExclusion()`, un garde-fou
+  // qui refuse qu'une zone de preuve verbatim soit déclarée sans son exclusion ici — la seconde
+  // option que l'Article 24 autorise quand la dérivation est impossible.
+  { motif: /^docs\/contexte-projet\//, pourquoi: "zone de preuve VERBATIM (tâche #1548) : des copies exactes de documents anciens. Une copie verbatim ressemble forcément à son original — c'est sa définition, pas un défaut, et la corriger voudrait dire la résumer" },
   // TOUT DOSSIER D'ARCHIVES, ET LA RÈGLE EST GÉNÉRALE (2026-10-02, tâche #1426). Une archive est
   // une COPIE VERBATIM de ce qu'elle archive — c'est sa définition, pas un défaut. La signaler
   // comme un document jumeau de son original revient à reprocher à une archive d'archiver, et

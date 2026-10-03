@@ -2040,6 +2040,13 @@ function main() {
     const r = findContraintesSansRegle();
     const lignes = formatContraintesSansRegleLines(r);
     for (const l of lignes) console.log(l);
+    // LA MOITIÉ MESURABLE DE LA MÊME QUESTION (tâche #1555) : les contraintes ci-dessus sont
+    // DÉCLARÉES parce qu'aucun programme ne lit un prompt système ; un chemin absolu vers mon
+    // conteneur, lui, se MESURE. Les deux moitiés sortent ensemble, sinon on lirait la première
+    // comme la réponse entière.
+    const dep = findDependancesALEnvironnement();
+    console.log("");
+    for (const l of formatDependancesALEnvironnementLines(dep)) console.log(l);
     const corps = ["# Ce qui gouverne l'agent sans venir de l'Agence", "",
       "*(Produit par `node scripts/safe-export.mjs session`, tâche #1552. Réponse à sa demande P89 du 2026-10-03.)*", "",
       "**Pourquoi ce document existe** : une partie de ce qui dirige mon travail ne vient pas de l'Agence — elle vient de mon conteneur, de mon éditeur, ou de nos habitudes. Tant que ce n'est pas écrit, il est impossible de savoir ce qui, dans ce qu'il croit être l'Agence, partirait avec elle et ce qui resterait ici.", "",
@@ -2061,6 +2068,7 @@ function main() {
     else {
       for (const c of r.domicilesMorts) constats.push({ constat: `la contrainte « ${c.cle} » annonce ${c.domicile}, qui n'existe pas`, etat: "retenu", tache: 1552 });
       for (const c of r.sansDomicile) constats.push({ constat: `la contrainte « ${c.cle} » (${c.nature}) ne vit dans aucune règle écrite`, etat: "a-trancher", pourquoi: "l'écrire dans l'Agence est une décision : une contrainte d'environnement n'a pas forcément vocation à devenir une règle du projet" });
+      for (const d of dep?.durs ?? []) constats.push({ constat: `${d.fichier}:${d.ligne} lit un chemin absolu vers mon conteneur (${d.chemin}) : ce code échoue chez tout le monde`, etat: "retenu", tache: 1555 });
       const habitudes = (r.parNature.habitude ?? []).length;
       if (habitudes) constats.push({ constat: `${habitudes} habitude(s) de travail recensées — ce sont les seules qui ont vocation à rejoindre l'Agence`, etat: "ecarte", pourquoi: "elles sont déjà logées dans un document du dépôt ; les y recopier une seconde fois créerait deux porteurs de la même règle, qui finiraient par diverger (leçon L29)" });
     }
@@ -4721,3 +4729,111 @@ export function findFichiersHorsZone({ fichiers = null, root = ROOT, listerImpl 
 // que findLanceursPrematures() refuse. Quatrième outil du dépôt à le payer : le défaut se
 // déclenche à la seconde où un `const` passe sous la ligne du lanceur, jamais avant.
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) main();
+
+// ============================================================================
+// CE QUI NE MARCHE QUE CHEZ MOI — sa peur P65, rendue mécanique (tâche #1555)
+// ============================================================================
+// SA PEUR, PRÉCISÉE PAR LUI-MÊME ET RECENTRÉE : elle ne porte pas sur l'export en général, mais
+// sur le cas où « des fonctionnalités de l'Agence seraient en réalité des fonctions de MON
+// périmètre Claude Code et non de l'Agence ». Installée ailleurs, l'Agence les perdrait sans que
+// rien ne l'annonce, et le défaut ne se verrait qu'au moment où elle devrait servir.
+//
+// LA TÂCHE #1552 A RÉPONDU PAR DÉCLARATION — quinze contraintes écrites à la main, parce qu'aucun
+// programme ne peut lire le prompt système d'une session. CELLE-CI RÉPOND PAR MESURE, sur la
+// partie qui EST mesurable : un chemin absolu vers mon conteneur, inscrit en dur dans le code de
+// l'Agence, ne marchera chez personne d'autre.
+//
+// ⚠️ LA DISTINCTION QUI DÉCIDE DE TOUT, et sans elle ce détecteur crierait sur quarante fichiers :
+//   · une MENTION en commentaire (« le scratchpad disparaît en fin de session ») est une
+//     explication, elle n'empêche rien et elle est même utile au prochain agent ;
+//   · un CHEMIN ABSOLU dans du code exécuté est une dépendance dure — le fichier n'existe que
+//     dans mon conteneur, et le code qui le lit échoue partout ailleurs.
+// Le premier est du savoir, le second est un bug d'export. Les confondre rendrait la mesure
+// illisible (leçon L4).
+// LES MOTIFS SONT CONSTRUITS DANS LA FONCTION, jamais en constantes de module — et c'est une
+// correction payée sur place : la CLI de ce fichier s'exécute AVANT la fin du module, donc une
+// constante déclarée plus bas n'existe pas encore quand la commande l'appelle (« Cannot access
+// before initialization »). Un détecteur qui plante au lancement ne détecte rien.
+// LA MARQUE EST VERBEUSE EXPRÈS : on ne la tape pas par réflexe, et elle se lit dans un diff.
+// ELLE EST UNE FONCTION ET NON UNE CONSTANTE, et c'est la SECONDE fois que ce fichier l'apprend
+// dans la même heure : sa CLI s'exécute avant la fin du module, donc une constante déclarée plus
+// bas n'existe pas encore quand la commande l'appelle. Un garde-fou du filet refuse d'ailleurs
+// ce montage — il a mordu, et il avait raison.
+export function marqueFixtureExport() { return "fixture-export-pas-une-dependance"; }
+
+export function motifsDeCheminAbsolu() {
+  return [
+    /["'`](\/tmp\/claude-[^"'`\s]+)["'`]/g,
+    /["'`](\/(?:home|Users)\/[^"'`\s]+)["'`]/g,
+  ];
+}
+
+export function findDependancesALEnvironnement({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, dossiers = ["scripts", "lib"] } = {}) {
+  const fichiers = [];
+  for (const d of dossiers) {
+    try {
+      for (const f of listDirImpl(join(root, d))) {
+        if (f.endsWith(".mjs") || f.endsWith(".ts")) fichiers.push(`${d}/${f}`);
+      }
+    } catch { /* dossier absent : il ne compte pas comme propre */ }
+  }
+  if (!fichiers.length) {
+    return { mesurable: false, pourquoi: "aucun fichier de code lu : ce zéro mesure un parcours qui n'a rien trouvé, jamais un code sans dépendance (leçons L5/L11)" };
+  }
+  const durs = [];
+  const exemptes = [];
+  for (const f of fichiers) {
+    let texte = "";
+    try { texte = String(readFileImpl(join(root, f), "utf8")); } catch { continue; }
+    // LES COMMENTAIRES SONT RETIRÉS AVANT DE CHERCHER : une mention explicative n'est pas une
+    // dépendance, et c'est très exactement la confusion qui a fait annoncer 34 lecteurs du suivi
+    // là où il y en avait 22, le même jour.
+    // ⚠️ ON NE RETIRE QUE LES COMMENTAIRES DE LIGNE, ET C'EST UNE CORRECTION PAYÉE SUR PLACE.
+    // La première version retirait aussi les blocs `/* … */`. Sur le filet de sécurité, ce motif
+    // a mangé 850 000 caractères — il traverse les littéraux d'expression régulière et les
+    // chaînes qui contiennent `/*` — et il a FAIT DISPARAÎTRE LES DEUX SEULS VRAIS CAS que ce
+    // détecteur existe pour trouver. Un détecteur qui avale ce qu'il cherche rend zéro, et un
+    // zéro se lit comme un code propre.
+    // LE COÛT DU CHOIX EST DÉCLARÉ : un chemin absolu écrit dans un commentaire de BLOC sera
+    // désormais signalé à tort. C'est le bon sens de l'erreur — un faux signalement se lit et se
+    // corrige, un vrai cas effacé ne se voit jamais.
+    const sansCommentaires = texte.replace(/^\s*\/\/.*$/gm, "");
+    const lignes = sansCommentaires.split("\n");
+    lignes.forEach((l, i) => {
+      // UNE EXCEPTION DÉCLARÉE SUR LA LIGNE, ET ELLE EST COMPTÉE (2026-10-03). Le détecteur ne
+      // peut pas distinguer un chemin LU sur le disque d'une chaîne de test qui en imite un — et
+      // il ne le doit pas : les trois vrais cas trouvés ce jour-là étaient justement dans le
+      // filet. La seule sortie honnête est donc une marque ÉCRITE sur la ligne, visible en
+      // relecture, impossible à poser par distraction. Elle est COMPTÉE dans le rapport : une
+      // exception qu'on ne voit plus finit par couvrir autre chose qu'elle (Article 24).
+      if (l.includes(marqueFixtureExport())) { exemptes.push({ fichier: f, ligne: i + 1 }); return; }
+      for (const motif of motifsDeCheminAbsolu()) {
+        motif.lastIndex = 0;
+        let m;
+        while ((m = motif.exec(l))) durs.push({ fichier: f, ligne: i + 1, chemin: m[1] });
+      }
+    });
+  }
+  return {
+    mesurable: true,
+    fichiers: fichiers.length,
+    durs,
+    exemptes,
+    fichiersTouches: [...new Set(durs.map((d) => d.fichier))],
+    horsPortee: "ne se mesure ici que ce qui s'écrit comme un CHEMIN. Une dépendance à un outil de session (un réveil, une fenêtre de question, un agent séparé) ne laisse aucune trace dans le code du dépôt — elle est DÉCLARÉE à la main dans CONTRAINTES_DE_SESSION, et c'est la seule protection possible (Article 27).",
+  };
+}
+
+export function formatDependancesALEnvironnementLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  const out = [`DÉPENDANCES À MON CONTENEUR — ${r.durs.length} chemin(s) absolu(s) en dur dans ${r.fichiersTouches.length} fichier(s), sur ${r.fichiers} parcourus.`];
+  for (const d of r.durs) out.push(`   🚨 ${d.fichier}:${d.ligne} — ${d.chemin}`);
+  if (r.durs.length) {
+    out.push("      Ce fichier n'existe QUE dans mon conteneur. Le code qui le lit échoue chez tout le monde — et le défaut ne se verra qu'au moment où il devrait servir.");
+  } else {
+    out.push("   ✅ Aucun chemin absolu vers mon conteneur dans du code exécuté.");
+  }
+  if (r.exemptes?.length) out.push(`   · ${r.exemptes.length} ligne(s) portent la marque d'exception « ${marqueFixtureExport()} » : ce sont des chaînes de test qui imitent un chemin sans jamais être lues. Elles sont comptées plutôt que tues — une exception qu'on ne voit plus finit par couvrir autre chose qu'elle.`);
+  out.push(`   HORS PORTÉE : ${r.horsPortee}`);
+  return out;
+}

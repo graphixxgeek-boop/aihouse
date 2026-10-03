@@ -1367,6 +1367,43 @@ export function findZonesDePreuveAbsentes({ zones = ZONES_DE_PREUVE, root = ROOT
   };
 }
 
+// LE LIEN AVEC LE DÉTECTEUR DE DOCUMENTS JUMEAUX, TENU PAR UN GARDE-FOU FAUTE DE POUVOIR L'ÊTRE
+// PAR UNE DÉRIVATION (2026-10-03, tâches #1548 et #1555). Une zone de preuve VERBATIM contient
+// par construction des copies exactes : elle doit donc être hors du corpus des documents jumeaux,
+// sinon chaque archive est signalée comme la jumelle du document dont elle est l'ancêtre.
+//
+// LA DÉRIVATION A ÉTÉ ESSAYÉE ET ANNULÉE : faire lire `ZONES_DE_PREUVE` à Abraham crée un CYCLE
+// d'import qui casse l'initialisation du module. L'Article 24 autorise exactement cela — une
+// liste tenue à la main À CONDITION qu'un mécanisme détecte l'écart. C'est ce mécanisme.
+// ⚠️ IL Y A PLUSIEURS CONSOMMATEURS, ET C'EST LA VRAIE LEÇON DU PASSAGE. Le garde-fou ne visait
+// d'abord que le corpus des documents jumeaux. Le filet a immédiatement trouvé le SECOND : un
+// état ancien de la charte portait un schéma sans titre, écrit avant que la règle existe — et
+// personne n'a le droit de le corriger, puisque toucher y est interdit. Une liste par
+// consommateur se serait périmée au troisième ; `listes` en prend autant qu'on lui en donne
+// (Article 24 : un nouveau venu hérite de ce que l'équipe sait déjà faire).
+export function findZonesDePreuveSansExclusion({ zones = ZONES_DE_PREUVE, listes = null } = {}) {
+  const entrees = Object.entries(listes ?? {}).filter(([, l]) => Array.isArray(l) && l.length);
+  if (!entrees.length) {
+    return { mesurable: false, pourquoi: "aucune liste d'exclusion fournie : sans elles, « aucune zone oubliée » serait un verdict rendu sur rien (leçons L5/L11). Elles s'injectent par les outils qui les portent, qui ne peuvent pas être importés ici sans créer un cycle." };
+  }
+  const verbatim = zones.filter((z) => (z.criteres ?? []).includes("verbatim"));
+  const oubliees = [];
+  for (const [nom, liste] of entrees) {
+    for (const z of verbatim) {
+      if (!liste.some((h) => h.motif?.test?.(`${z.chemin}/un-fichier.md`))) oubliees.push({ ...z, liste: nom });
+    }
+  }
+  return { mesurable: true, verbatim: verbatim.length, listes: entrees.map(([n]) => n), oubliees, total: zones.length };
+}
+
+export function formatZonesDePreuveSansExclusionLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  const out = [`ZONES VERBATIM ET CONTRÔLES DE FORME — ${r.verbatim} zone(s) de preuve verbatim sur ${r.total}, confrontées à ${r.listes.length} liste(s) d'exclusion : ${r.listes.join(", ")}.`];
+  for (const z of r.oubliees) out.push(`   🚨 « ${z.chemin} » est une zone de preuve VERBATIM et n'est pas exclue de « ${z.liste} » : un contrôle de forme y réclamera une correction que sa propre règle interdit (#1548).`);
+  if (!r.oubliees.length) out.push("   ✅ Chaque zone verbatim est hors de chaque liste — les listes tenues à la main n'ont pas divergé.");
+  return out;
+}
+
 export function formatZonesDePreuveLines(r) {
   if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
   const out = [`PREUVE JURIDIQUE — ${r.presentes} zone(s) déclarée(s) et présente(s) sur ${r.total}.`];

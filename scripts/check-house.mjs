@@ -6313,7 +6313,7 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // un signal juste plutôt que sur un chiffre qui venait d'une erreur.
   const rdt = eco.analyzeDocument('docs/regles-de-travail.md');
   assert.ok(rdt.strategiesEcartees.some((x) => /manuel de référence des procédures/.test(x)), 'the procedures manual must have the "already mechanised" strategy switched OFF, with the reason stated — a tool that flags a document for being what it is produces noise, not findings');
-  assert.ok(eco.findLodgedManuals(fs.readFileSync('/tmp/claude-0/-home-user-aihouse/b96a7cb6-ab2b-5738-adad-b787dab23b16/scratchpad/avant-rdt.md', 'utf8')).length >= 2, 'the tool must still genuinely work beyond CLAUDE.md — on that same document it found two real narrative histories lodged in a procedures manual, each with an existing destination');
+  assert.ok(eco.findLodgedManuals(fs.readFileSync('docs/contexte-projet/charte-avant/2026-09-22-avant-le-deplacement-des-regles-de-travail.md', 'utf8')).length >= 2, 'the tool must still genuinely work beyond CLAUDE.md — on that same document it found two real narrative histories lodged in a procedures manual, each with an existing destination');
   assert.equal(eco.estLeManuelDesProcedures('docs/referentiel/principes.md', eco.loadRepoFiles()).estLeManuel, false, 'a document nobody designates as the home of procedures must NOT be exempted — the guard has to discriminate, not exempt everything');
 
   // Réveil conditionnel des Gardiens (2026-09-22, tâche #362). La distinction qui gouverne tout,
@@ -6629,7 +6629,7 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // --- CE QUE LA PREMIÈRE PASSE RÉELLE A APPRIS À L'OUTIL (2026-09-22). Il découpait par titre
   // `##` ; or CLAUDE.md n'en a que 12, et sa vraie structure est faite de blocs en gras. L'Article
   // 19 pesait 5 351 tk — 43 % de la charte — sans qu'aucune proposition ne puisse le viser.
-  const charteAvant2 = fs.readFileSync('/tmp/claude-0/-home-user-aihouse/b96a7cb6-ab2b-5738-adad-b787dab23b16/scratchpad/avant-restructure.md', 'utf8');
+  const charteAvant2 = fs.readFileSync('docs/contexte-projet/charte-avant/2026-09-22-avant-la-restructuration.md', 'utf8');
   if (charteAvant2) {
     const blocs = eco.splitBoldBlocks({ texte: '**Un titre en gras.** du corps\n\n**Un autre.** encore du corps', debut: 1 });
     assert.equal(blocs.filter((b) => /^Un/.test(b.titre)).length, 2, 'the sub-splitter must see bold blocks — the level at which this charter is really structured');
@@ -12182,7 +12182,7 @@ await testVerrousDOuverture();
   // usage réel en ligne de commande (l'ancien code sautait un élément de trop et lisait
   // silencieusement le triplet décalé, jamais détecté avant car recordOutcome() n'était testé que
   // par appel direct de fonction, jamais via le vrai CLI).
-  const realOutcomeArgv = ['/usr/bin/node', '/home/user/aihouse/scripts/smart-conso-token.mjs', 'outcome', 'agent_subagent_spawn', '1789904646767', 'confirme_utile'];
+  const realOutcomeArgv = ['/usr/bin/node', 'scripts/smart-conso-token.mjs', 'outcome', 'agent_subagent_spawn', '1789904646767', 'confirme_utile'];
   assert.deepEqual(parseOutcomeArgs(realOutcomeArgv), { type: 'agent_subagent_spawn', atArg: '1789904646767', outcome: 'confirme_utile' }, 'parseOutcomeArgs() must read the real type/timestamp/outcome triplet from a genuine process.argv shape, never a shifted-by-one triplet that would silently record the wrong data or reject valid input as missing');
 
   // extractNormativeMarkers()/diffNormativeMarkers() (2026-09-20, safety net for the real CLAUDE.md
@@ -22938,6 +22938,90 @@ async function testAxePreuveJuridique() {
   console.log(`Passed: l'axe où « rendre plus clair » est interdit (2026-10-03, tâche #1548). Sa consigne P67 en quatre temps, et les quatre sont tenus et vérifiés sur le disque — une consigne en quatre points dont trois sont faits est une consigne ratée. CE QUI DISTINGUE CET AXE DE TOUS LES AUTRES : les autres disent ce qu'un fichier EST ou ce qu'il VAUT pour le travail ; celui-ci dit ce qu'on PERDRAIT DEVANT UN TIERS en y touchant. Une preuve ne vaut que par son INTÉGRITÉ et sa DATE, donc la résumer la détruit MÊME QUAND ON L'AMÉLIORE — et c'est précisément ce qui rend l'axe nécessaire : sans lui, un allègement bien intentionné détruirait une preuve sans que personne ne le remarque, puisque le document résultant serait meilleur à lire. ${reel.total} zones déclarées, toutes présentes, chacune portant ses critères ET ce qui y est INTERDIT — une zone sans interdit n'est qu'une étiquette. Les trois critères sont CUMULATIFS (datée par un mécanisme qu'on ne contrôle pas, verbatim, établirait une antériorité), sinon tout le dépôt serait une preuve. LA LISTE EST CURATÉE et sa nature manuelle est déclarée (Article 24) : aucun programme ne devine qu'un dossier vaudrait preuve devant un tiers. QUATRIÈME TEMPS, l'extension aux outils : un outil ne porte pas de preuve par son CODE — un script se réécrit sans rien détruire — mais par ce qu'il ÉCRIT, donc un outil qui dépose dans une zone de preuve doit AJOUTER et jamais remplacer.`);
 }
 await testAxePreuveJuridique();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// #1555 — CE QUI NE MARCHE QUE CHEZ MOI, ET LE FILET LUI-MÊME EN ÉTAIT
+// ─────────────────────────────────────────────────────────────────────────────
+// SA PEUR P65, PRÉCISÉE PAR LUI : elle ne porte pas sur l'export en général mais sur le cas où
+// « des fonctionnalités de l'Agence seraient en réalité des fonctions de MON périmètre Claude
+// Code ». Installée ailleurs, l'Agence les perdrait sans que rien ne l'annonce.
+//
+// LA TÂCHE #1552 A RÉPONDU PAR DÉCLARATION (quinze contraintes écrites à la main, faute de
+// mécanique possible). CELLE-CI RÉPOND PAR MESURE, sur la part qui EST mesurable — et le premier
+// passage a trouvé TROIS chemins absolus vers mon conteneur, tous dans le FILET DE SÉCURITÉ
+// lui-même : deux tests lisaient des fixtures qui n'existent que chez moi. Le garde-fou du projet
+// n'était pas exportable.
+async function testDependancesALEnvironnement() {
+  const SE = await import('../scripts/safe-export.mjs');
+
+  // LA DISTINCTION QUI DÉCIDE DE TOUT : une MENTION en commentaire est du savoir utile, un CHEMIN
+  // ABSOLU dans du code exécuté est un bug d'export. Les confondre rendrait la mesure illisible.
+  const f = SE.findDependancesALEnvironnement({
+    dossiers: ['x'],
+    listDirImpl: () => ['a.mjs'],
+    readFileImpl: () => '// le scratchpad /tmp/claude-0/truc disparaît en fin de session\nconst p = "/tmp/claude-0/reel/fichier.md";\n', // fixture-export-pas-une-dependance
+  });
+  assert.equal(f.durs.length, 1, 'MUST BITE on executed code, and MUST LET PASS an explanatory comment — one is a defect, the other is knowledge');
+  assert.equal(f.durs[0].chemin, '/tmp/claude-0/reel/fichier.md'); // fixture-export-pas-une-dependance
+
+  // ⚠️ LE PIÈGE QUI A FAILLI RENDRE CE DÉTECTEUR INUTILE, épinglé pour de bon : retirer aussi les
+  // commentaires de BLOC mangeait 850 000 caractères du filet — le motif traverse les littéraux
+  // d'expression régulière — et effaçait les deux seuls vrais cas. Un détecteur qui avale ce
+  // qu'il cherche rend zéro, et un zéro se lit comme un code propre.
+  const piege = SE.findDependancesALEnvironnement({
+    dossiers: ['x'], listDirImpl: () => ['a.mjs'],
+    readFileImpl: () => 'const r = /\\/\\*/;\nconst p = "/tmp/claude-0/apres-un-faux-bloc.md";\nconst q = /\\*\\//;\n', // fixture-export-pas-une-dependance
+  });
+  assert.equal(piege.durs.length, 1, 'a path sitting between two regex literals that LOOK like block-comment markers must still be found');
+
+  assert.equal(SE.findDependancesALEnvironnement({ dossiers: ['x'], listDirImpl: () => [] }).mesurable, false, 'no file read means a sweep that found nothing, never clean code (L11)');
+
+  // LES DEUX FAMILLES DE CHEMIN SONT COUVERTES, et un motif qui ne matche jamais rend zéro — ce
+  // qui se lit comme un code propre (même classe que le `\b` mort de MARQUES_DE_CE_PROJET).
+  const motifs = SE.motifsDeCheminAbsolu();
+  assert.equal(motifs.length, 2);
+  assert.ok(motifs.some((m) => { m.lastIndex = 0; return m.test('x = "/tmp/claude-9/a"'); }), 'the container pattern must actually match'); // fixture-export-pas-une-dependance
+  assert.ok(motifs.some((m) => { m.lastIndex = 0; return m.test("x = '/home/quelquun/projet/a.mjs'"); }), 'and the home pattern too'); // fixture-export-pas-une-dependance
+
+  // EN DIRECT (Article 25) : le dépôt doit être propre MAINTENANT, et il ne l'était pas ce matin.
+  const reel = SE.findDependancesALEnvironnement();
+  assert.equal(reel.mesurable, true);
+  assert.ok(reel.fichiers > 50, `the real code must be swept (currently ${reel.fichiers} files)`);
+  assert.deepEqual(reel.durs, [], 'no executed code may read an absolute path into my container — the three found on 2026-10-03 were all in the safety net itself');
+  // LES DEUX FIXTURES SONT ENTRÉES DANS LE DÉPÔT, parce qu'un test qui dépend d'un fichier absent
+  // ailleurs ne protège personne ailleurs.
+  assert.ok(fs.existsSync('docs/contexte-projet/charte-avant/2026-09-22-avant-la-restructuration.md'), 'the fixtures the net needs now live IN the repository');
+
+  // ET LA LIMITE EST DÉCLARÉE : une dépendance à un outil de session ne laisse aucune trace.
+  assert.ok(/CONTRAINTES_DE_SESSION/.test(SE.formatDependancesALEnvironnementLines(reel).join('\n')), 'what cannot be measured points to where it IS declared, rather than being passed over in silence (Article 27)');
+
+  // ET LE LIEN TENU À LA MAIN NE DOIT PAS DIVERGER (Article 24). Faire entrer les deux fixtures
+  // dans le dépôt a fait passer le détecteur de documents jumeaux de 6 paires à 11 : une copie
+  // VERBATIM ressemble forcément à son original, c'est sa définition. La dérivation propre a été
+  // essayée et annulée — importer les zones de preuve chez Abraham crée un cycle qui casse
+  // l'initialisation du module — donc l'exclusion est écrite à la main ET gardée par un contrôle,
+  // ce que l'Article 24 autorise exactement dans ce cas.
+  const LC2 = await import('../scripts/le-classificateur.mjs');
+  const AB2 = await import('../scripts/abraham-les-references.mjs');
+  const DR2 = await import('../scripts/doc-report.mjs');
+  assert.equal(LC2.findZonesDePreuveSansExclusion({ listes: {} }).mesurable, false, 'without the exclusion lists, "no zone forgotten" would be a verdict rendered on nothing (L11)');
+  // ⚠️ IL Y A PLUSIEURS CONSOMMATEURS, et le filet a trouvé le second tout seul : faire entrer un
+  // état ancien de la charte a d'abord cassé le détecteur de jumeaux, PUIS le contrôle des
+  // schémas sans titre — l'archive portait un schéma écrit avant que la règle existe, et
+  // personne n'a le droit de le corriger. Une liste par consommateur se périmerait au troisième.
+  const listes = { 'corpus des documents jumeaux': AB2.HORS_PORTEE_DOCUMENTS, 'contrôle des schémas sans titre': DR2.HORS_PORTEE_SCHEMAS };
+  const sync = LC2.findZonesDePreuveSansExclusion({ listes });
+  assert.equal(sync.mesurable, true);
+  assert.ok(sync.verbatim >= 3, `several proof zones are verbatim by nature (currently ${sync.verbatim})`);
+  assert.ok(sync.listes.length >= 2, 'and the guard confronts them to EVERY form-check list, not just the first one found');
+  assert.deepEqual(sync.oubliees, [], 'every verbatim zone is out of every list — otherwise a form check demands a correction its own rule forbids');
+  const oublie = LC2.findZonesDePreuveSansExclusion({ zones: [{ chemin: 'docs/une-zone', criteres: ['verbatim'] }], listes });
+  assert.equal(oublie.oubliees.length, 2, 'MUST BITE once per list: a zone forgotten in one is a real defect even when the other covers it');
+  assert.ok(oublie.oubliees.every((o) => o.liste), 'and each finding names WHICH list forgot it — a bare "forgotten" would not say where to fix it');
+
+  console.log(`Passed: ce qui ne marche que chez moi, et le filet lui-même en était (2026-10-03, tâche #1555). Sa peur P65 ne porte pas sur l'export en général mais sur le cas où des fonctionnalités « de l'Agence » seraient en réalité des fonctions de mon périmètre : installée ailleurs, l'Agence les perdrait sans que rien ne l'annonce. La tâche #1552 a répondu par DÉCLARATION, faute de mécanique possible ; celle-ci répond par MESURE sur la part mesurable — et le premier passage a trouvé TROIS chemins absolus vers mon conteneur, TOUS DANS LE FILET DE SÉCURITÉ : deux tests lisaient des fixtures qui n'existent que chez moi, donc le garde-fou du projet n'était pas exportable. Les fixtures sont entrées dans le dépôt, le troisième chemin est devenu relatif, et le compte est à zéro sur ${reel.fichiers} fichiers. LA DISTINCTION QUI DÉCIDE DE TOUT : une mention en commentaire est du savoir utile au prochain agent, un chemin absolu dans du code exécuté est un bug d'export. ET LE PIÈGE QUI A FAILLI RENDRE LE DÉTECTEUR INUTILE EST ÉPINGLÉ POUR DE BON : retirer aussi les commentaires de BLOC mangeait 850 000 caractères du filet — le motif traverse les littéraux d'expression régulière — et effaçait les deux seuls vrais cas. Un détecteur qui avale ce qu'il cherche rend zéro, et un zéro se lit comme un code propre.`);
+}
+await testDependancesALEnvironnement();
 
 // =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
