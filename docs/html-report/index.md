@@ -103,3 +103,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/livrables/les-six-registres-le-dossier.html` | `docs/livrables/les-six-registres-le-dossier.md` | 15183 | 2026-10-02 23:41Z |
 | `docs/livrables/article-33-honnetete-texte-propose.html` | `docs/livrables/article-33-honnetete-texte-propose.md` | 13546 | 2026-10-03 06:44Z |
 | `docs/the-king/tableau-des-convictions-2026-10-03.html` | `docs/the-king/tableau-des-convictions-2026-10-03.md` | 54025 | 2026-10-03 07:04Z |
+| `docs/le-coordinateur-catalogue/carte-des-modules-2026-10-03.html` | `docs/le-coordinateur-catalogue/carte-des-modules-2026-10-03.md` | 13698 | 2026-10-03 07:23Z |
+| `docs/livrables/carte-des-modules-2026-10-03.html` | `docs/livrables/carte-des-modules-2026-10-03.md` | 13682 | 2026-10-03 07:25Z |

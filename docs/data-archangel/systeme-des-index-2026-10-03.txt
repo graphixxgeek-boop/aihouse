@@ -1,4 +1,4 @@
-=== LE SYSTÈME DES INDEX — 99 dossiers, 1254 fichiers déposés ===
+=== LE SYSTÈME DES INDEX — 99 dossiers, 1258 fichiers déposés ===
 
   TROIS CONTRATS, JAMAIS UN SEUL SEUIL POUR TOUT LE MONDE — le même chiffre veut dire l'inverse selon la nature de l'index :
     📇 catalogue — il NOMME les fichiers de son dossier — un fichier absent de la liste est un vrai trou
@@ -11,7 +11,7 @@
   incomplet : 1 dossier(s)
 
   LES 1 À TRAITER, du plus gros écart au plus petit :
-      · docs/data-archangel — catalogue : 27/28 fichiers nommés, 1 absent(s) de la liste qu'il promet de tenir
+      · docs/le-coordinateur-catalogue — catalogue : 9/11 fichiers nommés, 2 absent(s) de la liste qu'il promet de tenir
 
   1 index délègue(nt) leur catalogue, et c'est DÉCLARÉ chez eux, jamais deviné :
       · docs/grand-projet → docs/grand-projet/01-absorption/inventaire.md

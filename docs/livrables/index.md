@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-03. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**34 fichier(s).**
+**36 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -10,6 +10,8 @@
 | [article-33-honnetete-texte-propose.md](article-33-honnetete-texte-propose.md) | — |
 | [avant-apres-nuit-2026-10-02.html](avant-apres-nuit-2026-10-02.html) | — |
 | [avant-apres-nuit-2026-10-02.md](avant-apres-nuit-2026-10-02.md) | — |
+| [carte-des-modules-2026-10-03.html](carte-des-modules-2026-10-03.html) | — |
+| [carte-des-modules-2026-10-03.md](carte-des-modules-2026-10-03.md) | — |
 | [ce-que-tu-nas-jamais-recu.html](ce-que-tu-nas-jamais-recu.html) | — |
 | [ce-que-tu-nas-jamais-recu.md](ce-que-tu-nas-jamais-recu.md) | — |
 | [choisir-une-licence.html](choisir-une-licence.html) | — |

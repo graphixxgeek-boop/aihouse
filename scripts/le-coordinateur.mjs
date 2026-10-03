@@ -48,7 +48,7 @@ import { fileURLToPath } from "node:url";
 // La racine du dépôt, pour relever les sources que chaque outil lit (tâche #1382). Injectable
 // partout où elle sert, pour qu'un test puisse pointer un faux dossier sans toucher au vrai.
 const ROOT_COORD = fileURLToPath(new URL("..", import.meta.url));
-import { sh, assertNotAPersonnage, assertNomPropreDAgent, AGENT_CATEGORIES, sansAccents, rangDeLaCategorie, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
+import { sh, assertNotAPersonnage, assertNomPropreDAgent, AGENT_CATEGORIES, sansAccents, rangDeLaCategorie, familleDeLaCategorie, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "./axa-check.mjs";
 import { findOrphanReportFiles, REGISTRIES as REGISTRIES_DOC_REPORT } from "./doc-report.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
@@ -64,6 +64,7 @@ import { summarizeHistory, findJudgeSpawnsWithoutConsultation, filterIndexRowsBy
 import { checkWeightBudget } from "./ecotoken.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { loadJson, recordCliUsage, loadToolUsageHistory } from "./tool-usage.mjs";
+import { buildPlanDaction, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const BADGE_CEREMONY_HISTORY_PATH = join(ROOT, ".badge-ceremony-history.json");
@@ -2713,6 +2714,249 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   return { duplicate, previousRun: state, rows };
 }
 
+// ============================================================================
+// LA CARTE DES MODULES — sa demande d'un SCHÉMA, pas d'un texte (tâche #1536)
+// ============================================================================
+// SA DEMANDE, MOT POUR MOT : « une VRAIE carte schématique, pas un texte », en DEUX documents —
+// la carte ACTUELLE et la carte CIBLE — « schéma en tête, pas de long texte, tout compréhensible
+// par le visuel ». Et sa consigne de contenu est tranchante : « oublier les familles qu'il a
+// créées, reprendre la classification par type et par axe transverse CONSTATÉS ».
+//
+// SA DÉFINITION D'UN MODULE, qu'il a donnée le même jour : « un ensemble d'agents qui œuvrent
+// dans un sens commun pour produire UNE PRESTATION DE L'AGENCE ». La carte ACTUELLE se dérive donc
+// du catalogue des prestations, et non d'un découpage que j'inventerais.
+//
+// ⚠️ CE QUE LA CARTE ACTUELLE MONTRE, ET QUI N'EST PAS CE QU'ON ESPÉRAIT : sur 76 prestations,
+// la grande majorité n'est portée que par UN SEUL outil. « Un ensemble d'agents » ne décrit donc
+// pas le catalogue d'aujourd'hui. Ce n'est pas un défaut de sa définition : c'est la mesure qui
+// dit que le catalogue est découpé plus fin que ses modules. La carte le montre au lieu de le
+// lisser, parce qu'une carte qui dessinerait de beaux modules groupés serait une carte de ce que
+// je souhaite, pas du dépôt.
+//
+// LA JOINTURE PASSE PAR `normaliserNomDOutil`, ET C'EST UNE ERREUR PAYÉE : ma première mesure
+// joignait les deux registres sur leurs clés brutes et annonçait « 41 prestations hors
+// organigramme ». Faux : PRESTATIONS nomme les outils par leur nom d'affichage
+// (`ABRAHAM-LES-REFERENCES`), `AGENT_CATEGORIES` par leur slug (`abraham-les-references`). Le
+// résolveur existait depuis le 2026-09-25 et je ne l'avais pas appelé. 66 des 75 se résolvent.
+export function carteDesModules({ prestations = PRESTATIONS, categories = AGENT_CATEGORIES, familleDe = familleDeLaCategorie } = {}) {
+  if (!prestations?.length) {
+    return { mesurable: false, pourquoi: "catalogue de prestations vide : une carte dessinée sur zéro prestation ressemblerait à une Agence sans modules, ce qui est faux (leçons L5/L11)" };
+  }
+  const parNorme = new Map(Object.entries(categories).map(([slug, cat]) => [normaliserNomDOutil(slug), { slug, famille: familleDe(cat) }]));
+  const resolu = (nom) => parNorme.get(normaliserNomDOutil(nom)) ?? null;
+
+  const modules = prestations.map((p) => {
+    const outils = (p.outils ?? []).map((o) => ({ nom: o, ...(resolu(o) ?? { slug: null, famille: null }) }));
+    const familles = [...new Set(outils.map((o) => o.famille).filter(Boolean))];
+    return {
+      prestation: p.nom,
+      demande: p.demande ?? "",
+      outils,
+      // UN MODULE AU SENS DE SA DÉFINITION exige PLUSIEURS agents. Un outil seul rend bien une
+      // prestation, mais ce n'est pas « un ensemble d'agents » — et confondre les deux ferait
+      // compter 76 modules là où il y en a une poignée.
+      estUnEnsemble: outils.length > 1,
+      familles,
+      // Un module dont les outils viennent de plusieurs familles est TRANSVERSE : c'est le cas qui
+      // prouve qu'une famille n'est pas un module, et il répond directement à sa question P29-5.
+      transverse: familles.length > 1,
+      inconnus: outils.filter((o) => !o.slug).map((o) => o.nom),
+    };
+  });
+  const ensembles = modules.filter((m) => m.estUnEnsemble);
+  return {
+    mesurable: true,
+    total: modules.length,
+    ensembles: ensembles.length,
+    solitaires: modules.length - ensembles.length,
+    transverses: modules.filter((m) => m.transverse).length,
+    outilsCites: [...new Set(prestations.flatMap((p) => p.outils ?? []))].length,
+    outilsInconnus: [...new Set(modules.flatMap((m) => m.inconnus))],
+    modules,
+  };
+}
+
+// LE SCHÉMA EST EN CARACTÈRES, et c'est un choix plutôt qu'un pis-aller : un schéma dessiné en
+// texte se régénère à chaque passage, se lit dans un terminal comme dans un navigateur, et ne
+// peut pas se périmer sans que son générateur le sache. Une image devrait être redessinée à la
+// main au premier outil ajouté — exactement la copie que l'Article 24 interdit.
+export function schemaDeLaCarteActuelle(c, { maxParFamille = 6 } = {}) {
+  if (!c?.mesurable) return [`❓ PAS MESURÉ — ${c?.pourquoi}`];
+  const parFamille = new Map();
+  for (const m of c.modules) {
+    const cle = m.transverse ? "⇄ TRANSVERSE (plusieurs familles)" : (m.familles[0] ?? "∅ hors organigramme");
+    if (!parFamille.has(cle)) parFamille.set(cle, []);
+    parFamille.get(cle).push(m);
+  }
+  const ordonne = [...parFamille.entries()].sort((a, b) => b[1].length - a[1].length);
+  const out = ["```", "              L'AGENCE CODEX — CARTE ACTUELLE DES MODULES", "              (un module = les outils qui rendent UNE prestation)", ""];
+  out.push(`   ${c.total} prestations  ·  ${c.ensembles} portées par PLUSIEURS outils  ·  ${c.solitaires} par UN SEUL`);
+  out.push("");
+  for (const [famille, liste] of ordonne) {
+    const ens = liste.filter((m) => m.estUnEnsemble).length;
+    out.push(`┌─ ${famille}`);
+    out.push(`│    ${liste.length} prestation(s), dont ${ens} vrai(s) module(s) au sens « plusieurs agents »`);
+    const montres = liste.slice(0, maxParFamille);
+    for (const m of montres) {
+      const marque = m.estUnEnsemble ? "▣" : "▫";
+      out.push(`│    ${marque} ${m.prestation}  ←  ${m.outils.map((o) => o.slug ?? o.nom).join(" + ")}`);
+    }
+    if (liste.length > montres.length) out.push(`│    … et ${liste.length - montres.length} autre(s)`);
+    out.push("└─");
+    out.push("");
+  }
+  out.push("   ▣ = plusieurs outils (un module au sens de sa définition)");
+  out.push("   ▫ = un seul outil (une prestation, pas encore un module)");
+  out.push("```");
+  return out;
+}
+
+// ============================================================================
+// LA CARTE CIBLE — une PROPOSITION, et elle dit qu'elle en est une
+// ============================================================================
+// TROIS TENTATIVES MÉCANIQUES, TROIS ÉCHECS MESURÉS, et c'est le vrai résultat de ce chantier.
+// Avant de proposer quoi que ce soit, on a cherché un axe DÉJÀ CONSTATÉ par le dépôt qui
+// regrouperait les 76 prestations en modules. Les trois réponses, chiffrées :
+//
+//   ① par FAMILLE de l'organigramme → écarté par lui-même : « oublier les familles que j'ai
+//      créées ». Et la mesure lui donne raison, elles sont déclarées à la main à 100 %.
+//   ② par OUTIL PARTAGÉ (deux prestations qui emploient le même outil sont du même module) →
+//      7 groupes seulement, 22 prestations dedans, 54 restent seules.
+//   ③ par DOMAINE CONSTATÉ (ce que les outils LISENT du dépôt) → 19 prestations tombent dans
+//      « transverse » et 17 dans « non mesurable » : 36 sur 76 inclassables.
+//
+// LA CONCLUSION EST DONC UN NON, ET ELLE RÉPOND DIRECTEMENT À SA QUESTION P29-7 (« sait-on
+// constater des familles par l'axe PRESTATION RENDUE ? ») : non, pas aujourd'hui. Aucun axe
+// mécanique du dépôt ne produit un découpage en modules utilisable.
+//
+// D'OÙ UNE LISTE CURATÉE, ET SA NATURE MANUELLE EST ÉCRITE ICI PLUTÔT QUE SUBIE (Article 24, qui
+// l'autorise à cette seule condition). Ce qui la rend légitime et non périssable : un GARDE-FOU
+// mécanique vérifie qu'aucune prestation n'échappe au découpage, donc une prestation ajoutée
+// demain se signalera au lieu de disparaître dans un silence.
+//
+// LA RÈGLE DE REGROUPEMENT EST LA SIENNE, pas la mienne : « un ensemble d'agents qui œuvrent dans
+// un sens commun pour produire UNE PRESTATION ». Les modules ci-dessous regroupent donc par
+// QUESTION POSÉE, jamais par parenté de rôle — c'est ce qui les distingue des familles.
+export const MODULES_CIBLES = [
+  { cle: "gouvernance", titre: "GOUVERNANCE", quoi: "la loi du projet : la charte, la philosophie, les règles, et ce qui les allège",
+    prestations: ["Pack Tables de Loi", "Pack Références", "Pack Régence", "Pack Classification", "Pack Diète", "Pack Espion", "Pack Criticité"] },
+  { cle: "qualite-du-code", titre: "QUALITÉ DU CODE", quoi: "ce que le code vaut : dette, duplication, tests, robustesse, découpage",
+    prestations: ["Pack Rénovation", "Pack Blindage", "Pack Chasse", "Pack Chasse aux clones", "Pack Même notion, deux écritures", "Pack Points de coupe", "Pack Découpage", "Pack Le filet lui-même", "Pack Filet en parts", "Pack Sentinelle", "Pack Éclaireur", "Pack Uniformité"] },
+  { cle: "pilotage", titre: "PILOTAGE DU TRAVAIL", quoi: "ce qu'on fait, dans quel ordre, et si les règles de travail ont été tenues",
+    prestations: ["Pack Boussole", "Pack Découpe", "Pack Ronde", "Pack Déroulé de Ronde", "Pack Boussole des process", "Pack Discipline d'exécution", "Pack Niveau attendu", "Pack Mode de travail", "Pack Nuit autonome", "Pack Saisine", "Pack Suis-je à jour", "Pack Où on en est", "Pack Fidélité du suivi", "Pack Objectifs"] },
+  { cle: "memoire", titre: "CONNAISSANCE ET MÉMOIRE", quoi: "ce que l'équipe sait déjà, et comment on le retrouve",
+    prestations: ["Pack Circulation des données", "Pack Mémoire Longue", "Pack Registre", "Pack Secrétariat", "Pack Page HTML d'un document", "Pack Message court", "Pack Rapports non unifiés", "Pack Cerveau de recherche"] },
+  { cle: "outillage", titre: "ORGANISATION DE L'OUTILLAGE", quoi: "ce qu'est chaque outil, ce qu'il vaut, qui l'emploie et qui le nomme",
+    prestations: ["Pack Rangement", "Pack Recensement", "Pack Convocation", "Pack Direction RH", "Pack Accueil", "Pack Trajectoire", "Pack Compteur d'usage", "Pack Cerveau central", "Pack Baptême", "Pack Niveau"] },
+  { cle: "export", titre: "EXPORT ET LIVRAISON", quoi: "ce qui part, ce qui reste, et ce que coûterait de tout reprendre",
+    prestations: ["Pack Départ", "Pack Aveugle", "Pack Sauvegarde", "Pack Chiffrage de refonte"] },
+  { cle: "le-jeu", titre: "LE JEU", quoi: "l'esprit des personnages, le rendu, et les simulations — le seul module qui regarde le PRODUIT",
+    prestations: ["Pack Fidélité du ton", "Pack Empreinte", "Pack Provocation", "Pack Vitrine", "Pack Memory-Audit", "Pack Lancement de simulation", "Pack Discipline de simulation", "Pack Régie de simulation", "Pack Résumé de journal", "Pack Décollage"] },
+  { cle: "ressources", titre: "RESSOURCES ET COÛTS", quoi: "le temps, les quotas, les tokens, et ce qui ralentit le projet",
+    prestations: ["Pack Heure", "Pack Dépannage", "Pack Sobriété", "Pack Tableau de bord", "Pack Anti-lourdeurs"] },
+  { cle: "audit", titre: "AUDIT INDÉPENDANT", quoi: "le regard extérieur, celui qui n'est juge et partie d'aucun chantier",
+    prestations: ["Pack Verdict", "Pack Bouclier", "Pack Panorama", "Pack Réseau de vérifications", "Pack Profil utilisateur"] },
+];
+
+// LE GARDE-FOU QUI REND LA LISTE CURATÉE ACCEPTABLE : il va dans LES DEUX SENS (BP4). Une
+// prestation du catalogue absente du découpage est un trou ; un nom cité par le découpage qui
+// n'existe plus au catalogue est une référence morte, et une référence morte ressemble à un lien,
+// ce qui est pire qu'une absence (Article 28, même doctrine que checkActionChain).
+export function findPrestationsHorsModule({ prestations = PRESTATIONS, modules = MODULES_CIBLES } = {}) {
+  if (!prestations?.length) {
+    return { mesurable: false, pourquoi: "catalogue vide : un découpage mesuré sur zéro prestation serait complet par accident, jamais par vérification (leçon L11)" };
+  }
+  const nommees = new Set(modules.flatMap((m) => m.prestations));
+  const auCatalogue = new Set(prestations.map((p) => p.nom));
+  const doublons = [];
+  const vus = new Set();
+  for (const m of modules) for (const n of m.prestations) { if (vus.has(n)) doublons.push(n); vus.add(n); }
+  return {
+    mesurable: true,
+    total: auCatalogue.size,
+    // Au catalogue, dans aucun module : la prestation n'appartient à rien, donc elle ne partira
+    // avec rien le jour d'un export par module.
+    orphelines: [...auCatalogue].filter((n) => !nommees.has(n)),
+    // Dans un module, plus au catalogue : le découpage promet une prestation qui n'existe pas.
+    mortes: [...nommees].filter((n) => !auCatalogue.has(n)),
+    // Dans DEUX modules : un module n'est plus une partition, et « détachable » perd son sens.
+    doublons,
+  };
+}
+
+// LE DÉCOUPAGE SUPPOSE QU'UN NOM DÉSIGNE UNE SEULE PRESTATION, ET CE N'ÉTAIT PAS VRAI
+// (2026-10-03, trouvé en construisant la carte). Le catalogue porte 76 prestations pour 75 noms :
+// DEUX s'appellent « Pack Boussole » — l'une rend l'état des tâches, l'autre retrouve une logique
+// dans un gros fichier. Ce sont les noms par lesquels on COMMANDE une prestation ; un homonyme
+// rend donc la commande ambiguë, et c'est très exactement la leçon L21 que ce fichier cite déjà
+// plus bas (« un nom qui existe dans le monde d'un lecteur et pas dans celui d'un autre »).
+//
+// POURQUOI L'OUTIL NE RENOMME RIEN : c'est l'utilisateur qui nomme, et il nomme par SÉRIES dans
+// une même famille, jamais au cas par cas. Un renommage décidé ici produirait un nom isolé — et
+// le ferait sur la pièce même qui sert à commander le travail.
+export function findPrestationsHomonymes({ prestations = PRESTATIONS } = {}) {
+  if (!prestations?.length) return { mesurable: false, pourquoi: "catalogue vide : zéro homonyme sur zéro prestation n'est pas une bonne nouvelle, c'est une absence de mesure (L11)" };
+  const parNom = new Map();
+  for (const p of prestations) {
+    if (!parNom.has(p.nom)) parNom.set(p.nom, []);
+    parNom.get(p.nom).push(p);
+  }
+  const homonymes = [...parNom.entries()].filter(([, l]) => l.length > 1)
+    .map(([nom, l]) => ({ nom, combien: l.length, demandes: l.map((p) => p.demande ?? ""), outils: l.map((p) => (p.outils ?? []).join(", ")) }));
+  return { mesurable: true, total: prestations.length, nomsDistincts: parNom.size, homonymes };
+}
+
+export function schemaDeLaCarteCible(r, { prestations = PRESTATIONS, modules = MODULES_CIBLES } = {}) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  const parNom = new Map(prestations.map((p) => [p.nom, p]));
+  const out = ["```", "              L'AGENCE CODEX — CARTE CIBLE DES MODULES", "              (PROPOSITION — regroupée par QUESTION POSÉE, jamais par parenté de rôle)", ""];
+  out.push(`   ${modules.length} modules proposés pour ${r.total} prestations`);
+  out.push("");
+  out.push("                        ┌───────────────────────────┐");
+  out.push("                        │   PARTIE INDÉTACHABLE     │");
+  out.push("                        │  (ce que toute prestation │");
+  out.push("                        │      réclame quoi qu'il   │");
+  out.push("                        │          arrive)          │");
+  out.push("                        └─────────────┬─────────────┘");
+  out.push("                                      │");
+  out.push("        ┌─────────────────────────────┼─────────────────────────────┐");
+  for (const m of modules) {
+    const n = m.prestations.filter((p) => parNom.has(p)).length;
+    out.push("        │");
+    out.push(`        ├── ▣ ${m.titre}  (${n} prestation${n > 1 ? "s" : ""})`);
+    out.push(`        │      ${m.quoi}`);
+  }
+  out.push("        │");
+  out.push("        └─────────────────────────────────────────────────────────────┘");
+  out.push("```");
+  return out;
+}
+
+export function formatCarteLines(actuelle, cible) {
+  const out = [];
+  out.push(...schemaDeLaCarteActuelle(actuelle));
+  out.push("");
+  out.push(...schemaDeLaCarteCible(cible));
+  out.push("");
+  if (cible?.mesurable) {
+    if (cible.orphelines.length) out.push(`⚠️ ${cible.orphelines.length} prestation(s) du catalogue n'appartiennent à AUCUN module proposé : ${cible.orphelines.join(" · ")}`);
+    if (cible.mortes.length) out.push(`⚠️ ${cible.mortes.length} nom(s) cité(s) par le découpage n'existent plus au catalogue — une référence morte ressemble à un lien : ${cible.mortes.join(" · ")}`);
+    if (cible.doublons.length) out.push(`⚠️ ${cible.doublons.length} prestation(s) rangée(s) dans DEUX modules : ${cible.doublons.join(" · ")} — un module cesse alors d'être détachable`);
+    if (!cible.orphelines.length && !cible.mortes.length && !cible.doublons.length) out.push("✅ Le découpage est une vraie partition : chaque prestation du catalogue appartient à un module, et un seul.");
+  }
+  const h = findPrestationsHomonymes();
+  if (h.mesurable && h.homonymes.length) {
+    out.push("");
+    out.push(`⚠️ ${h.total} prestations pour seulement ${h.nomsDistincts} noms : le catalogue porte ${h.homonymes.length} homonyme(s), et ce sont les noms par lesquels on COMMANDE une prestation.`);
+    for (const x of h.homonymes) {
+      out.push(`   · « ${x.nom} » désigne ${x.combien} prestations différentes :`);
+      x.demandes.forEach((d, i) => out.push(`       ${i + 1}. ${d} — ${x.outils[i]}`));
+    }
+    out.push("   L'outil ne renomme rien : c'est lui qui nomme, et par séries dans une même famille, jamais au cas par cas.");
+  }
+  return out;
+}
+
 function main() {
   recordCliUsage("le-coordinateur");
   // Sous-commande "catalogue" (tâche #154) : sur demande seulement, jamais mêlée à la synthèse
@@ -2725,7 +2969,7 @@ function main() {
   // sortie en croyant en avoir demandé une autre. Même forme que la leçon L21 — un nom qui existe
   // dans le monde d'un lecteur et pas dans celui d'un autre.
   const sousCommande = process.argv[2];
-  const SOUS_COMMANDES = ["catalogue", "memes-sources"];
+  const SOUS_COMMANDES = ["catalogue", "memes-sources", "carte"];
   if (sousCommande && !SOUS_COMMANDES.includes(sousCommande)) {
     console.log(`❌ « ${sousCommande} » n'est pas une sous-commande de cet outil.`);
     console.log(`   Sous-commandes réelles : ${SOUS_COMMANDES.join(", ")}`);
@@ -2746,6 +2990,39 @@ function main() {
     // pendant que son zéro ne mesurait plus rien.
     console.log("");
     console.log(outilsQuiEcriventLaMemeChoseLines(findOutilsQuiEcriventLaMemeChose()).join("\n"));
+    return;
+  }
+  // `carte` (2026-10-03, tâche #1536) — sa demande d'un SCHÉMA et non d'un texte. Le livrable est
+  // le FICHIER (Article 31, faille 3), et il porte les DEUX cartes : l'actuelle, qui se dérive, et
+  // la cible, qui est une proposition et le dit.
+  if (sousCommande === "carte") {
+    const actuelle = carteDesModules();
+    const partition = findPrestationsHorsModule();
+    const lignes = formatCarteLines(actuelle, partition);
+    console.log(lignes.join("\n"));
+    // LE DÉPÔT VA DANS `docs/livrables/`, PAS DANS LE REGISTRE DU CATALOGUE : ce registre tient
+    // une SÉRIE de versions datées du catalogue, et son index est une table tenue à la main de
+    // cette série. Y glisser un document d'une autre nature l'aurait rendu faux au premier
+    // passage du contrôle d'index — trouvé en le faisant, et le filet l'a refusé.
+    const dossier = join(ROOT, "docs/livrables");
+    try { mkdirSync(dossier, { recursive: true }); } catch { /* déjà là */ }
+    const jour = new Date().toISOString().slice(0, 10);
+    const sortie = join(dossier, `carte-des-modules-${jour}.md`);
+    writeFileSync(sortie, ["# La carte des modules de l'Agence", "", ...lignes, ""].join("\n"), "utf8");
+    console.log(`\nRapport déposé : docs/livrables/carte-des-modules-${jour}.md`);
+    const constats = [];
+    if (actuelle.mesurable && actuelle.solitaires > actuelle.ensembles) {
+      constats.push({ constat: `${actuelle.solitaires} prestations sur ${actuelle.total} ne sont portées que par UN outil : sa définition d'un module (« un ensemble d'agents ») ne décrit pas le catalogue actuel`, etat: "a-trancher", pourquoi: "soit le catalogue est découpé plus fin que ses modules et il faut regrouper, soit la définition vise la cible et non l'existant — c'est son arbitrage, pas une mesure" });
+    }
+    const h = findPrestationsHomonymes();
+    if (h.mesurable && h.homonymes.length) {
+      constats.push({ constat: `${h.homonymes.length} nom(s) de prestation désignent plusieurs prestations différentes, alors que ce sont les noms par lesquels on les commande`, etat: "a-trancher", pourquoi: "renommer est son privilège, et il nomme par séries dans une même famille — un nom choisi ici serait un nom isolé, sur la pièce même qui sert à commander le travail" });
+    }
+    if (partition.mesurable && (partition.orphelines.length || partition.mortes.length)) {
+      constats.push({ constat: `le découpage proposé n'est plus une partition : ${partition.orphelines.length} prestation(s) sans module, ${partition.mortes.length} référence(s) morte(s)`, etat: "retenu", tache: 1536 });
+    }
+    console.log("");
+    imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "le-coordinateur" }));
     return;
   }
   if (sousCommande === "catalogue") {

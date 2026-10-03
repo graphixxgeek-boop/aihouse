@@ -9820,6 +9820,81 @@ async function testOffresConcurrentes() {
 
 await testOffresConcurrentes();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// #1536 — LA CARTE DES MODULES, ET LE NOM QUI DÉSIGNE DEUX PRESTATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+// SA DEMANDE : « une VRAIE carte schématique, pas un texte », en deux documents — l'actuelle et
+// la cible. Sa définition d'un module, le même jour : « un ensemble d'agents qui œuvrent dans un
+// sens commun pour produire UNE PRESTATION ».
+//
+// CE QUE LA CARTE ACTUELLE MONTRE, ET CE N'EST PAS CE QU'ON ESPÉRAIT : 71 des 76 prestations ne
+// sont portées que par UN outil. « Un ensemble d'agents » ne décrit donc pas le catalogue
+// d'aujourd'hui, et la carte le montre au lieu de le lisser — une carte qui dessinerait de beaux
+// modules groupés serait une carte de ce que je souhaite, pas du dépôt.
+//
+// ET UNE ERREUR DE MESURE PAYÉE EN CHEMIN : la première jointure comparait les clés brutes des
+// deux registres et annonçait « 41 prestations hors organigramme ». Faux — PRESTATIONS nomme par
+// nom d'affichage, AGENT_CATEGORIES par slug, et le résolveur `normaliserNomDOutil` existait
+// depuis le 2026-09-25 sans que je l'appelle (Article 31 : l'outil existait, je ne l'ai pas
+// consulté). 66 des 75 se résolvent une fois la bonne jointure employée.
+async function testCarteDesModules() {
+  const lc = await import('../scripts/le-coordinateur.mjs');
+
+  // ── LA CARTE ACTUELLE SE DÉRIVE, et elle refuse de conclure sur un catalogue vide.
+  assert.equal(lc.carteDesModules({ prestations: [] }).mesurable, false, 'an empty catalogue must refuse: a map drawn on zero prestations would look like an Agency without modules, which is false (L11)');
+  const fixture = lc.carteDesModules({
+    prestations: [
+      { nom: 'A', outils: ['alpha'] },
+      { nom: 'B', outils: ['alpha', 'beta'] },
+      { nom: 'C', outils: ['inconnu-total'] },
+    ],
+    categories: { alpha: 'Famille X', beta: 'Famille Y' },
+    familleDe: (c) => c,
+  });
+  assert.equal(fixture.ensembles, 1, 'only a prestation carried by SEVERAL tools is a module in his sense — counting a lone tool as one would report 76 modules where there are a handful');
+  assert.equal(fixture.solitaires, 2);
+  assert.equal(fixture.transverses, 1, 'a module whose tools span two families is TRANSVERSE — and that case is the proof that a family is not a module (his question P29-5)');
+  assert.deepEqual(fixture.outilsInconnus, ['inconnu-total'], 'a tool the organigramme does not know is NAMED, never silently counted as placed');
+
+  // ── LA CARTE CIBLE EST UNE LISTE CURATÉE, donc elle ne vaut que par son garde-fou (Article 24),
+  //    et il va dans LES DEUX SENS (BP4).
+  const partition = lc.findPrestationsHorsModule();
+  assert.equal(partition.mesurable, true);
+  assert.deepEqual(partition.orphelines, [], 'every catalogue prestation must belong to a module: one belonging to none would leave with nothing the day an export is done module by module');
+  assert.deepEqual(partition.mortes, [], 'and no module may name a prestation that no longer exists — a dead reference looks like a link, which is worse than an absence (Article 28)');
+  assert.deepEqual(partition.doublons, [], 'nor may one sit in two modules: a module then stops being detachable');
+  const casse = lc.findPrestationsHorsModule({
+    prestations: [{ nom: 'Pack Réel' }, { nom: 'Pack Oublié' }],
+    modules: [{ cle: 'm', titre: 'M', quoi: '', prestations: ['Pack Réel', 'Pack Fantôme', 'Pack Réel'] }],
+  });
+  assert.deepEqual(casse.orphelines, ['Pack Oublié'], 'MUST STILL BITE on a prestation nobody placed');
+  assert.deepEqual(casse.mortes, ['Pack Fantôme'], 'and on a module naming a prestation that does not exist');
+  assert.deepEqual(casse.doublons, ['Pack Réel'], 'and on one placed twice');
+
+  // ── L'HOMONYME : trouvé en construisant la carte, jamais cherché.
+  const h = lc.findPrestationsHomonymes();
+  assert.equal(h.mesurable, true);
+  assert.equal(h.homonymes.length, 1, `the catalogue currently carries exactly one homonym (${h.total} prestations for ${h.nomsDistincts} names) — and these are the names by which a prestation is COMMANDED`);
+  assert.equal(h.homonymes[0].nom, 'Pack Boussole');
+  assert.equal(h.homonymes[0].combien, 2);
+  assert.notEqual(h.homonymes[0].demandes[0], h.homonymes[0].demandes[1], 'they really answer two different questions — a duplicate entry would be another defect entirely');
+  assert.equal(lc.findPrestationsHomonymes({ prestations: [{ nom: 'X' }, { nom: 'Y' }] }).homonymes.length, 0, 'MUST LET PASS a catalogue with distinct names');
+  assert.equal(lc.findPrestationsHomonymes({ prestations: [] }).mesurable, false, 'zero homonyms among zero prestations is an absence of measure, never good news (L11)');
+
+  // ── LE SCHÉMA EST UN SCHÉMA, pas un paragraphe : c'est le point de sa demande.
+  const reelle = lc.carteDesModules();
+  const lignes = lc.formatCarteLines(reelle, partition);
+  const texte = lignes.join('\n');
+  assert.ok(texte.includes('┌─') && texte.includes('└─'), 'the output must actually be DRAWN — he refused a text and asked for a schema');
+  assert.ok(/CARTE ACTUELLE/.test(texte) && /CARTE CIBLE/.test(texte), 'and carry both maps, because the gap between them is the whole subject');
+  assert.ok(/PROPOSITION/.test(texte), 'the target map must declare itself a proposal: presenting a judgement as a measure is the one thing this repository refuses');
+  assert.ok(/Pack Boussole/.test(texte), 'the homonym surfaces in the report a human reads, never only in a function nobody calls (L2)');
+  assert.ok(reelle.solitaires > reelle.ensembles, `and the uncomfortable figure is kept rather than smoothed: ${reelle.solitaires} of ${reelle.total} prestations rest on a single tool`);
+
+  console.log(`Passed: la carte des modules, et le nom qui désigne deux prestations (2026-10-03, tâche #1536). Sa demande : « une VRAIE carte schématique, pas un texte », en deux documents. L'ACTUELLE SE DÉRIVE du catalogue et montre ce qu'on n'espérait pas — ${reelle.solitaires} des ${reelle.total} prestations ne sont portées que par UN outil, donc sa définition d'un module (« un ensemble d'agents ») ne décrit pas le catalogue d'aujourd'hui. La carte le montre au lieu de le lisser : une carte qui dessinerait de beaux modules groupés serait une carte de ce que je souhaite. LA CIBLE EST UNE PROPOSITION ET LE DIT, parce que trois tentatives mécaniques ont échoué avant elle — par famille (déclarées à la main, et il a lui-même dit de les oublier), par outil partagé (7 groupes, 54 prestations restent seules), par domaine constaté (36 sur 76 inclassables). La liste curatée est donc légitime au sens de l'Article 24 à une seule condition, et elle est tenue : un garde-fou à double sens refuse une prestation sans module, un module nommant une prestation qui n'existe plus, et une prestation rangée deux fois. ET LA CONSTRUCTION A TROUVÉ AUTRE CHOSE : ${h.total} prestations pour ${h.nomsDistincts} noms — « Pack Boussole » en désigne DEUX, l'état des tâches et la recherche dans un fichier, alors que ce sont les noms par lesquels on COMMANDE une prestation. L'outil ne renomme rien : c'est lui qui nomme, et par séries. Une erreur de mesure payée en chemin est gardée au-dessus : la première jointure comparait des clés brutes et annonçait 41 prestations hors organigramme — le résolveur existait depuis neuf jours et je ne l'avais pas appelé.`);
+}
+await testCarteDesModules();
+
 async function testClassificationDesDocuments() {
   const lc = await import('../scripts/le-classificateur.mjs');
   const { classerUnDocument, classerLesDocuments, nomsDesExecutables, ETATS_D_EXPORT, EXCEPTIONS_D_EXPORT, POPULATIONS_A_CLASSER, compterMentionsDuJeu } = lc;

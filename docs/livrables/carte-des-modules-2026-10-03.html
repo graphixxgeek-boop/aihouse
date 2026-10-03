@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La carte des modules de l'Agence</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-03T07:25:57.134Z</div>
+    <h1>La carte des modules de l'Agence</h1>
+    <p class="sub">L'actuelle se mesure, la cible se propose — et trois tentatives mécaniques ont échoué avant</p>
+  </header>
+  <div class="divider"></div>
+  <main><pre><code>              L'AGENCE CODEX — CARTE ACTUELLE DES MODULES
+              (un module = les outils qui rendent UNE prestation)
+
+   76 prestations  ·  5 portées par PLUSIEURS outils  ·  71 par UN SEUL
+
+┌─ (f) 👼 Les Anges de la coordination
+│    20 prestation(s), dont 0 vrai(s) module(s) au sens « plusieurs agents »
+│    ▫ Pack Suis-je à jour  ←  fils-de-discussion
+│    ▫ Pack Message court  ←  messages-courts
+│    ▫ Pack Où on en est  ←  ou-on-en-est
+│    ▫ Pack Réseau de vérifications  ←  le-coordinateur
+│    ▫ Pack Rapports non unifiés  ←  pure-gold-unity
+│    ▫ Pack Profil utilisateur  ←  check-profil-utilisateur
+│    … et 14 autre(s)
+└─
+
+┌─ (f) 👑 La Gouvernance Royale
+│    18 prestation(s), dont 1 vrai(s) module(s) au sens « plusieurs agents »
+│    ▫ Pack Chiffrage de refonte  ←  cout-de-la-refonte
+│    ▫ Pack Tableau de bord  ←  kpi-report
+│    ▫ Pack Rangement  ←  le-classificateur
+│    ▫ Pack Convocation  ←  cassandra-rh
+│    ▫ Pack Recensement  ←  cassandra-rh
+│    ▫ Pack Uniformité  ←  cassandra-rh
+│    … et 12 autre(s)
+└─
+
+┌─ (f) 📜 Les Prophètes - Dette &amp; Structure du code
+│    10 prestation(s), dont 0 vrai(s) module(s) au sens « plusieurs agents »
+│    ▫ Pack Anti-lourdeurs  ←  jesus-le-sauveur
+│    ▫ Pack Filet en parts  ←  filet-en-parts
+│    ▫ Pack Références  ←  abraham-les-references
+│    ▫ Pack Tables de Loi  ←  moise-tables-de-loi
+│    ▫ Pack Niveau  ←  the-equalizer
+│    ▫ Pack Classification  ←  abraham-les-references
+│    … et 4 autre(s)
+└─
+
+┌─ ∅ hors organigramme
+│    7 prestation(s), dont 0 vrai(s) module(s) au sens « plusieurs agents »
+│    ▫ Pack Sauvegarde  ←  sauvegarde-projet
+│    ▫ Pack Aveugle  ←  X-Port BLINDTEST
+│    ▫ Pack Provocation  ←  check-spirit.mjs
+│    ▫ Pack Lancement de simulation  ←  run-simulation
+│    ▫ Pack Résumé de journal  ←  summarize-simulation-log
+│    ▫ Pack Le filet lui-même  ←  ezechiel-les-tests
+│    … et 1 autre(s)
+└─
+
+┌─ (f) 🛡️ Les Gardiens Sacrés du Code
+│    7 prestation(s), dont 3 vrai(s) module(s) au sens « plusieurs agents »
+│    ▫ Pack Départ  ←  safe-export
+│    ▫ Pack Blindage  ←  axa-check
+│    ▣ Pack Rénovation  ←  always-new-code + clean-dirty-old
+│    ▣ Pack Sentinelle  ←  check-house.mjs + argus + harmonia
+│    ▣ Pack Éclaireur  ←  axa-check + clean-dirty-old + harmonia
+│    ▫ Pack Chasse aux clones  ←  clone-hunter
+│    … et 1 autre(s)
+└─
+
+┌─ (f) 🎬 La Suite Tarantino - Simulation &amp; qualité narrative
+│    6 prestation(s), dont 0 vrai(s) module(s) au sens « plusieurs agents »
+│    ▫ Pack Fidélité du ton  ←  check-spirit
+│    ▫ Pack Empreinte  ←  el-professor
+│    ▫ Pack Vitrine  ←  the-screener
+│    ▫ Pack Memory-Audit  ←  memory-audit
+│    ▫ Pack Discipline de simulation  ←  process-simulation-guardian
+│    ▫ Pack Régie de simulation  ←  le-regisseur
+└─
+
+┌─ (f) 🚀 Les Boosters de Navigation
+│    4 prestation(s), dont 0 vrai(s) module(s) au sens « plusieurs agents »
+│    ▫ Pack Découpage  ←  find-deep-booster
+│    ▫ Pack Boussole  ←  find-booster
+│    ▫ Pack Cerveau de recherche  ←  find-brain
+│    ▫ Pack Points de coupe  ←  route-booster
+└─
+
+┌─ (f) 🕵️ Les Agents Externes - Audit indépendant
+│    3 prestation(s), dont 0 vrai(s) module(s) au sens « plusieurs agents »
+│    ▫ Pack Verdict  ←  the-final-judge
+│    ▫ Pack Bouclier  ←  the-final-judge
+│    ▫ Pack Mémoire Longue  ←  the-deep-reader
+└─
+
+┌─ ⇄ TRANSVERSE (plusieurs familles)
+│    1 prestation(s), dont 1 vrai(s) module(s) au sens « plusieurs agents »
+│    ▣ Pack Panorama  ←  check-house.mjs + argus + harmonia + axa-check + clean-dirty-old + always-new-code + smart-conso-api + smart-conso-token
+└─
+
+   ▣ = plusieurs outils (un module au sens de sa définition)
+   ▫ = un seul outil (une prestation, pas encore un module)</code></pre>
+<pre><code>              L'AGENCE CODEX — CARTE CIBLE DES MODULES
+              (PROPOSITION — regroupée par QUESTION POSÉE, jamais par parenté de rôle)
+
+   9 modules proposés pour 75 prestations
+
+                        ┌───────────────────────────┐
+                        │   PARTIE INDÉTACHABLE     │
+                        │  (ce que toute prestation │
+                        │      réclame quoi qu'il   │
+                        │          arrive)          │
+                        └─────────────┬─────────────┘
+                                      │
+        ┌─────────────────────────────┼─────────────────────────────┐
+        │
+        ├── ▣ GOUVERNANCE  (7 prestations)
+        │      la loi du projet : la charte, la philosophie, les règles, et ce qui les allège
+        │
+        ├── ▣ QUALITÉ DU CODE  (12 prestations)
+        │      ce que le code vaut : dette, duplication, tests, robustesse, découpage
+        │
+        ├── ▣ PILOTAGE DU TRAVAIL  (14 prestations)
+        │      ce qu'on fait, dans quel ordre, et si les règles de travail ont été tenues
+        │
+        ├── ▣ CONNAISSANCE ET MÉMOIRE  (8 prestations)
+        │      ce que l'équipe sait déjà, et comment on le retrouve
+        │
+        ├── ▣ ORGANISATION DE L'OUTILLAGE  (10 prestations)
+        │      ce qu'est chaque outil, ce qu'il vaut, qui l'emploie et qui le nomme
+        │
+        ├── ▣ EXPORT ET LIVRAISON  (4 prestations)
+        │      ce qui part, ce qui reste, et ce que coûterait de tout reprendre
+        │
+        ├── ▣ LE JEU  (10 prestations)
+        │      l'esprit des personnages, le rendu, et les simulations — le seul module qui regarde le PRODUIT
+        │
+        ├── ▣ RESSOURCES ET COÛTS  (5 prestations)
+        │      le temps, les quotas, les tokens, et ce qui ralentit le projet
+        │
+        ├── ▣ AUDIT INDÉPENDANT  (5 prestations)
+        │      le regard extérieur, celui qui n'est juge et partie d'aucun chantier
+        │
+        └─────────────────────────────────────────────────────────────┘</code></pre>
+<p>✅ Le découpage est une vraie partition : chaque prestation du catalogue appartient à un module, et un seul.</p>
+<p>⚠️ 76 prestations pour seulement 75 noms : le catalogue porte 1 homonyme(s), et ce sont les noms par lesquels on COMMANDE une prestation. · « Pack Boussole » désigne 2 prestations différentes :</p>
+<ul><li>État des lieux des tâches en cours — check-tasks-details</li><li>Retrouver rapidement où se trouve une logique précise dans un gros fichier déjà structuré — find-booster L'outil ne renomme rien : c'est lui qui nomme, et par séries dans une même famille, jamais au cas par cas.</li></ul></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/carte-des-modules-2026-10-03.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
