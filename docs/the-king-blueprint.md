@@ -88,3 +88,21 @@ produit des accusations fausses, et un signal qui accuse à tort cesse d'être l
 
 **Le classement RANGE, il ne NOTE pas** — et le dire dans la sortie elle-même, sinon un document
 parfaitement classé passera pour un document à jour.
+
+## Revenir sur un refus écrit, sans le contredire en silence
+
+Un outil de ce genre finit par porter, dans son propre code, des refus argumentés : « on ne dépose
+pas ce fichier, et voici pourquoi ». C'est une bonne pratique — mais elle crée une situation que le
+patron doit prévoir : **le jour où la demande revient, le refus est toujours là.**
+
+La règle : on ne le supprime pas, on le **transforme en historique** à sa place même, et le
+revirement nomme **ce qui a changé** plutôt que **qui a demandé**. « Parce qu'on me le demande »
+n'est jamais une raison ; « la première objection tombe parce que le document se réécrit depuis la
+source, et la seconde se vérifie — voici la mesure » en est une. Et la vérification se fait pour de
+vrai : la deuxième objection d'origine avait été MESURÉE, elle doit être re-mesurée, pas
+congédiée.
+
+**Un document entièrement généré se déclare comme tel, et c'est mécaniquement vérifiable** :
+dépouillé de son bloc généré, il doit être VIDE. Cette assertion-là vaut toutes les promesses —
+elle prouve qu'aucune ligne n'y a été écrite à la main, et elle sort du vert le jour où quelqu'un
+en ajoute une.

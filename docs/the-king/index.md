@@ -8,6 +8,7 @@ la fréquence potentielle des rappels rendrait ça inutile et bruyant.)*
 |---|---|---|
 | 2026-09-21 | Création de THE-KING — premier passage sur le document réel | 19 principes extraits, 2 datés explicitement (1.9, 1.10, tous deux 2026-09-19), zéro tension possible détectée |
 | 2026-10-04 | Classement des stratégies du projet (tâche #1569) | 16 stratégies rangées sur quatre axes lus (type, rang, descendance, état) : 3 globales, 10 de chantier, 3 non déclarées · 0 sans parent, 0 hors de l'arbre · enregistré dans `classification-des-strategies.md`, nom STABLE parce qu'un rangement se réécrit au lieu de s'empiler |
+| 2026-10-04 | L'arbre complet de la cascade, en un seul endroit (tâche #1570) | 70 documents, profondeur 8, racine `philosophie-et-politique`, couverture 100 % · déposé dans `arbre-de-la-cascade.md`, réécrit à CHAQUE passage de `cascade` · le refus écrit la veille (second porteur + paire de jumeaux avec `docs/plans/index.md`) est levé par la mesure : zéro paire sur 539 documents, et le fichier dépouillé de son bloc généré est VIDE |
 
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers

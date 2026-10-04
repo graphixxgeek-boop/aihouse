@@ -736,5 +736,18 @@
       "scripts/check-house.mjs"
     ],
     "date": "2026-10-04T01:30:32.983Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "un garde-fou bloque ou un test échoue de façon imprévue",
+    "titre": "Un cache indexé sur la ressource mémorise la sortie d'un faux shell, et le repli le cache",
+    "quoi": "La part 4 du filet dépassait son plan de 18,5 s, trois lancements de suite, et j'avais consigné la cause comme non établie plutôt que de la deviner. Elle n'avait rien à voir avec le parallélisme : le cache d'historique git de THE-KING était indexé sur le SEUL nom de fichier, si bien qu'un test injectant un faux shell sur ce même document y déposait sa sortie — filtrée à VIDE par le contrôle de forme, puisqu'un faux shell ne rend pas de vrais sha. Le prochain appelant RÉEL recevait ce vide sans la moindre erreur et retombait sur 71 appels `git log -S<titre>`, très exactement les 15,9 s qu'une optimisation de la veille avait supprimées.",
+    "pourquoi": "Trois choses à garder. (1) UN CACHE SE CLÉ SUR TOUT CE QUI DÉTERMINE SON CONTENU, pas seulement sur la ressource : la dépendance injectée en fait partie. (2) NE JAMAIS MÉMORISER UN VIDE — une absence de résultat n'apprend rien et se remesure gratuitement, alors qu'en cache elle aveugle tous les appelants suivants (L5/L11). (3) LE REPLI MASQUAIT LE DÉFAUT : le digest retombait sur le chemin lent et rendait un résultat juste, donc rien ne criait ; seul le TEMPS trahissait. Un repli silencieux transforme une panne en lenteur, et une lenteur ne se diagnostique pas toute seule. ET LA LEÇON DE MÉTHODE : j'avais écrit « cause non établie, à instruire » plutôt qu'une hypothèse plausible. Deux heures plus tard la vraie cause est apparue, et elle contredisait toutes les hypothèses que j'aurais pu écrire. Refuser de deviner a payé.",
+    "terrain": [
+      "scripts/the-king.mjs",
+      "scripts/check-house.mjs",
+      "scripts/filet-en-parts.mjs"
+    ],
+    "date": "2026-10-04T03:22:17.546Z"
   }
 ]

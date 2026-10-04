@@ -14,8 +14,8 @@
 
 import { significantWords } from "./le-coordinateur.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
-import { recordCliUsage } from "./tool-usage.mjs";
-import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard, lireLeDocumentGouvernant, ligneDocumentAbsent, MARQUEUR_NEGATION, MARQUEUR_ABSOLU } from "./lib-shell.mjs";
+import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
+import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard, lireLeDocumentGouvernant, ligneDocumentAbsent, MARQUEUR_NEGATION, MARQUEUR_ABSOLU, DEBUT_DOCUMENT_GENERE, FIN_DOCUMENT_GENERE } from "./lib-shell.mjs";
 import { SEUIL_JACCARD_STRICT } from "./abraham-les-references.mjs";
 import { extractRuleUnits } from "./moise-tables-de-loi.mjs";
 import { readFileSync, writeFileSync, mkdirSync, readdirSync as fsReaddir, existsSync as fsExists } from "node:fs";
@@ -158,7 +158,19 @@ const CACHE_HISTOIRE = new Map();
 export function viderLHistoireDuFichier() { CACHE_HISTOIRE.clear(); }
 
 export function versionsSuccessives(fichier, { shImpl = sh } = {}) {
-  if (CACHE_HISTOIRE.has(fichier)) return CACHE_HISTOIRE.get(fichier);
+  // LE CACHE NE GARDE QUE CE QU'UN VRAI SHELL A RENDU, ET JAMAIS UN VIDE (2026-10-04, tâche
+  // #1570, trouvé par une part qui tombe). Il était indexé sur le SEUL nom de fichier, donc :
+  //   ① un test qui injecte un faux shell pour ce même fichier y déposait sa sortie — filtrée à
+  //      VIDE par le contrôle de forme, puisqu'un faux shell ne rend pas des sha réels — et le
+  //      prochain appelant RÉEL recevait ce vide sans qu'aucune erreur ne soit levée ;
+  //   ② un échec ponctuel de git (contention, interruption) se mémorisait pour toute la durée du
+  //      processus : une absence de mesure rangée comme une mesure (leçons L5/L11).
+  // LE DÉFAUT EST ORDONNANCÉ, DONC INVISIBLE EN SÉQUENTIEL TANT QUE L'ORDRE NE CHANGE PAS : il
+  // est sorti le jour où le découpage en parts a mis le test injecté et le test réel dans la même
+  // part, dans cet ordre. Le séquentiel restait vert, et c'est le pire cas de figure — un défaut
+  // réel que seul le parallélisme révèle se fait prendre pour un défaut du parallélisme.
+  const cacheable = shImpl === sh;
+  if (cacheable && CACHE_HISTOIRE.has(fichier)) return CACHE_HISTOIRE.get(fichier);
   let versions = [];
   try {
     // UNE LIGNE QUI NE RESSEMBLE PAS À UNE VERSION N'EN EST PAS UNE. Le filet injecte des faux
@@ -173,7 +185,8 @@ export function versionsSuccessives(fichier, { shImpl = sh } = {}) {
       try { v.texte = String(shImpl(`git show ${v.sha}:${fichier}`, { quiet: true }) ?? ""); } catch { v.texte = ""; }
     }
   } catch { versions = []; }
-  CACHE_HISTOIRE.set(fichier, versions);
+  // On ne mémorise QUE des versions réellement lues : un vide n'apprend rien et se remesure.
+  if (cacheable && versions.length) CACHE_HISTOIRE.set(fichier, versions);
   return versions;
 }
 
@@ -784,6 +797,71 @@ export function lignesDuDocumentDesStrategies(c = {}, { date = "", source = "" }
   for (const l of c.lignes) L.push(`| \`${l.chemin}\` | ${String(l.titre).replace(/\|/g, "\\|") || "*(sans titre de niveau 1)*"} | ${l.octets} caractères |`);
   L.push("");
   L.push("<!-- /DOCUMENT GÉNÉRÉ -->");
+  return L;
+}
+
+// L'ARBRE ENTIER, EN UN SEUL ENDROIT (2026-10-04, tâche #1570)
+// ───────────────────────────────────────────────────────────────────────────────────────────────
+// SA DEMANDE : « je veux un document ou il y a l'arbre complet, un document qui se genere ? à
+// hberger chez l'outil ». Les trois choses qu'il demande sont dans la phrase : l'arbre ENTIER
+// (pas une branche), qui se GÉNÈRE (pas tenu à la main), et hébergé CHEZ L'OUTIL (docs/the-king/).
+//
+// CE DOCUMENT AVAIT ÉTÉ REFUSÉ, ET LE REFUS EST ÉCRIT DIX LIGNES PLUS BAS DANS LE BLOC CLI
+// `cascade` — on ne le contredit pas en silence (Article 19, Article 30). Ses deux raisons :
+//   ① un SECOND porteur de l'arbre finirait par diverger des branches insérées dans chaque
+//      document (leçon L29) ;
+//   ② mesuré en le faisant, il créait une paire de documents JUMEAUX avec `docs/plans/index.md`,
+//      parce qu'une liste de tous les chemins du dépôt ressemble forcément à un index.
+//
+// CE QUI LES LÈVE, ET CE N'EST PAS « parce qu'il le demande » :
+//   ① il est marqué GÉNÉRÉ de bout en bout et réécrit à chaque passage de `cascade`, donc il ne
+//      PEUT pas diverger : il n'est pas un second porteur, il est la même mesure rendue en entier.
+//      Un porteur qui se réécrit à partir de la source n'est pas une copie, c'est un affichage ;
+//   ② le détecteur de documents jumeaux retire les blocs déclarés générés avant de comparer
+//      (`BLOCS_GENERES`, lib-shell) — c'est précisément la correction de CLASSE faite le
+//      2026-10-03 quand l'insertion des branches avait fait passer les paires de 6 à 10.
+// La mesure le vérifie après coup, elle ne se suppose pas : le filet le contrôle.
+export const FICHIER_ARBRE_COMPLET = "docs/the-king/arbre-de-la-cascade.md";
+
+export function lignesDuDocumentDeLArbre(arbre, alignement, { date = "", source = "" } = {}) {
+  const L = [];
+  L.push(DEBUT_DOCUMENT_GENERE);
+  L.push("# L'arbre complet de la cascade");
+  L.push("");
+  L.push(`> Produit par \`node scripts/the-king.mjs cascade\` le ${date}${source ? ` (heure de source ${source})` : ""}, en remontant les déclarations « DÉCOULE DE » réelles de chaque document.`);
+  L.push("> Ta demande : « je veux un document ou il y a l'arbre complet, un document qui se genere ? à hberger chez l'outil ».");
+  L.push("");
+  L.push("**Ce document ne s'écrit jamais à la main.** Chaque document du dépôt porte déjà SA branche, insérée entre marqueurs ; celui-ci est le même calcul rendu en ENTIER, en un seul endroit. Il est réécrit à chaque passage, donc il ne peut pas prendre du retard sur les branches.");
+  L.push("");
+  if (!arbre?.mesurable) { L.push(`**PAS MESURÉ** — ${arbre?.pourquoi}`); L.push(FIN_DOCUMENT_GENERE); return L; }
+  L.push(`**${arbre.total} document(s)** dans la cascade · **${arbre.rattaches}** rattaché(s) à la racine \`${String(arbre.racine).replace(/^docs\//, "").replace(/\.md$/, "")}\` · profondeur maximale **${arbre.profondeurMax}**.`);
+  L.push("");
+  L.push("## L'arbre");
+  L.push("");
+  L.push("```");
+  L.push(...dessinerLArbre(arbre));
+  L.push("```");
+  L.push("");
+  // LES ORPHELINS SONT NOMMÉS, JAMAIS COMPTÉS : « 3 documents ne déclarent aucun parent » laisse
+  // chercher, les nommer laisse corriger. Et zéro orphelin se DIT aussi, sinon on ne sait pas si
+  // la section est vide parce qu'il n'y en a pas ou parce qu'on n'a pas regardé (leçons L5/L11).
+  L.push("## Ce qui ne figure dans aucun arbre");
+  L.push("");
+  if (!arbre.orphelins.length) {
+    L.push("*Aucun : les " + arbre.total + " documents de la cascade déclarent tous un parent atteignable.* Déclarer un parent n'est pas obligatoire — ce qui l'est, c'est qu'une déclaration ne devienne pas fausse en silence.");
+  } else {
+    L.push(`**${arbre.orphelins.length} document(s)** ne déclarent aucun parent. Ce n'est pas un reproche : déclarer un parent n'est pas obligatoire. C'est une information, et la taire la rendrait introuvable.`);
+    L.push("");
+    for (const o of arbre.orphelins) L.push(`- \`${o}\``);
+  }
+  L.push("");
+  if (alignement?.mesurable) {
+    L.push("## La couverture, mesurée");
+    L.push("");
+    L.push(`**${alignement.couverture} %** des ${alignement.objets.length} documents alignables remontent à la racine sans un écart.`);
+    L.push("");
+  }
+  L.push(FIN_DOCUMENT_GENERE);
   return L;
 }
 
@@ -2682,6 +2760,7 @@ async function main({ chemin = PHILOSOPHY_PATH } = {}) {
     const jour = t?.suivi ?? new Date().toISOString().slice(0, 16).replace("T", " ");
     const sortie = join(dossier, "classification-des-strategies.md");
     writeFileSync(sortie, lignesDuDocumentDesStrategies(c, { date: jour, source: t?.source ?? "" }).join("\n") + "\n", "utf8");
+    recordRegistryWrite("docs/the-king/classification-des-strategies.md", { par: "the-king" });
     console.log(`\nClassification enregistrée : docs/the-king/classification-des-strategies.md`);
     const constats = [];
     if (!c.mesurable) constats.push({ constat: `aucune stratégie lue : ${c.pourquoi}`, etat: "retenu", tache: 1569 });
@@ -2701,13 +2780,30 @@ async function main({ chemin = PHILOSOPHY_PATH } = {}) {
     const arbre = arbreDeLaCascade(a);
     const lignes = ["# L'arborescence de la cascade", "", ...formatAlignementLines(a), "", "## L'arbre entier", "", "```", ...dessinerLArbre(arbre), "```"];
     for (const l of lignes) console.log(l);
-    // AUCUN FICHIER SÉPARÉ N'EST DÉPOSÉ, ET C'EST UNE DÉCISION PLUTÔT QU'UN OUBLI. Le livrable
-    // (Article 31) est bien un fichier : ce sont les documents EUX-MÊMES, chacun portant sa
-    // branche entre marqueurs — c'est très exactement ce qu'il a demandé, « une arborescence
-    // INCLUSE » dans chaque stratégie. Un document séparé reprenant l'arbre entier serait un
-    // SECOND porteur de la même information, qui finirait par diverger (leçon L29) ; mesuré en
-    // le faisant, il créait en plus une paire de documents jumeaux avec `docs/plans/index.md`,
-    // parce qu'une liste de tous les chemins du dépôt ressemble forcément à un index.
+    // LE DOCUMENT DE L'ARBRE ENTIER EST DÉPOSÉ (2026-10-04, tâche #1570), et ça REVIENT sur le
+    // refus écrit ici le 2026-10-03 — qui disait : « aucun fichier séparé n'est déposé, et c'est
+    // une décision plutôt qu'un oubli », pour deux raisons, un second porteur qui divergerait
+    // (L29) et une paire de jumeaux mesurée avec `docs/plans/index.md`.
+    //
+    // POURQUOI LE REVIREMENT EST LÉGITIME, et ce n'est pas « parce qu'il l'a demandé » : le
+    // document est marqué GÉNÉRÉ de bout en bout et RÉÉCRIT à chaque passage, donc il ne peut pas
+    // diverger des branches — un porteur qui se reconstruit depuis la source n'est pas une copie,
+    // c'est un affichage. Et la paire de jumeaux ne peut plus se former : le détecteur retire les
+    // blocs déclarés générés avant de comparer (`BLOCS_GENERES`), correction de CLASSE faite le
+    // 2026-10-03 le jour même où l'insertion des branches avait fait monter les paires de 6 à 10.
+    // Les branches restent la forme PRINCIPALE — chaque document porte la sienne, et l'arbre
+    // entier dans 70 fichiers ferait 70 copies du même dessin.
+    {
+      const dossierArbre = join(ROOT, "docs/the-king");
+      try { mkdirSync(dossierArbre, { recursive: true }); } catch { /* déjà là */ }
+      const t = await import("./agent-du-temps.mjs").then((m) => m.maintenant()).catch(() => null);
+      writeFileSync(join(ROOT, FICHIER_ARBRE_COMPLET),
+        lignesDuDocumentDeLArbre(arbre, a, { date: t?.suivi ?? new Date().toISOString().slice(0, 16).replace("T", " "), source: t?.source ?? "" }).join("\n") + "\n", "utf8");
+      // LE COMPTEUR DOIT SAVOIR QU'UN REGISTRE A ÉTÉ ALIMENTÉ, sans quoi cet outil ressortira
+      // « jamais nourri » alors qu'il écrit à chaque passage (garde-fou de l'Article 27).
+      recordRegistryWrite(FICHIER_ARBRE_COMPLET, { par: "the-king" });
+      console.log(`\nArbre entier déposé : ${FICHIER_ARBRE_COMPLET} — réécrit à chaque passage, jamais tenu à la main.`);
+    }
 
     const inserer = process.argv.includes("--inserer");
     let touches = 0; const refus = [];

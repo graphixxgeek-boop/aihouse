@@ -464,3 +464,48 @@ seule générée des seize). Zéro sans parent, zéro hors de l'arbre.
 
 Elle RANGE, elle ne NOTE pas. Un document peut être parfaitement classé et complètement périmé sur
 le fond.
+
+## L'ARBRE ENTIER EN UN SEUL ENDROIT — et le refus qu'il a fallu lever (2026-10-04, tâche #1570)
+
+Sa demande : « je veux un document ou il y a l'arbre complet, un document qui se genere ? à
+hberger chez l'outil ». Produit à **chaque** passage de `node scripts/the-king.mjs cascade`, déposé
+dans `docs/the-king/arbre-de-la-cascade.md`.
+
+### Ce document avait été REFUSÉ la veille, et le refus était écrit dans le code
+
+Le bloc CLI `cascade` portait noir sur blanc, depuis le 2026-10-03 : « aucun fichier séparé n'est
+déposé, et c'est une décision plutôt qu'un oubli ». Deux raisons :
+
+1. un **second porteur** de l'arbre finirait par diverger des branches insérées dans chaque
+   document (leçon L29) ;
+2. **mesuré en le faisant**, il créait une paire de documents **jumeaux** avec
+   `docs/plans/index.md` — une liste de tous les chemins du dépôt ressemble forcément à un index.
+
+### Pourquoi le revirement est légitime, et ce n'est PAS « parce qu'il l'a demandé »
+
+1. Le document est **marqué GÉNÉRÉ de bout en bout** et **réécrit à chaque passage**. Il ne peut
+   donc pas diverger : un porteur qui se reconstruit depuis la source n'est pas une copie, c'est un
+   affichage. **Preuve mécanique, vérifiée par le filet** : dépouillé de son bloc généré, le
+   fichier est **vide**.
+2. Le détecteur de jumeaux **retire les blocs déclarés générés avant de comparer**
+   (`BLOCS_GENERES`) — correction de CLASSE faite le 2026-10-03, le jour même où l'insertion des
+   branches avait fait monter les paires de 6 à 10. **Vérifié plutôt que supposé** : zéro paire
+   impliquant ce document, sur 539 documents réels.
+
+Les branches restent la forme **principale** : chaque document porte la sienne, et l'arbre entier
+recopié dans 70 fichiers ferait 70 copies du même dessin.
+
+### Ce que le document contient, et ce qu'il refuse de taire
+
+Le dessin, le compte (70 documents, profondeur 8, racine `philosophie-et-politique`), la couverture
+mesurée (100 %), et **les orphelins NOMMÉS** — « 3 documents ne déclarent aucun parent » laisse
+chercher, les nommer laisse corriger. **Zéro orphelin se dit en toutes lettres** : une section vide
+ne distingue pas « il n'y en a pas » de « on n'a pas regardé » (leçons L5/L11).
+
+### Au passage : le marqueur du document généré a enfin un nom
+
+Il vivait en **chaîne littérale recopiée** — neuf ouvertures et quinze fermetures écrites à la main
+à travers le dépôt. Seize occasions de diverger d'un accent, et le jour où l'une diverge, son
+document cesse d'être reconnu comme généré : il se fait compter comme un jumeau écrit à la main, en
+silence. `DEBUT_DOCUMENT_GENERE` / `FIN_DOCUMENT_GENERE` (lib-shell) le nomment une fois, et
+`BLOCS_GENERES` les emploie plutôt qu'une seconde copie du même texte posée à côté (Article 24).

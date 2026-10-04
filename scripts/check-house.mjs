@@ -26265,6 +26265,68 @@ async function testClassificationDesStrategies() {
 await testClassificationDesStrategies();
 
 // ─────────────────────────────────────────────────────────────────────────────
+// L'ARBRE ENTIER, EN UN SEUL ENDROIT — et le refus qu'il fallait lever d'abord
+// (2026-10-04, tâche #1570)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLArbreEntierEnUnSeulEndroit() {
+  const K = await import('../scripts/the-king.mjs');
+  const sh = await import('../scripts/lib-shell.mjs');
+
+  // ── 1. LE MARQUEUR DU DOCUMENT GÉNÉRÉ A UN NOM, et c'est ce qui l'empêche de diverger.
+  //    Il vivait en CHAÎNE LITTÉRALE recopiée : neuf ouvertures et quinze fermetures écrites à la
+  //    main dans le dépôt. Une chaîne recopiée seize fois est seize occasions de se tromper d'un
+  //    accent — et le jour où l'une diverge, son document cesse d'être reconnu comme généré, donc
+  //    il se fait compter comme un jumeau écrit à la main, en silence (L29).
+  assert.ok(sh.DEBUT_DOCUMENT_GENERE.startsWith('<!-- DOCUMENT GÉNÉRÉ'), 'the marker is a named constant now');
+  assert.strictEqual(sh.FIN_DOCUMENT_GENERE, '<!-- /DOCUMENT GÉNÉRÉ -->');
+  const declare = sh.BLOCS_GENERES.find((b) => b.debut === sh.DEBUT_DOCUMENT_GENERE);
+  assert.ok(declare && declare.fin === sh.FIN_DOCUMENT_GENERE, 'and the stripper uses THAT constant rather than a second copy of the same text beside it');
+
+  // ── 2. LE DOCUMENT SE CONSTRUIT DEPUIS LA MESURE, et refuse de conclure sans elle.
+  const faux = {
+    mesurable: true, total: 3, rattaches: 2, racine: 'R', profondeurMax: 2,
+    orphelins: ['docs/seul.md'],
+    enfants: new Map([['R', ['A']], ['A', ['B']]]),
+  };
+  const doc = K.lignesDuDocumentDeLArbre(faux, { mesurable: true, couverture: 97, objets: [1, 2, 3] }, { date: '2026-10-04', source: 'système' }).join('\n');
+  assert.ok(doc.startsWith(sh.DEBUT_DOCUMENT_GENERE), 'the document declares itself fully generated from its first line');
+  assert.ok(doc.trimEnd().endsWith(sh.FIN_DOCUMENT_GENERE), 'and closes its marker, without which the stripper swallows the end of the file');
+  assert.ok(/└──|├──/.test(doc), 'the tree is DRAWN, not listed — a 70-line list is exact and unreadable, which was the whole point of his question');
+  assert.ok(doc.includes('docs/seul.md'), 'an orphan is NAMED, never only counted: "3 documents declare no parent" leaves you searching, naming them lets you fix');
+  assert.ok(/97 %/.test(doc), 'and the measured coverage travels with the drawing');
+  const sansMesure = K.lignesDuDocumentDeLArbre({ mesurable: false, pourquoi: 'rien lu' }, null, { date: 'x' }).join('\n');
+  assert.ok(/PAS MESURÉ/.test(sansMesure), 'with no tree it says so rather than drawing an empty one, which would read as a flat repository (L5/L11)');
+  assert.ok(sansMesure.trimEnd().endsWith(sh.FIN_DOCUMENT_GENERE), 'even the refusal closes its marker');
+
+  // ── 3. ZÉRO ORPHELIN SE DIT AUSSI. Une section vide ne distingue pas « il n'y en a pas » de
+  //    « on n'a pas regardé ».
+  const propre = K.lignesDuDocumentDeLArbre({ ...faux, orphelins: [] }, null, { date: 'x' }).join('\n');
+  assert.ok(/Aucun/.test(propre), 'an empty orphan section says "none" in words rather than being simply absent');
+
+  // ── 4. LE REFUS DE LA VEILLE EST LEVÉ PAR LA MESURE, PAS PAR L'ENVIE (Article 19/30). Le bloc
+  //    CLI `cascade` refusait ce document le 2026-10-03 pour deux raisons écrites : un SECOND
+  //    porteur qui divergerait, et une paire de jumeaux mesurée avec `docs/plans/index.md`. La
+  //    première tombe parce que le document est réécrit à chaque passage ; la seconde se VÉRIFIE.
+  const A = await import('../scripts/abraham-les-references.mjs');
+  const corpus = A.chargerLesDocuments();
+  const jum = A.trouverDocumentsJumeaux(corpus);
+  assert.strictEqual(jum.mesurable, true, `the twin detector really runs on the real corpus (${corpus.length} documents)`);
+  const impliques = (jum.paires ?? []).filter((x) => JSON.stringify(x).includes('arbre-de-la-cascade'));
+  assert.deepStrictEqual(impliques, [], 'MUST STAY EMPTY: the whole-tree document must not form a twin pair with any index — that was the measured objection of 2026-10-03, and the generated-block stripper is what answers it');
+
+  // ── 5. ET LE FICHIER EST VRAIMENT SUR LE DISQUE (leçon L2 : un dessin que personne ne peut
+  //    ouvrir ne répond à rien).
+  const surDisque = fs.readFileSync(K.FICHIER_ARBRE_COMPLET, 'utf8');
+  assert.ok(surDisque.includes('## L\'arbre'), 'the deposited file carries the drawing');
+  assert.ok(/└──/.test(surDisque), 'really drawn on disk, not only computable');
+  assert.ok(surDisque.startsWith(sh.DEBUT_DOCUMENT_GENERE), 'and declared generated on disk too — otherwise the stripper never sees it');
+  assert.strictEqual(sh.sansLeBlocGenere(surDisque).trim(), '', 'stripped of its generated block the file is EMPTY, which is the mechanical proof that not one line of it is hand-written');
+
+  console.log(`Passed: l'arbre entier en un seul endroit, et le refus qu'il fallait lever d'abord (2026-10-04, tâche #1570). Sa demande : « je veux un document ou il y a l'arbre complet, un document qui se genere ? à hberger chez l'outil ». CE DOCUMENT AVAIT ÉTÉ REFUSÉ LA VEILLE, et le refus était écrit dans le code plutôt que oublié — deux raisons : un SECOND porteur de l'arbre qui finirait par diverger des branches insérées dans chaque document (L29), et une paire de documents JUMEAUX mesurée avec \`docs/plans/index.md\`, parce qu'une liste de tous les chemins du dépôt ressemble forcément à un index. LE REVIREMENT NE SE JUSTIFIE PAS PAR SA DEMANDE, il se justifie par ce qui a changé : le document est marqué GÉNÉRÉ de bout en bout et RÉÉCRIT à chaque passage de \`cascade\`, donc il ne peut pas diverger — un porteur qui se reconstruit depuis la source n'est pas une copie, c'est un affichage ; et le détecteur de jumeaux retire désormais les blocs déclarés générés avant de comparer, correction de CLASSE faite le 2026-10-03 le jour où l'insertion des branches avait fait monter les paires de 6 à 10. LA SECONDE RAISON EST VÉRIFIÉE PLUTÔT QUE SUPPOSÉE : zéro paire impliquant ce document sur ${corpus.length} documents réels. PREUVE MÉCANIQUE QU'AUCUNE LIGNE N'EST ÉCRITE À LA MAIN : dépouillé de son bloc généré, le fichier est VIDE. ET LE MARQUEUR A ENFIN UN NOM — il vivait en chaîne littérale recopiée neuf fois à l'ouverture et quinze à la fermeture, soit seize occasions de diverger d'un accent, après quoi le document cesserait d'être reconnu comme généré et se ferait compter comme un jumeau écrit à la main, en silence.`);
+}
+await testLArbreEntierEnUnSeulEndroit();
+
+// ─────────────────────────────────────────────────────────────────────────────
 // L'ORGANISATION DES LOIS — numéroter n'est pas citer (2026-10-02, tâche #1445)
 // ─────────────────────────────────────────────────────────────────────────────
 async function testLOrganisationDesLois() {
@@ -28315,6 +28377,21 @@ async function testLePassageGroupeDeLHistoire() {
   assert.deepStrictEqual(sansSpawn, { date: '2026-02-01', provenance: 'git' }, 'MUST CATCH: with a prebuilt map, not one process may be spawned');
   const absentDeLaCarte = K.principleDate({ titre: 'absent', tag: '' }, { datesGit: new Map(), shImpl: () => { throw new Error('git must not be called'); }, dateDEdition: '2026-10-01' });
   assert.strictEqual(absentDeLaCarte.provenance, 'édition', 'and a title absent from the map falls through to the edition date rather than spawning');
+
+  // ── LE CACHE NE GARDE QUE CE QU'UN VRAI SHELL A RENDU (2026-10-04, tâche #1570). Trouvé par
+  //    une part qui tombe, et c'est un VRAI défaut que seul le parallélisme révèle — le pire cas
+  //    de figure, parce qu'il se fait prendre pour un défaut du parallélisme. Le cache de
+  //    `versionsSuccessives` était indexé sur le seul nom de fichier : le test de la ligne 14650,
+  //    qui injecte un faux shell sur CE MÊME document, y déposait sa sortie — filtrée à VIDE par
+  //    le contrôle de forme, puisqu'un faux shell ne rend pas des sha réels — et le prochain
+  //    appelant RÉEL recevait ce vide sans qu'aucune erreur ne soit levée. En séquentiel les deux
+  //    tests tombaient dans cet ordre-là depuis toujours sans se croiser ; le nouveau découpage
+  //    les a mis dans la même part.
+  const bidon = K.versionsSuccessives('docs/philosophie-et-politique.md', { shImpl: () => 'n importe quoi' });
+  assert.strictEqual(bidon.length, 0, 'a fake shell yields no usable version, which is correct');
+  const apres = K.versionsSuccessives('docs/philosophie-et-politique.md');
+  assert.ok(apres.length > 5, `MUST CATCH: a real call right after must still read the real history (${apres.length} versions) — caching the fake run\'s empty result would silently blind every later caller`);
+  assert.ok(apres.every((v) => /^[0-9a-f]{7,40}$/i.test(v.sha)), 'and what comes back is real history, never the fake shell\'s output kept around');
 
   // ── LE PASSAGE RÉEL (Article 25) : sur le vrai document, les deux chemins doivent rendre LE
   // MÊME DIGEST. C'est cette vérification — 71 principes sur 71 — qui a autorisé le remplacement.

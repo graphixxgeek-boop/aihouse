@@ -235,10 +235,26 @@ machine » (bornée par `cpus().length`), avec la mention explicite quand il y a
 cœurs. Sur 4 cœurs : 4 parts → 63,8 s, 6 parts → **72,6 s**, 8 parts → **82,3 s**. Le nombre de
 cœurs se LIT, il n'est jamais une constante écrite dans l'outil.
 
-### Ce qui reste INEXPLIQUÉ, et qui est dit plutôt que comblé
+### ④ L'écart « inexpliqué » de la part 4 avait une cause, et c'était un vrai bug
 
-Après l'épine (16,8 s), les parts 1 à 3 tombent à 1 à 5 secondes de leur plan ; **la part 4 est à
-+18,5 s**, et ce n'est pas le déséquilibre des unités non pesées (corrigé en ②, sans effet). Trois
-lancements de suite donnent le même écart, toujours sur la part 4. La cause n'est pas établie :
-elle est consignée **À INSTRUIRE**, jamais expliquée par une hypothèse plausible — c'est exactement
-le genre de diagnostic élégant et faux que cette campagne a déjà payé une fois.
+Pendant deux heures la part 4 est restée à **+18,5 s** sur son plan, trois lancements de suite,
+sans que le déséquilibre des unités non pesées (②) y change quoi que ce soit. C'était consigné
+**À INSTRUIRE** plutôt qu'expliqué par une hypothèse plausible. **Bien joué de ne pas avoir
+deviné : la cause réelle n'avait rien à voir avec le parallélisme.**
+
+Le cache d'historique git de THE-KING (`versionsSuccessives`) était indexé sur le **seul nom de
+fichier**. Un test qui injecte un **faux shell** sur `docs/philosophie-et-politique.md` y déposait
+sa sortie — filtrée à **VIDE** par le contrôle de forme, puisqu'un faux shell ne rend pas de vrais
+sha — et le prochain appelant RÉEL recevait ce vide, sans la moindre erreur. Le code retombait
+alors sur le chemin d'avant : **71 appels `git log -S<titre>` individuels**, très exactement les
+15,9 s que la tâche #1592 avait supprimées.
+
+**En séquentiel, les deux tests ne se croisaient pas** ; le nouveau découpage les a mis dans la
+même part, dans cet ordre. C'est **le pire cas de figure** : un vrai défaut que seul le
+parallélisme révèle se fait prendre pour un défaut du parallélisme.
+
+Corrigé à la racine : le cache ne garde **que ce qu'un vrai shell a rendu** (`shImpl === sh`) et
+**jamais un vide** — une absence de mesure n'est pas une mesure (leçons L5/L11).
+
+**Mesure après correction : 78,8 s → 69,2 s, et l'écart entre parts tombe de 20 s à 11 s**
+(58,3 / 68,4 / 59,0 / 69,2).

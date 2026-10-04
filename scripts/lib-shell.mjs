@@ -1108,6 +1108,16 @@ export const FIN_BLOC_GENERE = "<!-- FIN DU SOMMAIRE GÉNÉRÉ -->";
 // désormais une LISTE, et un troisième bloc généré n'aura qu'à s'y déclarer — jamais à rouvrir
 // cette fonction. C'est l'Article 24 dans sa formule exacte : un nouveau venu hérite de ce que
 // l'équipe sait déjà faire.
+// LE MARQUEUR DU DOCUMENT ENTIÈREMENT GÉNÉRÉ A UN NOM, DEPUIS LE 2026-10-04 (tâche #1570).
+// Il existait depuis le 2026-10-03, mais seulement comme CHAÎNE LITTÉRALE : neuf outils écrivaient
+// la ligne d'ouverture mot pour mot et quinze la ligne de fermeture, chacun de son côté. Une
+// chaîne recopiée seize fois est seize occasions de diverger d'un accent ou d'un tiret — et le
+// jour où l'une diverge, son document cesse d'être reconnu comme généré, donc il se fait compter
+// comme un jumeau écrit à la main, en silence (leçon L29). Le nommer une fois est la seule forme
+// de protection qui tienne ; l'intention de « bien recopier » n'en est pas une (Article 24).
+export const DEBUT_DOCUMENT_GENERE = "<!-- DOCUMENT GÉNÉRÉ — produit intégralement par un outil, aucune ligne n'est écrite à la main -->";
+export const FIN_DOCUMENT_GENERE = "<!-- /DOCUMENT GÉNÉRÉ -->";
+
 export const BLOCS_GENERES = [
   { debut: DEBUT_BLOC_GENERE, fin: FIN_BLOC_GENERE, quoi: "le sommaire généré d'un index (data-archangel)" },
   { debut: "<!-- ARBORESCENCE — bloc généré par `node scripts/the-king.mjs cascade --inserer`, ne pas éditer à la main -->", fin: "<!-- /ARBORESCENCE -->", quoi: "l'arborescence de la cascade (THE-KING)" },
@@ -1117,7 +1127,7 @@ export const BLOCS_GENERES = [
   // Et il ressemble forcément à un index, puisqu'il énumère les mêmes objets : mesuré en vrai, la
   // carte des modules a créé une paire de jumeaux avec `docs/referentiel/index.md` le jour de son
   // dépôt. Le marqueur dit « ceci est une sortie d'outil », et la comparaison l'ignore.
-  { debut: "<!-- DOCUMENT GÉNÉRÉ — produit intégralement par un outil, aucune ligne n'est écrite à la main -->", fin: "<!-- /DOCUMENT GÉNÉRÉ -->", quoi: "un rapport produit intégralement par un outil" },
+  { debut: DEBUT_DOCUMENT_GENERE, fin: FIN_DOCUMENT_GENERE, quoi: "un rapport produit intégralement par un outil" },
 ];
 
 // Rend le texte SANS ses blocs générés. Un fichier qui n'en porte aucun ressort inchangé — c'est la
