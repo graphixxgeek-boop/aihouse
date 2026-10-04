@@ -28254,3 +28254,40 @@ async function testLAvertissementCompteSurSaSource() {
   console.log('Passed: la phrase écrite pour expliquer l\'alerte était ce qui la maintenait allumée (2026-10-04, tâche #1596). L\'ALERTE « la suite n\'est pas au vert » BRÛLAIT DEPUIS SIX JOURS, et le correctif de la veille (#1566) n\'y avait rien pu : il réparait le CLASSEMENT d\'un avertissement déclaré, pas son COMPTAGE. LA CAUSE EST PRESQUE DRÔLE, ET ELLE EST EXEMPLAIRE : le voyant comptait les occurrences de `ExperimentalWarning` dans TOUTE la sortie du filet, succès compris. Or le message du test #1098, écrit en septembre pour EXPLIQUER l\'avertissement de `node:sqlite`, contient forcément ce mot-là. Il était donc compté comme un SECOND avertissement, non déclaré — et comme la règle exige que TOUTES les occurrences d\'un genre soient déclarées pour que le genre sorte du compte des anomalies, le vrai avertissement ne pouvait plus être reconnu. **La phrase écrite pour documenter l\'alerte était ce qui la maintenait allumée, et plus on l\'expliquait, plus elle criait.** C\'EST LA MÊME CLASSE QUE LE « Passed » CITÉ DANS UNE CHAÎNE, déjà corrigée pour le découpage en groupes : un détecteur qui compte une MENTION comme une OCCURRENCE. Et la correction est la même — on regarde D\'OÙ VIENT la ligne, pas seulement ce qu\'elle contient : un avertissement du moteur sort sur l\'erreur standard, jamais dans la prose d\'un test. CE N\'EST PAS UN SILENCE, et trois contre-tests le tiennent : un second avertissement expérimental d\'un genre INCONNU reste une anomalie, un avertissement d\'obsolescence sur l\'erreur standard est toujours attrapé, et un appelant qui ne donne pas le flux retrouve l\'ancien comportement — sinon le garde-fou deviendrait intestable. **La suite est VERTE pour la première fois depuis le 2026-09-28.**');
 }
 await testLAvertissementCompteSurSaSource();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1568 — UN PROMPT DE RÉVEIL QUI PORTE UN ÉTAT EST UN PROMPT QUI MENTIRA
+async function testLeReveilQuiPorteUnEtat() {
+  const G = await import('../scripts/the-ghost.mjs');
+
+  // ── LE CAS RÉEL, REPRIS MOT POUR MOT DU PROMPT QUI A MENTI QUARANTE FOIS. Il déclarait ne
+  // porter aucun état, et sa dernière ligne nommait une tâche ET une heure de rendez-vous.
+  const celuiQuiAMenti = 'CE PROMPT NE PORTE VOLONTAIREMENT AUCUN ÉTAT. Un réveil se répète à chaque heure : une consigne périmée s\'y répéterait aussi. SEUIL DE LA NUIT : 14h00 Paris, tâche #1522 — livraison de ses documents.';
+  const v = G.reveilPorteUnEtat(celuiQuiAMenti);
+  assert.strictEqual(v.porte, true, 'MUST CATCH: the very prompt that woke this session forty times with a stale claim must be flagged');
+  assert.deepStrictEqual(v.motifs.map((m) => m.cle).sort(), ['heure-de-rendez-vous', 'numero-de-tache'], 'and both perishable elements are named, not just counted');
+  assert.strictEqual(v.promesseNonTenue, true, 'the broken promise is reported SEPARATELY, because a prompt that swears it carries no state and does is believed on its word');
+
+  // ── UN PROMPT QUI ENVOIE LIRE L'ÉTAT NE PORTE RIEN. C'est la forme qui survit à la répétition.
+  const propre = "Reprendre le travail là où il en est, sans s'arrêter. Lire l'état réel : `git log --oneline -5`, `git status --short`, les dernières lignes de docs/suivi/.";
+  assert.strictEqual(G.reveilPorteUnEtat(propre).porte, false, 'a prompt that says where to LOOK carries nothing that can go stale');
+  assert.match(G.formatReveilLines(G.reveilPorteUnEtat(propre)).join('\n'), /sans mentir/, 'and it is told so plainly');
+
+  // ── LA PROSE EXPLICATIVE N'EST PAS UN RENDEZ-VOUS, et ce contre-test est ce qui empêche ce
+  // détecteur de crier sur chaque commentaire bien écrit (leçon L4). « à 3 h du matin » dans une
+  // explication n'est pas « 14h00 Paris » dans une consigne.
+  const avecProse = "Réarmer AVANT de travailler : c'est le genre d'oubli qu'on fait à 3 h du matin au milieu d'un chantier.";
+  assert.deepStrictEqual(G.reveilPorteUnEtat(avecProse).motifs, [], 'an hour written loosely inside an explanation is not a rendezvous');
+
+  // ── CHAQUE MOTIF MORD SUR SON PROPRE CAS, et un seul suffit à condamner le prompt.
+  assert.deepStrictEqual(G.reveilPorteUnEtat("il n'a toujours pas écrit, ne rien livrer").motifs.map((m) => m.cle), ['presence-affirmee'], 'an assertion about the user being absent perishes the moment he writes');
+  assert.deepStrictEqual(G.reveilPorteUnEtat('EN COURS : #1592, filet en arrière-plan').motifs.map((m) => m.cle).sort(), ['numero-de-tache', 'travail-en-cours'], 'and the state of work in progress describes a past by the next firing');
+  assert.strictEqual(G.reveilPorteUnEtat('').porte, false, 'an empty prompt carries nothing');
+  assert.strictEqual(G.reveilPorteUnEtat(undefined).porte, false, 'and so does no prompt at all, rather than throwing');
+
+  // ── LA MOITIÉ QUI N'EST PAS MÉCANISABLE EST DÉCLARÉE, jamais tue (Article 27).
+  assert.match(G.reveilPorteUnEtat('x').horsPortee, /jamais les réveils réellement armés/, 'the tool says what it cannot see: the armed triggers live outside the repository');
+
+  console.log('Passed: un prompt de réveil qui porte un état est un prompt qui mentira (2026-10-04, tâche #1568). SA DEMANDE DU SOIR PORTAIT SUR DEUX CHOSES ET UNE SEULE ÉTAIT TENUE : « tu as ecris les bons parametres quelque part » — oui, le process les historise depuis septembre — « analyse ce qui fait que ca fonctionne et ce qui peut faire que ca ne fonctionne pas » — ça, nulle part. Les réglages étaient écrits, les CAUSES ne l\'étaient pas. LA NUIT A FOURNI LE CAS, ET IL EST EXEMPLAIRE : les deux prompts de réveil déclaraient en toutes lettres « CE PROMPT NE PORTE VOLONTAIREMENT AUCUN ÉTAT »… et leur dernière ligne nommait une tâche précise et une heure de rendez-vous. **Quarante réveils sont arrivés d\'un coup, tous affirmant que l\'utilisateur n\'avait pas écrit**, alors qu\'il avait écrit trois fois dans la soirée. CE QUE ÇA COÛTE N\'EST PAS LE BRUIT, C\'EST LA CONFIANCE : un agent qui reprend la main sur ces quarante messages lit quarante fois une consigne périmée, et rien ne lui dit laquelle est encore vraie. Leur propre texte avait raison — un filet qui ment est pire qu\'un filet absent. POURQUOI LA DÉCLARATION D\'INTENTION NE SUFFISAIT PAS : un réveil se répète à l\'identique, donc tout ce qu\'il AFFIRME se répète avec lui. Écrire « ce prompt ne porte aucun état » est une promesse, et c\'est la leçon L1 — une règle que rien ne fait respecter — appliquée au texte d\'un réveil. LA PROMESSE NON TENUE EST DONC SIGNALÉE À PART, parce qu\'elle est pire que l\'état lui-même : un prompt qui jure ne rien porter et qui porte se fait croire sur parole. ET LA MOITIÉ QUI N\'EST PAS MÉCANISABLE EST DÉCLARÉE : cette fonction lit un TEXTE, elle ne voit pas les réveils réellement armés, qui vivent chez le planificateur hors du dépôt. Relire son prompt avant de l\'armer reste un geste.');
+}
+await testLeReveilQuiPorteUnEtat();

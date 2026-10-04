@@ -136,5 +136,60 @@ function main() {
   }
 }
 
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// UN PROMPT DE RÉVEIL QUI PORTE UN ÉTAT EST UN PROMPT QUI MENTIRA (2026-10-04, tâche #1568)
+//
+// CONSTATÉ LE 2026-10-03 AU SOIR, et le cas est exemplaire : les deux prompts de réveil de la nuit
+// déclaraient en toutes lettres « CE PROMPT NE PORTE VOLONTAIREMENT AUCUN ÉTAT »… et leur dernière
+// ligne nommait une tâche précise comme seuil de la nuit, plus une heure de rendez-vous. Quarante
+// réveils sont arrivés d'un coup, tous affirmant que l'utilisateur n'avait pas écrit — alors qu'il
+// avait écrit trois fois dans la soirée.
+//
+// POURQUOI LA DÉCLARATION D'INTENTION NE SUFFIT PAS : un réveil se répète à l'identique, donc tout
+// ce qu'il AFFIRME se répète avec lui. Écrire « ce prompt ne porte aucun état » est une promesse ;
+// la tenir demande de relire ce qu'on vient d'écrire avec une autre paire d'yeux. C'est exactement
+// la leçon L1 — une règle que rien ne fait respecter — appliquée au texte d'un réveil.
+//
+// CE QUE CETTE FONCTION PEUT ET NE PEUT PAS. Elle lit un TEXTE et nomme ce qui s'y périmera. Elle
+// ne peut pas inspecter les réveils réellement armés : ils vivent chez le planificateur, hors du
+// dépôt, et aucune mécanique d'ici ne les voit. Cette moitié-là reste un geste — relire son prompt
+// avant de l'armer — et le déclarer vaut mieux que de laisser croire à une vérification complète
+// (Article 27).
+export const MOTIFS_D_ETAT_DANS_UN_REVEIL = [
+  { cle: "numero-de-tache", motif: /#\d{2,}/, pourquoi: "un numéro de tâche : elle sera close, et le réveil continuera de la réclamer" },
+  // L'HEURE SE RECONNAÎT COLLÉE À SON « h » — « 14h », « 14h00 », « 20h Paris ». La forme espacée
+  // (« à 3 h du matin ») est écartée volontairement : elle apparaît dans la PROSE explicative d'un
+  // prompt sans être un rendez-vous, et un détecteur qui la compterait crierait sur chaque
+  // commentaire bien écrit (leçon L4).
+  { cle: "heure-de-rendez-vous", motif: /\b\d{1,2}h(?:\d{2})?\b/, pourquoi: "une heure de rendez-vous : elle passera, et le réveil continuera de l'annoncer" },
+  { cle: "presence-affirmee", motif: /\bil n'a (?:toujours )?(?:rien|pas) (?:écrit|ecrit)\b|\bs'il n'a pas écrit\b/i, pourquoi: "une affirmation sur la présence de l'utilisateur : elle sera fausse dès qu'il écrira, et le réveil ne le saura pas" },
+  { cle: "travail-en-cours", motif: /\ben cours\s*:\s*#?\d/i, pourquoi: "l'état d'un travail en cours : il aura avancé, et le réveil décrira un passé" },
+  { cle: "liste-de-taches", motif: /^\s*\d+\.\s+#\d+/m, pourquoi: "une liste de tâches numérotées : elle sera faite, et le réveil la redonnera à faire" },
+];
+
+export function reveilPorteUnEtat(texte = "") {
+  const t = String(texte ?? "");
+  const trouves = MOTIFS_D_ETAT_DANS_UN_REVEIL.filter((m) => m.motif.test(t));
+  return {
+    porte: trouves.length > 0,
+    motifs: trouves.map((m) => ({ cle: m.cle, pourquoi: m.pourquoi })),
+    // LA PROMESSE NON TENUE EST SIGNALÉE À PART, parce qu'elle est pire que l'état lui-même : un
+    // prompt qui annonce ne porter aucun état et qui en porte un se fait croire sur parole.
+    promesseNonTenue: /n(?:e porte|'a) (?:volontairement )?aucun état/i.test(t) && trouves.length > 0,
+    horsPortee: "lit un TEXTE, jamais les réveils réellement armés : ils vivent chez le planificateur, hors du dépôt. Relire son prompt avant de l'armer reste un geste, pas une vérification.",
+  };
+}
+
+export function formatReveilLines(v = {}) {
+  if (!v.porte) return ["✅ RÉVEIL — ce prompt ne porte aucun état repérable : il pourra se répéter sans mentir."];
+  const L = [`🚨 RÉVEIL — ${v.motifs.length} élément(s) qui se périmeront dans ce prompt :`];
+  for (const m of v.motifs) L.push(`     · ${m.pourquoi}`);
+  if (v.promesseNonTenue) L.push("     ⚠️ ET IL ANNONCE « ne porter aucun état » : un prompt qui le promet et ne le tient pas se fait croire sur parole.");
+  L.push(`     HORS PORTÉE : ${v.horsPortee}`);
+  return L;
+}
+
+
 // LE PASSAGE S'ENREGISTRE : la raison complète vit à côté de `recordCliUsage()` (scripts/tool-usage.mjs).
 if (import.meta.url === `file://${process.argv[1]}`) { recordCliUsage("the-ghost"); main(); }

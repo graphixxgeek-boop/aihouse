@@ -334,6 +334,68 @@ frontière se déclare en NOMMANT le chemin de l'autre document, jamais en décr
 différence. C'est ce nom qui éteint l'alerte, et c'est surtout lui qui permet à quelqu'un
 d'aller vérifier que la frontière dit vrai.
 
+## CE QUI FAIT QUE ÇA MARCHE, ET CE QUI PEUT FAIRE QUE ÇA NE MARCHE PAS
+
+*(Ajouté le 2026-10-04, tâche #1568. Sa demande du soir portait sur DEUX choses et une seule était
+tenue : « tu as ecris les bons parametres quelque part » — oui, la section précédente les garde —
+« analyse ce qui fait que ca fonctionne (tu ne t'arretes pas) et ce qui peut faire que ca ne
+fonctionne pas » — ça, nulle part. Les réglages étaient historisés ; les CAUSES ne l'étaient pas.)*
+
+### Ce qui fait que ça marche — trois choses, et aucune n'est l'intervalle
+
+1. **La redondance, pas la fréquence.** Trois réveils indépendants valent mieux qu'un réveil plus
+   fréquent. La nuit qui a tenu plus de seize heures en avait trois ; celle qui s'est arrêtée à
+   05h10 en avait un.
+2. **Le réarmement AVANT le travail.** Un tour qui finit sans réarmer tue la nuit, et c'est
+   l'oubli le plus naturel du monde à 3 h du matin au milieu d'un chantier.
+3. **Un prompt qui envoie LIRE l'état plutôt que de le porter.** Un réveil se répète ; tout ce
+   qu'il affirme se répète avec lui.
+
+### Ce qui peut faire que ça ne marche pas — quatre pannes, toutes CONSTATÉES
+
+**① UN SEUL FILET.** Point de défaillance unique. Constaté le 2026-10-03 : la nuit a démarré avec
+un seul filet horaire, le travail s'est arrêté à 05h10, et c'est l'utilisateur qui a dû le
+signaler.
+
+**② LE RÉVEIL QUI MENT, ET C'EST LA PANNE LA PLUS VICIEUSE** *(constatée le 2026-10-03 au soir)*.
+Les prompts de réveil déclaraient en toutes lettres « CE PROMPT NE PORTE VOLONTAIREMENT AUCUN
+ÉTAT »… et leur dernière ligne nommait une tâche précise comme seuil de la nuit. Résultat : **40
+réveils sont arrivés d'un coup, tous affirmant que l'utilisateur n'avait pas écrit**, alors qu'il
+avait écrit trois fois dans la soirée.
+
+**Ce que ça coûte vraiment** n'est pas le bruit, c'est la confiance : un agent qui reprend la main
+sur ces quarante messages lit quarante fois une consigne périmée, et rien ne lui dit laquelle est
+encore vraie. Leur propre texte avait raison — *un filet qui ment est pire qu'un filet absent*.
+
+**La règle qui en sort, et elle est vérifiable à l'écriture** : un prompt de réveil ne nomme
+JAMAIS une tâche, une heure de rendez-vous, ni l'état de présence de l'utilisateur. Il dit où
+REGARDER (`git log`, `docs/suivi/`, l'état du dépôt), jamais ce qu'on y trouvera. Un prompt qui
+contient un numéro de tâche est un prompt qui se périmera.
+
+**③ LE DÉSARMEMENT QUI NE PEUT PAS S'EXÉCUTER.** Les deux filets portaient l'instruction « désarmer
+ce filet une fois la tâche close ». Personne ne pouvait l'exécuter : le réveil tombe dans une
+session qui peut ne pas écouter, et la condition de sortie dépendait d'une tâche que seul
+l'utilisateur pouvait débloquer. **Une consigne d'arrêt confiée à celui qu'on arrête n'est pas un
+mécanisme d'arrêt** — c'est le pendant exact de la leçon L1. Le désarmement se fait à la main, au
+retour de l'utilisateur, et c'est une décision qui lui appartient (constaté le 2026-10-03 : c'est
+lui qui l'a tranchée, en fenêtre dédiée).
+
+**④ LA LIVRAISON CONDITIONNÉE À UNE PRÉSENCE QUE RIEN NE SAIT DÉTECTER.** La tâche #1522 devait se
+livrer « à partir de 14 h, et elle nécessite sa présence ». Le déclencheur a sonné **quatre fois**
+— 14 h, 16 h, 18 h, 20 h — et quatre fois il a correctement refusé de livrer dans le vide, puis
+replanifié. Il n'a jamais su qu'il était arrivé. **Un mécanisme qui échoue du bon côté échoue quand
+même** : la livraison s'est finalement faite parce que l'utilisateur est allé chercher les fichiers
+lui-même. Conditionner une action à la présence suppose un détecteur de présence ; sans lui, c'est
+une action qui n'aura jamais lieu.
+
+### Le réglage du mode, et pourquoi il se re-déclare
+
+`node scripts/modes-de-travail.mjs <mode>` se re-déclare **au retour de l'utilisateur**, pas
+seulement au départ. Le 2026-10-03, « autonome » est resté déclaré 17 heures — plus que la plus
+longue nuit plausible — pendant que l'utilisateur écrivait. Toute décision de NE PAS poser une
+question s'appuyait alors sur une affirmation périmée. `god-of-all-process` le signale ; encore
+faut-il lui répondre.
+
 ## Ce que ce process ne sait pas encore faire
 
 Honnêtement : trois de ses cinq étapes ne laissent aucune trace vérifiable sur le disque (suivre le
