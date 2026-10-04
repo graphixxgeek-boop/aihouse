@@ -77,3 +77,20 @@ peut pas mesurer ne bloque jamais — il le dit fort.
 
 Il dit ce qui dort ; il ne dit pas ce que ça vaut. Le jugement sur le déroulé d'une Ronde revient à
 un **contrôleur de process extérieur** — un outil ne peut pas être à la fois le sujet et le juge.
+
+## Décrire un process pour qu'on puisse le réorganiser
+
+Quand quelqu'un demande les étapes d'un process **avant** de le refondre, la description a une
+contrainte que les autres rapports n'ont pas : **elle ne doit pas défendre ce qu'elle décrit.**
+Une description qui justifie chaque étape fausse la décision qu'on vient chercher. Trois règles :
+
+1. **Aucun mot de recommandation**, et la règle se tient en code (un contre-test qui refuse le
+   vocabulaire d'évaluation dans la sortie) plutôt qu'en intention.
+2. **Rien ne disparaît.** Un élément qui n'entre dans aucune catégorie déclarée est rangé à part
+   et NOMMÉ : un élément invisible dans la description est un élément qu'on ne pourra pas
+   supprimer, ce qui vide la refonte de son objet.
+3. **Chaque étape dit la trace qu'elle est censée laisser**, et celle qui n'en laisse aucune le dit
+   aussi — c'est l'information la plus utile pour savoir laquelle tient vraiment debout.
+
+Le plan d'action reste dû, et il ne contredit pas la consigne : dire **ce qui attend une décision**
+n'est pas plaider pour l'existant.

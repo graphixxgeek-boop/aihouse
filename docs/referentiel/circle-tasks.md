@@ -131,3 +131,41 @@ phrase survit intacte — le garde ajoute un cas, il n'en retire aucun. Un journ
 charge le journal et le passe à `relanceMessage()`. Sans ce branchement, la correction n'aurait été
 qu'une intention. L'historique s'**injecte** dans les tests plutôt que de se lire sur le disque
 (leçon L40).
+
+## LE PROCESS DE LA RONDE, RENDU TEL QU'IL EST (2026-10-04, tâche #1572)
+
+Sa demande est en **deux temps, et il les a numérotés** : « le process ronde doit etre revu de
+bout en bout : 1/ tu me donneras les etapes du process 2/ je te redonnerai le vrai process que je
+veux, il y aura des modifs, suppressions, remplacements, reorganisation, etc. »
+
+**Commande : `node scripts/circle-tasks.mjs process`** — elle ne lance RIEN, elle décrit. Document
+déposé dans `docs/circle-tasks/process-de-la-ronde.md`, réécrit à chaque passage.
+
+### La contrainte de l'étape 1 est inhabituelle pour ce dépôt
+
+Rendre ce qui **EST**, sans le commenter ni le défendre. Il va trancher dessus : une description
+qui plaiderait pour l'existant fausserait sa décision. **Le contre-test l'impose en code plutôt
+qu'en intention** — aucun mot de recommandation ni de jugement n'est accepté dans la sortie.
+
+### Quatre sources, toutes LUES
+
+| Ce qui est rendu | Chez qui |
+|---|---|
+| les 12 ÉTAPES et leurs traces attendues | `god-of-all-process`, qui en est le référent (Article 26) — les relire ici aurait créé un second porteur (L29) |
+| les 3 VERROUS d'ouverture | `VERROUS_D_OUVERTURE`, ici même |
+| les 45 ITEMS, par thème | `CIRCLE_ITEMS` + `THEME_ORDER` |
+| le contrôleur qui peut BLOQUER | nommé par le process lui-même |
+
+### Un item hors de l'ordre des thèmes est rangé à part et NOMMÉ
+
+Jamais omis : **un item invisible dans la description est un item qu'il ne pourrait pas
+supprimer**, ce qui viderait son étape 2 de son objet. Sur le catalogue réel, zéro item est dans ce
+cas aujourd'hui — et le contre-test le vérifie sur une fixture qui en contient un.
+
+### Ce que le plan d'action porte, et pourquoi il ne contredit pas sa consigne
+
+Décrire sans défendre interdit de **plaider** pour l'existant, jamais de dire **ce qui attend une
+décision**. Deux constats : l'étape 2 lui revient (**à trancher**, rien ne bouge avant son retour),
+et **1 étape sur 12 ne laisse aucune trace vérifiable** sur le disque — `questionnaire`, la fenêtre
+à cocher (**à instruire** : savoir si elle PEUT en laisser une, ou si elle ne se joue que dans la
+conversation).

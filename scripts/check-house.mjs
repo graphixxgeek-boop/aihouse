@@ -9148,6 +9148,66 @@ async function testKitsDExport() {
 
 await testKitsDExport();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LE PROCESS DE LA RONDE, RENDU TEL QU'IL EST (2026-10-04, tâche #1572)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLeProcessDeLaRondeRendu() {
+  const ct = await import('../scripts/circle-tasks.mjs');
+
+  // ── SA DEMANDE EST EN DEUX TEMPS, ET L'ÉTAPE 1 A UNE CONTRAINTE INHABITUELLE : rendre ce qui
+  //    EST, sans le commenter ni le défendre. Il va trancher dessus ; une description qui plaide
+  //    pour l'existant fausserait sa décision.
+  const faux = {
+    etapes: [{ cle: 'a', libelle: 'première étape', preuve: { fichier: 'docs/x.md' } }, { cle: 'b', libelle: 'deuxième étape', preuve: null }],
+    doc: 'docs/p.txt', gardien: 'scripts/g.mjs',
+  };
+  const items = [
+    { id: 'i1', theme: 'T1', label: 'un', cout: 'gratuit' },
+    { id: 'i2', theme: 'T2', label: 'deux' },
+    { id: 'i3', theme: 'THÈME ABSENT DE L\'ORDRE', label: 'trois' },
+  ];
+  const r = ct.processDeLaRonde({ items, themes: ['T1', 'T2'], verrous: [{ cle: 'v', libelle: 'un verrou' }], declare: faux });
+  assert.strictEqual(r.mesurable, true);
+  assert.strictEqual(r.totalItems, 3, 'every item is counted');
+  assert.strictEqual(r.totalEtapes, 2);
+  assert.strictEqual(r.etapes[0].preuve, 'docs/x.md', 'a step names the trace it is supposed to leave');
+  assert.strictEqual(r.etapes[1].preuve, null, 'and a step with no verifiable trace says so rather than pretending to one');
+
+  // ── UN ITEM HORS DE L'ORDRE DES THÈMES NE DISPARAÎT PAS, IL EST NOMMÉ. Un item invisible dans
+  //    la description est un item qu'il ne pourra pas supprimer — ce qui viderait l'étape 2 de
+  //    sa demande de son sens.
+  assert.strictEqual(r.horsTheme.length, 1, 'MUST CATCH: an item whose theme is absent from the declared order is kept and named');
+  assert.strictEqual(r.horsTheme[0].id, 'i3');
+  assert.strictEqual(r.parTheme.reduce((a, t) => a + t.items.length, 0) + r.horsTheme.length, items.length, 'and nothing is lost between the two groups');
+
+  // ── SANS ITEM, IL REFUSE : une Ronde décrite sans ses items se lirait comme une Ronde vide.
+  const vide = ct.processDeLaRonde({ items: [] });
+  assert.strictEqual(vide.mesurable, false);
+  assert.ok(ct.formatProcessRondeLines(vide)[0].startsWith('PAS MESURÉ'), 'and it never prints as a description');
+
+  // ── SANS ÉTAPES DÉCLARÉES, LA SECTION EST VIDE ET LE DIT — ce n'est pas un process sans
+  //    étapes, c'est une lecture qui n'a pas eu lieu (leçons L5/L11).
+  const sansEtapes = ct.formatProcessRondeLines(ct.processDeLaRonde({ items, themes: ['T1'], declare: null })).join('\n');
+  assert.ok(/aucune étape déclarée/.test(sansEtapes), 'an absent step list is declared as absent, never rendered as an empty process');
+
+  // ── LE RENDU NE JUGE RIEN. Le vocabulaire d'évaluation n'a rien à faire dans un document qu'il
+  //    va réorganiser lui-même.
+  const texte = ct.formatProcessRondeLines(r).join('\n');
+  assert.ok(/DÉCRIT, il ne défend rien/.test(texte), 'the document says in its own words that it does not argue');
+  assert.ok(!/recommand|il faudrait|devrait être|inutile/i.test(texte), 'MUST CATCH: not one word of recommendation or judgement in a description he is going to arbitrate on');
+
+  // ── EN DIRECT (Article 25) : sur le vrai catalogue, tous les items sortent, et aucun ne tombe.
+  const reel = ct.processDeLaRonde({ declare: null });
+  assert.strictEqual(reel.mesurable, true);
+  assert.strictEqual(reel.totalItems, ct.CIRCLE_ITEMS.length, 'the real description covers every real item');
+  assert.strictEqual(reel.parTheme.reduce((a, t) => a + t.items.length, 0) + reel.horsTheme.length, ct.CIRCLE_ITEMS.length, 'and none is lost between the themes and the leftovers');
+  assert.deepStrictEqual(reel.horsTheme, [], 'on the real catalogue every item does belong to a declared theme');
+  assert.strictEqual(reel.verrous.length, ct.VERROUS_D_OUVERTURE.length, 'the opening locks are read from their owner, never recopied');
+
+  console.log(`Passed: le process de la Ronde, rendu tel qu'il est (2026-10-04, tâche #1572). Sa demande est en DEUX temps, et il les a numérotés : « 1/ tu me donneras les etapes du process 2/ je te redonnerai le vrai process que je veux, il y aura des modifs, suppressions, remplacements, reorganisation ». L'ÉTAPE 1 A UNE CONTRAINTE INHABITUELLE POUR CE DÉPÔT : rendre ce qui EST, sans le commenter ni le défendre — il va trancher dessus, et une description qui plaiderait pour l'existant fausserait sa décision. Le contre-test l'impose en code plutôt qu'en intention : aucun mot de recommandation ni de jugement n'est accepté dans la sortie. QUATRE SOURCES LUES, JAMAIS RECOPIÉES : les ${reel.verrous.length} verrous d'ouverture et la condition de clôture ici même, les ÉTAPES chez god-of-all-process qui en est le référent (les relire aurait créé un second porteur, leçon L29), les ${reel.totalItems} items rangés par thème, et le contrôleur qui peut bloquer la Ronde. UN ITEM HORS DE L'ORDRE DES THÈMES EST RANGÉ À PART ET NOMMÉ, jamais omis : un item invisible dans la description est un item qu'il ne pourrait pas supprimer, ce qui viderait son étape 2 de son sens. Et sans items, l'outil REFUSE de décrire — une Ronde décrite sans ses items se lirait comme une Ronde vide.`);
+}
+await testLeProcessDeLaRondeRendu();
+
 // ————————————————————————————————————————————————————————————————————————
 // LE KIT DE L'AGENCE ELLE-MÊME + L'ALERTE D'EXPORTABILITÉ (2026-09-26)
 // ————————————————————————————————————————————————————————————————————————

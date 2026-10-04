@@ -41,7 +41,7 @@ import { renderHtmlReport } from "./html-report.mjs";
 // le 2026-09-21 (cf. commentaire au-dessus de sa définition dans lib-shell.mjs).
 export { daysSince };
 import { extractPrincipleUnits, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays, dateDEdition } from "./the-king.mjs";
-import { recordCliUsage, recordToolContribution } from "./tool-usage.mjs";
+import { recordCliUsage, recordToolContribution, recordRegistryWrite } from "./tool-usage.mjs";
 import { lireLesFils } from "./fils-de-discussion.mjs";
 import { loadJsonArray } from "./lib-json.mjs";
 
@@ -2209,6 +2209,90 @@ export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_I
   return renderHtmlReport({ title: "CIRCLE-TASKS — récapitulatif de la Ronde", dateLabel: dateLabel ?? new Date().toISOString(), blocks });
 }
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// LE PROCESS DE LA RONDE, DE BOUT EN BOUT — rendu, jamais commenté (2026-10-04, tâche #1572)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE, EN DEUX TEMPS EXPLICITES : « le process ronde doit etre revu de bout en bout :
+// 1/ tu me donneras les etapes du process 2/ je te redonnerai le vrai process que je veux, il y
+// aura des modifs, suppressions, remplacements, reorganisation, etc. »
+//
+// L'ÉTAPE 1 EST CELLE-CI, ET SA CONTRAINTE EST INHABITUELLE : rendre ce qui EST, lisiblement, sans
+// le commenter ni le défendre. Il va trancher dessus ; une description qui plaide pour l'existant
+// fausserait sa décision. Cette fonction ne porte donc AUCUN jugement, aucune recommandation,
+// aucune justification d'un item — seulement ce que le dépôt déclare, et d'où chaque morceau vient.
+//
+// LES QUATRE SOURCES SONT LUES, JAMAIS RECOPIÉES (Article 24) :
+//   · les ÉTAPES déclarées du process, chez god-of-all-process, qui en est le référent ;
+//   · les VERROUS D'OUVERTURE et la condition de clôture, ici même ;
+//   · les ITEMS réellement exécutables, dans `CIRCLE_ITEMS`, rangés par thème ;
+//   · le CONTRÔLEUR qui peut la bloquer, nommé par le process lui-même.
+// Une description écrite à la main se serait périmée au premier item ajouté — et c'est très
+// exactement le document qu'il veut pouvoir réorganiser.
+export const FICHIER_DU_PROCESS_RONDE = "docs/circle-tasks/process-de-la-ronde.md";
+
+export function processDeLaRonde({ items = CIRCLE_ITEMS, themes = THEME_ORDER, verrous = VERROUS_D_OUVERTURE, declare = null } = {}) {
+  if (!items?.length) {
+    return { mesurable: false, pourquoi: "aucun item lu : une Ronde décrite sans ses items se lirait comme une Ronde vide, ce qui est faux (leçons L5/L11)" };
+  }
+  const parTheme = [];
+  const vus = new Set();
+  for (const t of themes ?? []) {
+    const dedans = items.filter((i) => i.theme === t);
+    if (dedans.length) { parTheme.push({ theme: t, items: dedans.map((i) => ({ id: i.id, label: i.label, cout: i.cout ?? null })) }); dedans.forEach((i) => vus.add(i.id)); }
+  }
+  // UN ITEM DONT LE THÈME N'EST PAS DANS L'ORDRE DÉCLARÉ NE DISPARAÎT PAS : il est rangé à part et
+  // NOMMÉ. Un item invisible dans la description est un item qu'il ne pourra pas supprimer.
+  const horsTheme = items.filter((i) => !vus.has(i.id)).map((i) => ({ id: i.id, label: i.label, theme: i.theme ?? "(sans thème)" }));
+  return {
+    mesurable: true,
+    etapes: (declare?.etapes ?? []).map((e, n) => ({ rang: n + 1, cle: e.cle, libelle: e.libelle, preuve: e.preuve ? Object.values(e.preuve)[0] : null })),
+    doc: declare?.doc ?? null,
+    gardien: declare?.gardien ?? null,
+    verrous: (verrous ?? []).map((v) => ({ cle: v.cle, libelle: v.libelle })),
+    parTheme, horsTheme,
+    totalItems: items.length,
+    totalEtapes: (declare?.etapes ?? []).length,
+  };
+}
+
+export function formatProcessRondeLines(r = {}) {
+  if (!r.mesurable) return [`PAS MESURÉ — ${r.pourquoi}`];
+  const L = [];
+  L.push(`LE PROCESS DE LA RONDE, TEL QU'IL EST AUJOURD'HUI — ${r.totalEtapes} étape(s), ${r.verrous.length} verrou(s) d'ouverture, ${r.totalItems} item(s) exécutable(s).`);
+  L.push("");
+  L.push("Ce document DÉCRIT, il ne défend rien : aucune étape n'y est justifiée, aucun item n'y est mis en avant.");
+  if (r.doc) L.push(`Le process est écrit dans : ${r.doc}`);
+  if (r.gardien) L.push(`Il est surveillé par : ${r.gardien} — ce contrôleur peut BLOQUER une Ronde.`);
+  L.push("");
+  L.push("## ① AVANT DE LANCER — les verrous d'ouverture");
+  L.push("");
+  if (!r.verrous.length) L.push("  (aucun verrou déclaré)");
+  for (const v of r.verrous) L.push(`  · ${v.cle} — ${v.libelle}`);
+  L.push("");
+  L.push("## ② LES ÉTAPES, DANS L'ORDRE DÉCLARÉ");
+  L.push("");
+  if (!r.etapes.length) L.push("  (aucune étape déclarée — le référent du process n'a rien rendu)");
+  for (const e of r.etapes) {
+    L.push(`  ${String(e.rang).padStart(2)}. ${e.libelle}`);
+    L.push(`      clé : ${e.cle}${e.preuve ? ` · trace attendue : ${e.preuve}` : " · aucune trace vérifiable (à confirmer soi-même)"}`);
+  }
+  L.push("");
+  L.push(`## ③ CE QUE LA RONDE PEUT EXÉCUTER — ${r.totalItems} items, par thème`);
+  L.push("");
+  for (const t of r.parTheme) {
+    L.push(`### ${t.theme} (${t.items.length})`);
+    for (const i of t.items) L.push(`  · [${i.id}] ${i.label}${i.cout ? ` — ${i.cout}` : ""}`);
+    L.push("");
+  }
+  if (r.horsTheme.length) {
+    L.push(`### ⚠️ Hors de l'ordre des thèmes (${r.horsTheme.length}) — rangés à part plutôt qu'omis`);
+    for (const i of r.horsTheme) L.push(`  · [${i.id}] ${i.label} — thème « ${i.theme} », absent de THEME_ORDER`);
+    L.push("");
+  }
+  return L;
+}
+
 async function main() {
   printReliabilityNotice("circle-tasks");
   recordCliUsage("circle-tasks");
@@ -2940,9 +3024,61 @@ async function ouvrirCli() {
   console.log(`   Enregistré dans ${OUVERTURE_PATH} — la clôture par record-run est désormais autorisée pendant ${OUVERTURE_VALIDE_HEURES} h.`);
 }
 
+// LA DESCRIPTION DU PROCESS EST UNE COMMANDE À PART, et elle ne lance RIEN : sa demande est de
+// voir les étapes avant de les réorganiser, pas d'exécuter une Ronde pour les découvrir.
+async function processCli() {
+  printReliabilityNotice("circle-tasks");
+  recordCliUsage("circle-tasks");
+  // LE RÉFÉRENT DES ÉTAPES EST god-of-all-process (Article 26) : les relire ici en aurait fait un
+  // SECOND porteur, qui se serait mis à diverger du premier (leçon L29).
+  const g = await import("./god-of-all-process.mjs").catch(() => null);
+  const declare = (g?.whichProcess?.("lancer une Ronde") ?? []).find((p) => p.slug === "ronde") ?? null;
+  const r = processDeLaRonde({ declare });
+  const lignes = formatProcessRondeLines(r);
+  for (const l of lignes) console.log(l);
+  const t = await import("./agent-du-temps.mjs").then((m) => m.maintenant()).catch(() => null);
+  try { mkdirSync(`${ROOT}docs/circle-tasks`, { recursive: true }); } catch { /* déjà là */ }
+  const sh = await import("./lib-shell.mjs");
+  const corps = [
+    sh.DEBUT_DOCUMENT_GENERE,
+    "# Le process de la Ronde, de bout en bout",
+    "",
+    `> Produit par \`node scripts/circle-tasks.mjs process\` le ${t?.suivi ?? ""}${t?.source ? ` (heure de source ${t.source})` : ""}.`,
+    "> Ta demande : « le process ronde doit etre revu de bout en bout : 1/ tu me donneras les etapes du process 2/ je te redonnerai le vrai process que je veux ».",
+    "",
+    "**Étape 1 sur 2.** Ce document rend le process TEL QU'IL EST. Il ne commente rien, ne défend rien et ne recommande rien : la réorganisation est la tienne.",
+    "",
+    "```",
+    ...lignes,
+    "```",
+    "",
+    sh.FIN_DOCUMENT_GENERE,
+  ];
+  writeFileSync(`${ROOT}${FICHIER_DU_PROCESS_RONDE}`, corps.join("\n") + "\n", "utf8");
+  recordRegistryWrite(FICHIER_DU_PROCESS_RONDE, { par: "circle-tasks" });
+  console.log(`\nDéposé : ${FICHIER_DU_PROCESS_RONDE} — réécrit à chaque passage.`);
+  if (!declare) console.log("⚠️ les ÉTAPES n'ont pas pu être lues chez god-of-all-process : la section ② est vide, et c'est une absence de lecture, jamais un process sans étapes.");
+
+  // LE PLAN D'ACTION EST DÛ (Article 28), ET IL NE CONTREDIT PAS SA CONSIGNE : décrire sans
+  // défendre interdit de PLAIDER pour l'existant, jamais de dire ce qui attend une décision. Les
+  // deux constats ci-dessous sont des décisions qui lui reviennent, pas des avis sur le process.
+  const rt = await import("./report-template.mjs");
+  const constats = [];
+  if (!r.mesurable) constats.push({ constat: `le process n'a pas pu être décrit : ${r.pourquoi}`, etat: "retenu", tache: 1572 });
+  else {
+    constats.push({ constat: "l'étape 2 de sa demande lui revient : « je te redonnerai le vrai process que je veux, il y aura des modifs, suppressions, remplacements, reorganisation »", etat: "a-trancher", pourquoi: "rien ne doit bouger dans le process avant son retour — réorganiser à sa place viderait sa demande de son objet" });
+    const sansTrace = r.etapes.filter((e) => !e.preuve);
+    if (sansTrace.length) constats.push({ constat: `${sansTrace.length} étape(s) sur ${r.totalEtapes} ne laissent AUCUNE trace vérifiable sur le disque (${sansTrace.map((e) => e.cle).join(", ")})`, etat: "a-instruire", pourquoi: "savoir si ces étapes PEUVENT laisser une trace, ou si elles ne se jouent que dans la conversation, demande de les regarder une par une — et seule la seconde réponse justifie qu'elles n'en aient pas" });
+    if (r.horsTheme.length) constats.push({ constat: `${r.horsTheme.length} item(s) ont un thème absent de l'ordre déclaré : ils sortent en fin de liste`, etat: "retenu", tache: 1572 });
+  }
+  console.log("");
+  rt.imprimerPlanDaction(rt.buildPlanDaction(constats, { toolSlug: "circle-tasks" }));
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   if (process.argv[2] === "record-run") recordRunCli();
   else if (process.argv[2] === "ouvrir") ouvrirCli();
+  else if (process.argv[2] === "process") processCli();
   else main();
   // `ouvrirCli` est asynchrone depuis le 2026-09-26 (les verrous sondent tool-brain et doc-report
   // par import dynamique) ; rien n'attend son retour ici, comme pour `main()` — le process se

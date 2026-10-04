@@ -18,12 +18,13 @@ tables, qui ne se lisent nulle part ailleurs.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**130 fichier(s)** dans ce dossier.
+**131 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
 | [estimations.md](estimations.md) | — |
 | [ouverture.json](ouverture.json) | — |
+| [process-de-la-ronde.md](process-de-la-ronde.md) | — |
 | [questions-sans-reponse.json](questions-sans-reponse.json) | — |
 | [00-menu-circle-tasks.txt](ronde-2026-09-22/00-menu-circle-tasks.txt) | ronde-2026-09-22 |
 | [ANALYSE.md](ronde-2026-09-22/ANALYSE.md) | ronde-2026-09-22 |
