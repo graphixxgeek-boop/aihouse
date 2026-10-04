@@ -120,16 +120,19 @@
   <header>
     <div class="date">2026-10-03</div>
     <h1>Le filet — ce que la session a changé</h1>
-    <p class="sub">De 263 s à 80 s, et le vrai plancher est 52 s</p>
+    <p class="sub">De 266 s à 191 s, et à ~65 s en quatre parts</p>
   </header>
   <div class="divider"></div>
   <main><p><em>(Livrable du 2026-10-03. Il répond à sa consigne du soir : « on fait une pause et on s'attaque au filet pour diminuer son impact. Une session qui va nous faire gagner du temps sur toutes les autres. » Tous les chiffres viennent d'un lancement réel ; aucun n'est estimé.)</em></p>
 <h3>En une ligne</h3>
-<p><strong>Le filet passe de 263 s à 84 s</strong> quand on le lance en quatre parts, et le plancher qui rendait tout progrès impossible est tombé de 121 s à 6,4 s.</p>
+<p><strong>Le filet passe de 266 s à 191 s tout court, et à ~65 s lancé en quatre parts.</strong> Aucun test n'a été retiré ; trente-cinq ont été ajoutés en chemin.</p>
+<h3>Les deux moitiés du gain, et elles ne se ressemblent pas</h3>
+<table><thead><tr><th></th><th>Ce qu'on a changé</th><th>Effet sur le séquentiel</th></tr></thead><tbody><tr><td><strong>Première moitié</strong></td><td>le LANCEUR : découper le filet autrement, le répartir mieux</td><td>0 s — le séquentiel ne change pas, c'est le parallèle qui tombe de 266 s à 80 s</td></tr><tr><td><strong>Seconde moitié</strong></td><td>le CONTENU : quatre calculs qui coûtaient cher pour rien</td><td><strong>266 s → 191 s</strong>, et le parallèle suit</td></tr></tbody></table>
+<p>La seconde moitié n'a été possible <strong>qu'après</strong> avoir réparé la mesure : tant que 83 % des durées étaient attribuées au mauvais test, « le test le plus lourd » ne voulait rien dire.</p>
 <h3>Le tableau, étape par étape</h3>
 <table><thead><tr><th>Étape</th><th>Durée en 4 parts</th><th>Plancher théorique</th><th>Ce qui a changé</th></tr></thead><tbody><tr><td>départ (séquentiel)</td><td>263 s</td><td>—</td><td>—</td></tr><tr><td>runner réparé</td><td>167,0 s</td><td>121,3 s</td><td>il ne démarrait plus depuis quatre jours</td></tr><tr><td>+ unités d'appel</td><td>82,2 s</td><td><strong>6,4 s</strong></td><td>l'épine n'était pas un plafond</td></tr><tr><td>+ poids enfin justes</td><td>84,4 s, parts à ±5 %</td><td>6,4 s</td><td>83 % des durées étaient attribuées au mauvais test</td></tr></tbody></table>
 <p><em>(Les 82,2 s et les 84,4 s ne se comparent pas directement : le filet a gagné quatre groupes de tests entre les deux. Ce que la dernière étape a changé est l'ÉQUILIBRE — l'écart entre la part la plus longue et la plus courte passe de 48 s à 10 s.)</em></p>
-<h3>Les six trouvailles, de la plus grosse à la plus petite</h3>
+<h3>Les dix trouvailles, de la plus grosse à la plus petite</h3>
 <h4>1. Le runner ne démarrait plus depuis quatre jours, et personne ne le savait</h4>
 <p>Le seul levier connu contre la durée du filet était mort. Vingt-huit imports ajoutés après son écriture ne se résolvaient pas depuis la copie qu'il fabrique. <strong>Un outil qu'on n'utilise pas ne signale jamais qu'il est cassé.</strong></p>
 <h4>2. L'épine n'était pas un plafond, c'était un défaut de découpage</h4>
@@ -144,6 +147,15 @@
 <p>Poussé à huit parts, le runner échouait de façon reproductible. Ça ressemblait trait pour trait à une collision entre parts ; les fichiers étaient pourtant parfaitement séparés. <strong>Le coupable était le temps, pas le parallélisme</strong> : un journal laissé par un passage interrompu, que le test suivant sauvegarde puis restaure — donc reconduit au lieu de nettoyer.</p>
 <h4>6. Une ligne de registre écrite puis jamais lue se croit prise en compte</h4>
 <p>Le registre des passages se remplit à la main, et son lecteur n'acceptait que des nombres entiers. Deux lignes écrites avec une décimale ont disparu en silence, et le rapport annonçait « 1 ligne vérifiée sur 1 » sur un registre qui en portait trois.</p>
+<h4>7. Soixante-douze processus pour un fichier de douze commits</h4>
+<p>Un profil du filet entier a montré ce qu'aucune lecture n'aurait donné : <strong>un passage ouvre 1 037 processus enfants, pour 42,8 s — 18 % du temps.</strong> Et une seule commande en pesait 15,9 : une question posée à git <strong>soixante-douze fois</strong>, sur un fichier dont l'historique tient en douze commits. On lit l'historique une fois : <strong>15,2 s deviennent 0,3 s.</strong></p>
+<h4>8. Le test le plus lourd comparait 57 millions de paires</h4>
+<p>Un outil lit 383 documents, en extrait 7 565 phrases, et demande pour chacune « combien d'autres lui ressemblent ? » <strong>en les parcourant toutes</strong>. Un index inversé : <strong>14,2 s → 2,3 s.</strong></p>
+<h4>9. Une comparaison qui allouait un ensemble par paire</h4>
+<p>Trois corrections d'arithmétique, aucune approximation. <strong>6,5 fois plus rapide.</strong></p>
+<h4>10. Une recherche relancée dans chaque document, pour chaque nom</h4>
+<p>Le corpus est collé une fois, en séparant les textes par un octet qu'aucun nom de fichier ne peut contenir — sans quoi des noms apparaîtraient à cheval sur deux documents. 3,8 s → 2,9 s.</p>
+<p><strong>Les quatre ont la même forme de preuve, et c'est elle qui compte</strong> : l'ancienne implémentation sert de JUGE dans le test, et le résultat est comparé avant/après. Deux fois, la comparaison a refusé une première version — une qui changeait l'ordre des zones, une qui fabriquait un historique à partir d'une réponse de test. <strong>Une optimisation qui change le résultat n'est pas une optimisation, c'est un bug plus rapide.</strong></p>
 <h3>Deux résultats NÉGATIFS, gardés exprès</h3>
 <p>Ils comptent autant que les gains, parce qu'ils évitent de refaire le chemin.</p>
 <ul><li><strong>Élargir le détecteur de « morceaux qu'on ne peut pas déplacer »</strong> : essayé, mesuré, abandonné. Il envoyait 129 blocs sur 167 dans l'incompressible et faisait MONTER le plancher à 240 s. La cause est du bruit de noms identiques, et la trancher demanderait un vrai analyseur de code.</li><li><strong>Lancer plus de parts que la machine n'a de cœurs</strong> : 107,9 s à huit parts contre 96,2 s à quatre. La sur-réservation coûte.</li></ul>

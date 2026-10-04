@@ -71,10 +71,17 @@ refusés.
 
 | Étape | Durée du filet en 4 parts | Plancher théorique |
 |---|---|---|
-| séquentiel | 263 s | — |
+| séquentiel | 266 s au départ, **191,8 s** à la fin de la soirée | — |
 | runner réparé (blocs seuls) | 167,0 s | 121,3 s |
 | + unités d'appel | 82,2 s | **6,4 s** |
-| **+ poids enfin justes (#1582)** | **84,4 s, et les parts à ±5 %** | 6,4 s |
+| + poids enfin justes (#1582) | 84,4 s, et les parts à ±5 % | 6,4 s |
+| **+ quatre optimisations du CONTENU (#1591-#1594)** | **76,6 s** | **49,3 s** |
+
+**LES DEUX MOITIÉS DU GAIN NE SE RESSEMBLENT PAS, et les distinguer évite un contresens** : les
+trois premières lignes ne touchent qu'au LANCEUR — le séquentiel ne bouge pas d'une seconde, seul
+le parallèle descend. La dernière touche au CONTENU du filet, donc elle profite aux deux : 266 s à
+191,8 s en séquentiel. Et elle n'a été possible **qu'après** la réparation du chronomètre, sans
+laquelle « le test le plus lourd » ne voulait rien dire.
 
 *(Les 82,2 s et les 84,4 s ne se comparent pas : le filet a gagné quatre groupes de tests entre
 les deux. Ce que #1582 a changé est l'ÉQUILIBRE — l'écart entre la part la plus longue et la plus

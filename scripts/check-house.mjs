@@ -28190,18 +28190,22 @@ async function testLeCorpusColle() {
   }
   const corpus = Object.values(vraiesSources);
   const colle = corpus.join('\u0000');
-  const inv = D.inventaireDesRapports();
-  assert.strictEqual(inv.mesurable, true, 'the real inventory still runs');
+  // LES NOMS SE LISENT DIRECTEMENT SUR LE DISQUE, et ce détail est un correctif à MOI : la
+  // première version de ce test rappelait `inventaireDesRapports()` pour obtenir la liste des
+  // dossiers, et se payait ainsi les 2,9 s de l'inventaire entier. Le profil l'a montrée à 2,0 s
+  // — un test qui coûte un tiers de ce que son optimisation fait gagner. Ce dont la comparaison
+  // a besoin, ce sont des NOMS DE FICHIERS RÉELS, et un `readdir` les donne pour rien.
   let verifies = 0;
-  for (const l of inv.lignes.slice(0, 20)) {
+  for (const d of fs.readdirSync('docs', { withFileTypes: true }).filter((e) => e.isDirectory()).slice(0, 12)) {
     let noms = [];
-    try { noms = fs.readdirSync(l.dossier).filter((n) => /\.(md|html|json|txt)$/.test(n)); } catch { continue; }
-    for (const n of noms) {
+    try { noms = fs.readdirSync(`docs/${d.name}`).filter((n) => /\.(md|html|json|txt)$/.test(n)); } catch { continue; }
+    for (const n of noms.slice(0, 40)) {
       verifies += 1;
       assert.strictEqual(colle.includes(n), corpus.some((t) => t.includes(n)), `MUST CATCH: the glued corpus must answer exactly like the source-by-source scan — « ${n} »`);
     }
   }
   assert.ok(verifies > 100, `and the comparison really ran against a crowd of real names (${verifies})`);
+  assert.notStrictEqual(D.inventaireDesRapports({ lireDossier: () => { throw new Error('rien'); } }).mesurable, undefined, 'and the inventory itself still answers something rather than throwing when the disk refuses');
 
   console.log('Passed: un seul grand texte plutôt que sept cents petits, et l\'octet qui l\'autorise (2026-10-03, tâche #1594). TROISIÈME POSTE DU PROFIL DU FILET, à 10,4 s : une seule ligne de l\'inventaire des rapports, qui demande pour CHACUN des 428 fichiers « est-il NOMMÉ quelque part ailleurs que dans son propre dossier ? » en relançant la recherche dans CHAQUE source. Des centaines de milliers de recherches dont l\'immense majorité ne trouve rien. ON COLLE LE CORPUS UNE FOIS, et la recherche se fait dans un seul texte. LA JOINTURE SE FAIT SUR UN OCTET NUL, ET CE N\'EST PAS UN DÉTAIL DE CONFORT : coller les textes bout à bout ferait apparaître des correspondances À CHEVAL sur deux sources — la fin de l\'une et le début de l\'autre formant par hasard un nom de fichier, qui n\'existe alors dans aucune des deux. Le contre-test le montre en deux lignes. Un octet nul ne peut figurer dans aucun nom de fichier, donc aucune correspondance ne peut le traverser ; c\'est le même raisonnement, et le même octet, que la carte des dernières touches de `lib-shell`. VÉRIFIÉ SUR LE VRAI DÉPÔT AVANT LE REMPLACEMENT : 735 noms de fichiers, ZÉRO écart entre la recherche collée et la recherche source par source. Le gain est plus modeste que les deux précédents — 3,8 s à 2,9 s par passage — et le dire vaut mieux que de l\'arrondir : toutes les optimisations ne se valent pas, et celle-ci reste la troisième d\'une liste où la première valait douze secondes.');
 }

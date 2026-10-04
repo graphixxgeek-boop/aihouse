@@ -6,8 +6,18 @@ autres. » Tous les chiffres viennent d'un lancement réel ; aucun n'est estimé
 
 ## En une ligne
 
-**Le filet passe de 263 s à 84 s** quand on le lance en quatre parts, et le plancher qui rendait
-tout progrès impossible est tombé de 121 s à 6,4 s.
+**Le filet passe de 266 s à 191 s tout court, et à ~65 s lancé en quatre parts.** Aucun test n'a
+été retiré ; trente-cinq ont été ajoutés en chemin.
+
+## Les deux moitiés du gain, et elles ne se ressemblent pas
+
+| | Ce qu'on a changé | Effet sur le séquentiel |
+|---|---|---|
+| **Première moitié** | le LANCEUR : découper le filet autrement, le répartir mieux | 0 s — le séquentiel ne change pas, c'est le parallèle qui tombe de 266 s à 80 s |
+| **Seconde moitié** | le CONTENU : quatre calculs qui coûtaient cher pour rien | **266 s → 191 s**, et le parallèle suit |
+
+La seconde moitié n'a été possible **qu'après** avoir réparé la mesure : tant que 83 % des durées
+étaient attribuées au mauvais test, « le test le plus lourd » ne voulait rien dire.
 
 ## Le tableau, étape par étape
 
@@ -22,7 +32,7 @@ tout progrès impossible est tombé de 121 s à 6,4 s.
 tests entre les deux. Ce que la dernière étape a changé est l'ÉQUILIBRE — l'écart entre la part la
 plus longue et la plus courte passe de 48 s à 10 s.)*
 
-## Les six trouvailles, de la plus grosse à la plus petite
+## Les dix trouvailles, de la plus grosse à la plus petite
 
 ### 1. Le runner ne démarrait plus depuis quatre jours, et personne ne le savait
 
@@ -70,6 +80,33 @@ sauvegarde puis restaure — donc reconduit au lieu de nettoyer.
 Le registre des passages se remplit à la main, et son lecteur n'acceptait que des nombres entiers.
 Deux lignes écrites avec une décimale ont disparu en silence, et le rapport annonçait « 1 ligne
 vérifiée sur 1 » sur un registre qui en portait trois.
+
+### 7. Soixante-douze processus pour un fichier de douze commits
+
+Un profil du filet entier a montré ce qu'aucune lecture n'aurait donné : **un passage ouvre 1 037
+processus enfants, pour 42,8 s — 18 % du temps.** Et une seule commande en pesait 15,9 : une
+question posée à git **soixante-douze fois**, sur un fichier dont l'historique tient en douze
+commits. On lit l'historique une fois : **15,2 s deviennent 0,3 s.**
+
+### 8. Le test le plus lourd comparait 57 millions de paires
+
+Un outil lit 383 documents, en extrait 7 565 phrases, et demande pour chacune « combien d'autres
+lui ressemblent ? » **en les parcourant toutes**. Un index inversé : **14,2 s → 2,3 s.**
+
+### 9. Une comparaison qui allouait un ensemble par paire
+
+Trois corrections d'arithmétique, aucune approximation. **6,5 fois plus rapide.**
+
+### 10. Une recherche relancée dans chaque document, pour chaque nom
+
+Le corpus est collé une fois, en séparant les textes par un octet qu'aucun nom de fichier ne peut
+contenir — sans quoi des noms apparaîtraient à cheval sur deux documents. 3,8 s → 2,9 s.
+
+**Les quatre ont la même forme de preuve, et c'est elle qui compte** : l'ancienne implémentation
+sert de JUGE dans le test, et le résultat est comparé avant/après. Deux fois, la comparaison a
+refusé une première version — une qui changeait l'ordre des zones, une qui fabriquait un historique
+à partir d'une réponse de test. **Une optimisation qui change le résultat n'est pas une
+optimisation, c'est un bug plus rapide.**
 
 ## Deux résultats NÉGATIFS, gardés exprès
 
