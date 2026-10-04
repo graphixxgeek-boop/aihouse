@@ -559,3 +559,28 @@ empêcher.
 **Un outil fini qui annonce des dégradations fait exactement son travail.** CASSANDRA n'a plus
 besoin d'être construite ; elle a besoin d'être LUE — et son rapport de deux minutes n'avait pas
 tourné depuis assez longtemps pour que ces deux trous soient connus.
+
+## Sa question du 2026-10-04 : une fiche par outil ? (tâche #1623)
+
+En répondant à la grande livraison, il revient sur la décision #179 — « CASSANDRA connaît chaque
+membre » — et demande, en une phrase :
+
+> « ca veut dire qu'il doit y avoir une fiche par outil c'est ca ? »
+
+**Ce que ça rouvre, et ce n'est pas une petite question.** « Connaître chaque membre » a deux
+lectures qui ne coûtent pas la même chose : CASSANDRA sait DÉRIVER ce qu'elle veut sur un outil au
+moment où on le lui demande (c'est l'état d'aujourd'hui, et rien ne s'y périme) — ou bien chaque
+outil porte une FICHE écrite, qu'il faut tenir. La seconde donne un document lisible par un humain ;
+elle crée aussi une centième chose à maintenir à jour, et l'Article 24 dit ce qu'il advient d'un
+document tenu à la main sans garde-fou.
+
+**La voie qui concilie les deux, et qui est déjà le patron du dépôt** : une fiche GÉNÉRÉE par outil,
+réécrite à chaque passage, où rien ne s'écrit à la main — comme `classification-des-strategies.md`
+ou `arbre-de-la-cascade.md`. Elle se lit comme une fiche et ne peut pas se périmer.
+
+**Ce qui reste à trancher, et qui lui revient** : si une telle fiche doit exister pour les 65
+commandes documentées, ou seulement pour les outils d'un certain rang.
+
+*(Recopié ici le jour même, parce que le garde-fou de fraîcheur des chantiers a signalé — à juste
+titre — qu'une idée inscrite dans `docs/suivi/` et jamais recopiée dans son fichier de conception
+est une idée qui disparaîtra.)*

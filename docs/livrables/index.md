@@ -2,10 +2,11 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-04. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**55 fichier(s).**
+**56 fichier(s).**
 
 | Fichier | |
 |---|---|
+| [ESSAI-palette-claire.html](ESSAI-palette-claire.html) | — |
 | [LIVRAISON-14H-2026-10-03.html](LIVRAISON-14H-2026-10-03.html) | — |
 | [LIVRAISON-14H-2026-10-03.md](LIVRAISON-14H-2026-10-03.md) | — |
 | [article-33-honnetete-texte-propose.html](article-33-honnetete-texte-propose.html) | — |

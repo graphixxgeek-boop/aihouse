@@ -150,6 +150,98 @@ const FORMAT_LABELS = { liste: "liste rapide", arborescence: "arborescence déta
 // Aplatit les 4 paniers de categorizeAllSessions() en une seule liste de lignes annotées — jamais un
 // second parseur de tableau markdown (anti-duplication, docs/regles-de-travail.md §7ter) : ce module
 // ne fait QUE lire ce que check-suivi-fidelity.mjs sait déjà extraire.
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// LA FOURNÉE — ce qu'un gros prompt a produit, compté plutôt que raconté (2026-10-04, tâche #1665)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE DE CLÔTURE, après avoir répondu à toute une livraison : « Prévois un rapport ephemere
+// pour me dire ce qui ressort de mes reponses : combien de sujets et de taches DEBLOQUEES, combien
+// de taches generees, combien de docs à mettre à jour, combien de questions, notes, lecons, etc.
+// avec le détail (11 destinations), quoi d'autre pertinent ? »
+//
+// POURQUOI UNE FONCTION ET PAS UN PARAGRAPHE ÉCRIT À LA MAIN : un bilan rédigé de tête est
+// invérifiable et se périme à la première tâche ajoutée. Celui-ci se dérive des lignes RÉELLES du
+// suivi portant le même horodatage — ce qu'on appelle ici une FOURNÉE : l'ensemble des tâches nées
+// du même prompt, à la même minute. Il se rejoue à l'identique, et son chiffre ne peut pas mentir
+// autrement que si le suivi ment.
+//
+// CE QU'IL NE SAIT PAS FAIRE, ET IL FAUT LE LIRE AVANT DE S'EN SERVIR : il compte des LIGNES, pas
+// des sujets au sens humain. Deux tâches peuvent parler de la même chose, et une seule tâche peut
+// en contenir trois. Le chiffre cadre la discussion, il ne la remplace pas.
+export const DESTINATIONS_DE_FOURNEE = Object.freeze([
+  { cle: "livrable", libelle: "un document à produire ou à remettre à jour", test: (t) => /Livrable|Documentation/i.test(t.sujet) },
+  { cle: "strategie", libelle: "une décision ou une question de stratégie", test: (t) => /Strat/i.test(t.sujet) },
+  { cle: "charte", libelle: "une règle de la charte ou de la Vision", test: (t) => /Charte/i.test(t.sujet) },
+  { cle: "organisation", libelle: "l'organisation et la classification de l'Agence", test: (t) => /Organisation/i.test(t.sujet) },
+  { cle: "process", libelle: "un process de travail", test: (t) => /Process/i.test(t.sujet) },
+  { cle: "outillage", libelle: "un outil de l'Agence", test: (t) => /Outillage|Qualit/i.test(t.sujet) },
+  { cle: "export", libelle: "l'exportabilité et la livraison", test: (t) => /Export/i.test(t.sujet) },
+  { cle: "suivi", libelle: "le système de suivi lui-même", test: (t) => /Suivi|D[ée]cision/i.test(t.sujet) },
+  { cle: "nommage", libelle: "un nom à choisir — jamais par l'agent", test: (t) => /Nommage/i.test(t.sujet) },
+  { cle: "kpi", libelle: "une mesure ou un objectif chiffré", test: (t) => /KPI/i.test(t.sujet) },
+  { cle: "jeu", libelle: "le jeu — hors périmètre aujourd'hui", test: (t) => /Jeu/i.test(t.sujet) },
+]);
+
+export function bilanDeFournee(rows = [], { horodatage = null, destinations = DESTINATIONS_DE_FOURNEE } = {}) {
+  if (!rows.length) {
+    return { mesurable: false, pourquoi: "aucune ligne de suivi lue : un bilan rendu sur zéro ligne se lirait comme « ce prompt n'a rien produit », ce qui n'est jamais la même chose que « on n'a pas lu » (leçons L5/L11)" };
+  }
+  const dedans = horodatage ? rows.filter((r) => String(r.horodatage ?? "").startsWith(horodatage)) : rows;
+  if (!dedans.length) {
+    return { mesurable: false, pourquoi: `aucune tâche ne porte l'horodatage « ${horodatage} » : soit la fournée n'a pas encore été écrite, soit l'horodatage cherché n'est pas le bon — et les deux se corrigent, aucun ne se conclut` };
+  }
+  const par = {};
+  const vues = new Set();
+  for (const d of destinations) {
+    const l = dedans.filter((t) => d.test(t));
+    par[d.cle] = { libelle: d.libelle, taches: l.map((t) => ({ numero: t.numero, motCle: t.motCle, criticite: t.criticite })) };
+    l.forEach((t) => vues.add(t.numero));
+  }
+  // UNE TÂCHE QUI N'ENTRE DANS AUCUNE DESTINATION EST NOMMÉE, jamais perdue : c'est le seul moyen
+  // de savoir que la liste des destinations a pris du retard sur le vocabulaire réel du registre.
+  const sansDestination = dedans.filter((t) => !vues.has(t.numero)).map((t) => ({ numero: t.numero, sujet: t.sujet, motCle: t.motCle }));
+  const parCriticite = {};
+  for (const t of dedans) parCriticite[t.criticite ?? "(non renseignée)"] = (parCriticite[t.criticite ?? "(non renseignée)"] ?? 0) + 1;
+  const ouvertes = dedans.filter((t) => !/termin|ferm|[ée]cart/i.test(String(t.statut ?? "")));
+  return {
+    mesurable: true, horodatage, total: dedans.length,
+    par, sansDestination, parCriticite,
+    ouvertes: ouvertes.length, closes: dedans.length - ouvertes.length,
+    premiere: Math.min(...dedans.map((t) => Number(t.numero))),
+    derniere: Math.max(...dedans.map((t) => Number(t.numero))),
+    horsPortee: "il compte des LIGNES de suivi, jamais des sujets au sens humain : deux tâches peuvent parler de la même chose et une seule peut en contenir trois. Le chiffre cadre la discussion, il ne la remplace pas.",
+  };
+}
+
+export function formatFourneeLines(b = {}) {
+  if (!b.mesurable) return [`PAS MESURÉ — ${b.pourquoi}`];
+  const L = [];
+  L.push(`LA FOURNÉE DU ${b.horodatage} — ${b.total} tâche(s), de #${b.premiere} à #${b.derniere} · ${b.ouvertes} ouverte(s), ${b.closes} close(s).`);
+  L.push("");
+  L.push("## Par destination");
+  L.push("");
+  L.push("| Destination | Combien | Les tâches |");
+  L.push("|---|---|---|");
+  for (const [cle, d] of Object.entries(b.par)) {
+    if (!d.taches.length) continue;
+    L.push(`| **${cle}** — ${d.libelle} | ${d.taches.length} | ${d.taches.map((t) => `#${t.numero}`).join(" ")} |`);
+  }
+  const vides = Object.entries(b.par).filter(([, d]) => !d.taches.length).map(([c]) => c);
+  if (vides.length) L.push(`| *(aucune tâche)* | 0 | ${vides.join(", ")} |`);
+  L.push("");
+  if (b.sansDestination.length) {
+    L.push(`⚠️ ${b.sansDestination.length} tâche(s) n'entrent dans AUCUNE destination déclarée — nommées plutôt que perdues, parce que c'est le seul signe que la liste des destinations a pris du retard sur le registre :`);
+    for (const t of b.sansDestination) L.push(`   · #${t.numero} — sujet « ${t.sujet} » (${t.motCle})`);
+    L.push("");
+  }
+  L.push("## Par criticité");
+  L.push("");
+  for (const [c, n] of Object.entries(b.parCriticite).sort((a, z) => z[1] - a[1])) L.push(`  · ${c} : ${n}`);
+  L.push("");
+  L.push(`HORS PORTÉE : ${b.horsPortee}`);
+  return L;
+}
+
 export function loadAllTaskRows(sessionsDir, readDir, readFile, exists) {
   const buckets = categorizeAllSessions(sessionsDir, readDir, readFile, exists);
   const rows = [];
@@ -3489,6 +3581,11 @@ function main() {
       m.mesurable ? [{ pourquoi: `${m.taches} r\u00e9cit(s) ferm\u00e9(s) p\u00e8sent ${m.avant.toLocaleString("fr-FR")} caract\u00e8res recharg\u00e9s \u00e0 chaque lecture, et le calibrage n'est pas choisi` }] : [],
       { toolSlug: "check-tasks-details", tache: "lire docs/check-tasks-details/compactage-calibrage-2026-09-28.md et trancher entre A, B et C \u2014 l'arbitrage porte sur ce qu'on veut pouvoir relire dans six semaines, jamais sur un pourcentage (Article 16)" }));
     return undefined;
+  }
+  if (process.argv[2] === "fournee") {
+    const b = bilanDeFournee(loadAllTaskRows(), { horodatage: process.argv[3] ?? null });
+    for (const l of formatFourneeLines(b)) console.log(l);
+    return;
   }
   if (process.argv[2] === "themes") return themesCli();
   if (process.argv[2] === "decisions") return decisionsCli();

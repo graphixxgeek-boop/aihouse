@@ -14579,6 +14579,39 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const realTheme = checkHtmlReportTheme(fs.readFileSync('app/globals.css', 'utf8'), fs.readFileSync('scripts/html-report.mjs', 'utf8'));
   assert.deepEqual(realTheme.colorMismatches, [], 'checked live against the real files: html-report.mjs\'s colors must currently match app/globals.css exactly');
   assert.ok(realTheme.hasZoom, 'checked live: the real THEME_CSS must currently carry the 150% zoom rule for every report, not just the transcript');
+
+  // ── LA PALETTE EST CLAIRE, ET C'EST UNE EXIGENCE DE COPIER-COLLER, PAS DE GOÛT (2026-10-04,
+  //    tâche #1600). Sa demande : « je veux un fond gris et pas noir, et une écriture foncée et
+  //    pas clair […] c'est pour pouvoir copier coller sur du fond blanc que je te demande tout
+  //    ca ». Une page sombre collée dans un document blanc perd son fond et garde son texte
+  //    clair : elle devient illisible. Le contraste se CALCULE ici, il ne se juge pas à l'œil.
+  const themeSrc = fs.readFileSync('scripts/html-report.mjs', 'utf8');
+  const lireVar = (nom) => (themeSrc.match(new RegExp(`--${nom}\\s*:\\s*(#[0-9a-fA-F]{6})`)) ?? [])[1];
+  const lum = (hex) => {
+    const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  const contraste = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+  const bg = lireVar('bg'); const panel = lireVar('panel'); const texte = lireVar('text');
+  assert.ok(bg && panel && texte, 'the three base colours must be readable from the theme');
+  assert.ok(lum(bg) > 0.5, `MUST CATCH: the page background must be LIGHT, never dark again (luminance ${lum(bg).toFixed(2)}) — a dark page pasted onto a white document keeps its light text and becomes unreadable`);
+  assert.strictEqual(panel.toLowerCase(), '#ffffff', 'and the boxes are WHITE, exactly as he asked');
+  assert.ok(contraste(texte, bg) >= 4.5, `the body text holds its contrast on the page background (${contraste(texte, bg).toFixed(1)}:1, minimum 4.5)`);
+  assert.ok(contraste(texte, panel) >= 4.5, `and inside a white box too (${contraste(texte, panel).toFixed(1)}:1)`);
+  for (const nom of ['accent', 'accent2', 'muted', 'ok', 'warn']) {
+    const c = lireVar(nom);
+    assert.ok(c && contraste(c, bg) >= 4.5, `--${nom} (${c}) must stay legible on the light background (${c ? contraste(c, bg).toFixed(1) : '?'}:1) — a palette is only flipped once, and the colour that stays behind is the one nobody re-measured`);
+  }
+  // LES COULEURS DES PERSONNAGES NE SE TOUCHENT PAS, et c'est pour ça que des variantes existent :
+  // --lia/--noe restent synchronisées avec le jeu (vérifié juste au-dessus), et deux variantes
+  // FONCÉES portent le texte sur fond clair. Contourner la règle aurait été de changer --lia.
+  for (const nom of ['lia-texte', 'noe-texte']) {
+    const c = lireVar(nom);
+    assert.ok(c && contraste(c, panel) >= 4.5, `--${nom} (${c}) carries the speaker's name on a white box (${c ? contraste(c, panel).toFixed(1) : '?'}:1) without touching the game's own colour`);
+  }
+  assert.notStrictEqual(lireVar('lia'), lireVar('lia-texte'), 'the two are genuinely distinct: one is the game identity, the other is a reading colour');
+
   // LES LIENS SONT STYLÉS (2026-10-03, tâche #1527, sa remarque sur l'index des fils : « evite le
   // bleu fonce sur fond noir, c'est peu visible »). CE N'ÉTAIT PAS UNE COULEUR MAL CHOISIE, C'EN
   // ÉTAIT UNE JAMAIS CHOISIE : le thème ne portait AUCUNE règle sur les liens, donc le navigateur

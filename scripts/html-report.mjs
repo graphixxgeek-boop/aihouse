@@ -258,10 +258,22 @@ export function renderDocumentHtml({ markdown, title, subtitle, dateLabel, foote
 // Thème partagé — même palette que la première page produite dans ce style (photo de la dream
 // team), pour une identité visuelle cohérente d'un rapport à l'autre.
 export const THEME_CSS = `
+  /* PALETTE CLAIRE — GRIS, BLEU, BLANC (2026-10-04, tâche #1600). Sa demande : « je veux un fond
+     gris et pas noir, et une écriture foncée et pas clair. Revois l'harmonie des couleurs pour un
+     rendu moderne gris-bleu-blanc : le corps du texte est toujours bleu foncé ou gris foncé ou
+     noir ; les encadrés, les éléments de décor/illustrations peuvent etre blanc ».
+     LE BESOIN RÉEL, QU'IL DONNE LUI-MÊME, ET C'EST LUI QUI JUGE : « c'est pour pouvoir copier
+     coller sur du fond blanc que je te demande tout ca ». Une page sombre collée dans un document
+     blanc perd son fond et garde son texte clair : elle devient illisible. Avec un texte foncé sur
+     fond clair, le copier-coller survit, que le fond parte ou non.
+     LES CONTRASTES SONT CALCULÉS, PAS CHOISIS À L'ŒIL : texte #1b2330 sur #eef1f5 donne ~14:1,
+     les liens #1f5b8f ~6,5:1, le texte discret #566274 ~5,2:1 — tous au-dessus du minimum de
+     4,5:1. C'était déjà le raisonnement de la correction des liens du 2026-10-03 ; il tient dans
+     l'autre sens. */
   :root {
-    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
-    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
-    --ok: #6fbf73; --warn: #e0645a;
+    --bg: #eef1f5; --panel: #ffffff; --panel-border: #cfd8e3;
+    --accent: #8a5a16; --accent2: #1f5b8f; --text: #1b2330; --muted: #566274;
+    --ok: #1f6b33; --warn: #a3281f;
     /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
        réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
        rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
@@ -271,15 +283,23 @@ export const THEME_CSS = `
        Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
        deux constantes au fichier réel à chaque exécution. */
     --lia: #f29bc3; --noe: #55dbe5;
+    /* DEUX VARIANTES FONCÉES, ET ELLES NE CONTOURNENT PAS LA RÈGLE CI-DESSUS (2026-10-04, #1600).
+       --lia et --noe restent EXACTEMENT les couleurs du jeu, et le garde-fou les compare
+       toujours à app/globals.css. Mais ces deux teintes sont faites pour un fond sombre : sur
+       blanc, #f29bc3 tombe à ~1,8:1, donc le nom du personnage devient illisible. Les variantes
+       ci-dessous servent UNIQUEMENT au TEXTE sur fond clair ; la couleur d'identité continue de
+       porter le filet de gauche, là où le contraste n'est pas en jeu. Changer --lia aurait
+       désynchronisé le rapport du jeu — ce que la règle interdit, et à juste titre. */
+    --lia-texte: #a3326b; --noe-texte: #0f6670;
   }
   /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
      fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
      mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
      navigateur applique son
-     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
-     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
-     la palette, puisque la couleur fautive n'y figurait pas.
-     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     bleu par défaut #0000EE, qui sur le fond sombre d'alors donnait un contraste d'environ 2:1,
+     très au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture
+     de la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 est dans la palette et tient le contraste sur le fond courant. Le soulignement est
      gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
   a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
   a:hover { color: var(--accent); }
@@ -291,7 +311,7 @@ export const THEME_CSS = `
   body { zoom: 1.5; }
   body {
     margin: 0; padding: 40px 20px 60px;
-    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    background: radial-gradient(circle at 20% -10%, #e2e8f0 0%, var(--bg) 55%);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.5;
@@ -307,7 +327,7 @@ export const THEME_CSS = `
   main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
   main p { margin: 8px 0; }
   main p.note {
-    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    font-style: italic; color: #4a5565; border-left: 2px solid var(--accent);
     padding-left: 10px; margin: 10px 0;
   }
   main .highlight {
@@ -342,9 +362,9 @@ export const THEME_CSS = `
   main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
   main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
   main p.dialogue.speaker-lia { border-left-color: var(--lia); }
-  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia-texte); }
   main p.dialogue.speaker-noe { border-left-color: var(--noe); }
-  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe-texte); }
   main p.dialogue.speaker-other strong { color: var(--muted); }
   /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
      décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
