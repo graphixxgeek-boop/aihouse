@@ -28210,3 +28210,47 @@ async function testLeCorpusColle() {
   console.log('Passed: un seul grand texte plutôt que sept cents petits, et l\'octet qui l\'autorise (2026-10-03, tâche #1594). TROISIÈME POSTE DU PROFIL DU FILET, à 10,4 s : une seule ligne de l\'inventaire des rapports, qui demande pour CHACUN des 428 fichiers « est-il NOMMÉ quelque part ailleurs que dans son propre dossier ? » en relançant la recherche dans CHAQUE source. Des centaines de milliers de recherches dont l\'immense majorité ne trouve rien. ON COLLE LE CORPUS UNE FOIS, et la recherche se fait dans un seul texte. LA JOINTURE SE FAIT SUR UN OCTET NUL, ET CE N\'EST PAS UN DÉTAIL DE CONFORT : coller les textes bout à bout ferait apparaître des correspondances À CHEVAL sur deux sources — la fin de l\'une et le début de l\'autre formant par hasard un nom de fichier, qui n\'existe alors dans aucune des deux. Le contre-test le montre en deux lignes. Un octet nul ne peut figurer dans aucun nom de fichier, donc aucune correspondance ne peut le traverser ; c\'est le même raisonnement, et le même octet, que la carte des dernières touches de `lib-shell`. VÉRIFIÉ SUR LE VRAI DÉPÔT AVANT LE REMPLACEMENT : 735 noms de fichiers, ZÉRO écart entre la recherche collée et la recherche source par source. Le gain est plus modeste que les deux précédents — 3,8 s à 2,9 s par passage — et le dire vaut mieux que de l\'arrondir : toutes les optimisations ne se valent pas, et celle-ci reste la troisième d\'une liste où la première valait douze secondes.');
 }
 await testLeCorpusColle();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1596 — LA PHRASE ÉCRITE POUR EXPLIQUER L'ALERTE ÉTAIT CE QUI LA MAINTENAIT ALLUMÉE
+async function testLAvertissementCompteSurSaSource() {
+  const E = await import('../scripts/ezechiel-les-tests.mjs');
+
+  const vraiAvertissement = '(node:1234) ExperimentalWarning: SQLite is an experimental feature and might change at any time';
+  const proseQuiLeCite = "Passed: le même événement facturé deux fois — l'ExperimentalWarning de node:sqlite, plus la ligne d'accompagnement.";
+
+  // ── LE DÉFAUT, EN DEUX LIGNES : la prose d'un test qui NOMME l'avertissement était comptée
+  // comme un second avertissement. Non déclarée, elle empêchait le premier d'être reconnu, parce
+  // que la règle exige que TOUTES les occurrences d'un genre soient déclarées.
+  const avecProse = E.santeDuFilet({ code: 0, ms: 1000, groupes: [], lignes: [
+    { ms: 1, texte: vraiAvertissement, flux: 'erreur' },
+    { ms: 2, texte: proseQuiLeCite, flux: 'normal' },
+  ] });
+  assert.deepStrictEqual(avecProse.anomalies, [], 'MUST CATCH: a test message that NAMES the warning is not a warning — counting it kept the alert burning for six days, and the more it was documented the louder it got');
+  assert.deepStrictEqual(avecProse.declares.map((d) => d.cle), ['sqlite-experimental'], 'and the real one, on the error stream, is recognised as declared');
+  assert.strictEqual(avecProse.vert, true, 'so the suite can finally be green — a light that cannot turn green stops being read');
+
+  // ── CE N'EST PAS UN SILENCE : un avertissement RÉEL non déclaré reste une anomalie, et un
+  // déclaré n'absout jamais un inconnu assis à côté de lui.
+  const inconnu = E.santeDuFilet({ code: 0, ms: 1000, groupes: [], lignes: [
+    { ms: 1, texte: vraiAvertissement, flux: 'erreur' },
+    { ms: 2, texte: '(node:1234) ExperimentalWarning: Fetch API is an experimental feature', flux: 'erreur' },
+  ] });
+  assert.ok(inconnu.anomalies.some((a) => a.cle === 'experimental'), 'a second experimental warning of an UNDECLARED kind is still an anomaly');
+  assert.strictEqual(inconnu.vert, false, 'and it still keeps the suite from being green');
+
+  // ── UN AVERTISSEMENT SUR L'ERREUR STANDARD COMPTE TOUJOURS, même si personne ne l'a déclaré :
+  // la correction porte sur la SOURCE de la ligne, jamais sur sa gravité.
+  const seulEtInconnu = E.santeDuFilet({ code: 0, ms: 1000, groupes: [], lignes: [
+    { ms: 1, texte: '(node:1) DeprecationWarning: quelque chose va disparaître', flux: 'erreur' },
+  ] });
+  assert.ok(seulEtInconnu.anomalies.some((a) => a.cle === 'obsolescence'), 'a deprecation warning on stderr is still caught');
+
+  // ── LE REPLI, POUR LES APPELANTS QUI NE DONNENT PAS LE FLUX : un contre-test qui passe des
+  // lignes nues doit continuer de fonctionner, sinon le garde-fou deviendrait intestable.
+  const sansFlux = E.santeDuFilet({ code: 0, ms: 1000, groupes: [], lignes: [{ ms: 1, texte: '(node:1) DeprecationWarning: x' }] });
+  assert.ok(sansFlux.anomalies.some((a) => a.cle === 'obsolescence'), 'with no stream information at all, every line is examined — the old behaviour, kept on purpose');
+
+  console.log('Passed: la phrase écrite pour expliquer l\'alerte était ce qui la maintenait allumée (2026-10-04, tâche #1596). L\'ALERTE « la suite n\'est pas au vert » BRÛLAIT DEPUIS SIX JOURS, et le correctif de la veille (#1566) n\'y avait rien pu : il réparait le CLASSEMENT d\'un avertissement déclaré, pas son COMPTAGE. LA CAUSE EST PRESQUE DRÔLE, ET ELLE EST EXEMPLAIRE : le voyant comptait les occurrences de `ExperimentalWarning` dans TOUTE la sortie du filet, succès compris. Or le message du test #1098, écrit en septembre pour EXPLIQUER l\'avertissement de `node:sqlite`, contient forcément ce mot-là. Il était donc compté comme un SECOND avertissement, non déclaré — et comme la règle exige que TOUTES les occurrences d\'un genre soient déclarées pour que le genre sorte du compte des anomalies, le vrai avertissement ne pouvait plus être reconnu. **La phrase écrite pour documenter l\'alerte était ce qui la maintenait allumée, et plus on l\'expliquait, plus elle criait.** C\'EST LA MÊME CLASSE QUE LE « Passed » CITÉ DANS UNE CHAÎNE, déjà corrigée pour le découpage en groupes : un détecteur qui compte une MENTION comme une OCCURRENCE. Et la correction est la même — on regarde D\'OÙ VIENT la ligne, pas seulement ce qu\'elle contient : un avertissement du moteur sort sur l\'erreur standard, jamais dans la prose d\'un test. CE N\'EST PAS UN SILENCE, et trois contre-tests le tiennent : un second avertissement expérimental d\'un genre INCONNU reste une anomalie, un avertissement d\'obsolescence sur l\'erreur standard est toujours attrapé, et un appelant qui ne donne pas le flux retrouve l\'ancien comportement — sinon le garde-fou deviendrait intestable. **La suite est VERTE pour la première fois depuis le 2026-09-28.**');
+}
+await testLAvertissementCompteSurSaSource();

@@ -1,5 +1,5 @@
 {
-  "quand": "2026-10-04T00:01:42.719Z",
+  "quand": "2026-10-04T00:24:46.775Z",
   "pourquoi": "la liste des SUJETS vérifiés par le dernier filet séquentiel vert. Un COMPTE ne voit pas « un test perdu, un test ajouté » ; cette liste, si.",
   "sujets": [
     "Passed: 18 % du registre échappait à tous les contrôles, en ",
@@ -206,6 +206,7 @@
     "Passed: la liste du PACK DÉCOUVERTE est LUE dans sa COMMANDE",
     "Passed: la onzieme copie du chargeur JSON (2026-09-29, tache",
     "Passed: la page HTML est-elle encore celle de sa source (202",
+    "Passed: la phrase écrite pour expliquer l'alerte était ce qu",
     "Passed: la portee qui n'avait jamais ete choisie (2026-09-29",
     "Passed: la préparation avant la nuit (2026-09-27, tâche #770",
     "Passed: la quatrième population, nées ET fermées dans la pér",

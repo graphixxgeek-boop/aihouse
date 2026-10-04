@@ -1368,9 +1368,31 @@ export function santeDuFilet({ code = null, ms = null, lignes = [], groupes = []
   // ANOMALIE, puisqu'aucune action légitime ne peut l'éteindre. Les deux listes sont rendues
   // séparément : confondre « rien à faire » et « rien à signaler » serait le silence que cette
   // fonction existe pour empêcher.
+  // UN AVERTISSEMENT DU MOTEUR SORT SUR L'ERREUR STANDARD, JAMAIS DANS LA PROSE D'UN TEST
+  // (2026-10-04, tâche #1596). Ce compte balayait TOUTE la sortie, succès compris — et le message
+  // du test #1098, écrit pour EXPLIQUER l'avertissement de `node:sqlite`, contient forcément le
+  // mot `ExperimentalWarning`. Il était donc compté comme un second avertissement, non déclaré,
+  // ce qui empêchait le premier d'être reconnu : la règle exige que TOUTES les occurrences d'un
+  // genre soient déclarées, et celle-ci ne pouvait pas l'être.
+  //
+  // RÉSULTAT : **la phrase écrite pour documenter l'alerte était ce qui la maintenait allumée**,
+  // et plus on l'expliquait, plus elle criait. L'alerte brûlait depuis six jours, et le correctif
+  // de la veille (#1566) n'avait rien pu y faire — il réparait le classement, pas le comptage.
+  //
+  // C'EST LA MÊME CLASSE QUE LE « Passed » CITÉ DANS UNE CHAÎNE, déjà corrigée pour le découpage
+  // en groupes : un détecteur qui compte une MENTION comme une OCCURRENCE. La correction est la
+  // même — on regarde d'où vient la ligne, pas seulement ce qu'elle contient.
+  //
+  // LE REPLI EXISTE PARCE QUE TOUS LES APPELANTS NE DONNENT PAS LE FLUX : un contre-test qui
+  // passe des lignes nues doit continuer de fonctionner, sinon le garde-fou deviendrait
+  // intestable.
+  const avecFlux = lignes.filter((l) => l && typeof l.flux === "string");
+  const aExaminer = avecFlux.length
+    ? avecFlux.filter((l) => l.flux === "erreur").map((l) => String(l.texte ?? ""))
+    : texteComplet.split("\n");
   const declares = [];
   for (const a of MOTIFS_D_AVERTISSEMENT) {
-    const occurrences = texteComplet.split("\n").filter((l) => new RegExp(a.motif.source, "i").test(l));
+    const occurrences = aExaminer.filter((l) => new RegExp(a.motif.source, "i").test(l));
     if (!occurrences.length) continue;
     const connu = occurrences.every((l) => avertissementDeclare(l));
     if (connu) {
