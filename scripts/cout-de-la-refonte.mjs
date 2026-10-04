@@ -24,11 +24,11 @@
 // ANTI-DOUBLON (§7ter) : la portabilité vient de SAFE-EXPORT, les registres de doc-report, les
 // obligations par outil d'integration-outil — aucune n'est recalculée ici.
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, DEBUT_DOCUMENT_GENERE, FIN_DOCUMENT_GENERE } from "./lib-shell.mjs";
 import { printReportHeader, planDactionDepuisEcarts, imprimerPlanDaction } from "./report-template.mjs";
-import { recordCliUsage } from "./tool-usage.mjs";
+import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -123,6 +123,194 @@ function lireLArbre(racine, root = ROOT) {
     }
   }
   return out;
+}
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// LES PARTIES À RATIONALISER, DANS L'ORDRE — et ce qui ne l'est pas (2026-10-04, tâche #1571)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE, ET C'EST UN INSTRUMENT DE PILOTAGE PLUTÔT QU'UNE LISTE : « il nous faut des reperes,
+// pour voir au fur et à mesure les parties qui doivent etre rationnalisées […] la liste de TOUTES
+// les parties à traiter dans le cadre de la rationnalisation, dans l'ordre ou nous allons le faire
+// d'apres ton plan d'action ». Avec deux exigences explicites : l'ORDRE, et « la liste de ce qui
+// n'est PAS rationalisable ».
+//
+// POURQUOI CETTE MESURE VIT ICI ET PAS DANS UN OUTIL DE PLUS (Article 31, issue « étendre ») :
+// cet outil sait déjà compter le volume et les RAISONS écrites par famille, et c'est très
+// exactement ce qu'il faut pour chiffrer une partie. Un outil séparé aurait porté une seconde
+// copie de ce comptage, qui aurait fini par en diverger (leçon L29).
+//
+// LES PARTIES NE S'INVENTENT PAS : ce sont les MODULES déjà déclarés dans `MODULES_CIBLES`
+// (le-coordinateur), lus à l'exécution. En écrire une liste ici aurait été la copie manuelle que
+// l'Article 24 refuse — et elle se serait périmée au premier module ajouté.
+//
+// L'ORDRE NE S'INVENTE PAS NON PLUS, ET C'EST LE POINT DÉLICAT. Il se dérive d'un fait mesurable :
+// un module dont les scripts sont IMPORTÉS par d'autres modules passe AVANT eux. Rationaliser un
+// socle après ce qui s'appuie dessus oblige à refaire les dépendants ; l'inverse n'est jamais vrai.
+// À dépendance égale, le plus LOURD d'abord (plus de volume = plus à gagner, et le gros morceau
+// tard dans un chantier est celui qu'on repousse).
+// CE QUE CET ORDRE N'EST PAS : une priorité d'importance. Il dit dans quel ordre le travail coûte
+// le moins cher, jamais ce qui compte le plus — cet arbitrage-là lui revient (Article 16).
+
+export const FICHIER_DES_PARTIES = "docs/cout-de-la-refonte/parties-a-rationaliser.md";
+export const MOTIF_IMPORT_LOCAL = /\bfrom\s+["']\.\/([a-z0-9._-]+\.mjs)["']/gi;
+
+export function scriptsDUnModule(module, { prestations = [], scriptsParSlug = {}, normaliser = (x) => x } = {}) {
+  const noms = new Set();
+  for (const nom of module?.prestations ?? []) {
+    const p = prestations.find((x) => x.nom === nom);
+    for (const o of p?.outils ?? []) noms.add(normaliser(o));
+  }
+  const scripts = new Set();
+  for (const [slug, chemin] of Object.entries(scriptsParSlug)) {
+    if (noms.has(normaliser(slug))) scripts.add(chemin);
+  }
+  return { outils: [...noms].sort(), scripts: [...scripts].sort() };
+}
+
+// LE GRAPHE ENTRE MODULES — lu dans les imports réels, jamais déclaré.
+export function dependancesEntreModules(parModule = {}, { lire = null } = {}) {
+  const proprietaire = new Map();
+  for (const [cle, m] of Object.entries(parModule)) for (const s of m.scripts) proprietaire.set(s.replace(/^scripts\//, ""), cle);
+  const arcs = new Map(Object.keys(parModule).map((c) => [c, new Set()]));
+  for (const [cle, m] of Object.entries(parModule)) {
+    for (const chemin of m.scripts) {
+      let src = "";
+      try { src = String(lire ? lire(chemin) : ""); } catch { continue; }
+      for (const [, fichier] of src.matchAll(MOTIF_IMPORT_LOCAL)) {
+        const autre = proprietaire.get(fichier);
+        // Un module ne dépend jamais de lui-même : un import interne ne dit rien sur l'ordre.
+        if (autre && autre !== cle) arcs.get(cle).add(autre);
+      }
+    }
+  }
+  return arcs;
+}
+
+// L'ORDRE : les fournisseurs d'abord. Un cycle NE SE CASSE PAS EN SILENCE — il se nomme, parce
+// qu'un ordre inventé au milieu d'un cycle serait un ordre faux qui a l'air juste (leçon L4).
+export function ordonnerLesParties(parModule = {}, arcs = new Map(), { poids = () => 0 } = {}) {
+  const restants = new Map(Object.entries(parModule).map(([c]) => [c, new Set(arcs.get(c) ?? [])]));
+  const dependants = (c) => [...arcs.values()].filter((d) => d.has(c)).length;
+  const ordre = [];
+  const cycles = [];
+  while (restants.size) {
+    const prets = [...restants.entries()].filter(([, deps]) => [...deps].every((d) => !restants.has(d))).map(([c]) => c);
+    if (!prets.length) {
+      // TOUT CE QUI RESTE EST PRIS DANS UN CYCLE, ET C'EST LE CAS RÉEL ICI : mesuré le
+      // 2026-10-04, SEPT modules sur neuf s'importent mutuellement. L'ordre par dépendance
+      // n'existe donc pas, et prétendre en rendre un serait rendre un ordre faux qui a l'air
+      // juste. On le DIT, et on bascule sur un critère qui discrimine encore à l'intérieur du
+      // cycle : le plus DEMANDÉ d'abord — celui dont le plus de modules dépendent coûte le plus
+      // cher à refaire en dernier — puis le plus lourd à égalité.
+      const bloques = [...restants.keys()].sort((a, b) => (dependants(b) - dependants(a)) || (poids(b) - poids(a)));
+      cycles.push([...bloques]);
+      for (const c of bloques) { ordre.push(c); restants.delete(c); }
+      break;
+    }
+    for (const c of prets.sort((a, b) => poids(b) - poids(a))) { ordre.push(c); restants.delete(c); }
+  }
+  return { ordre, cycles };
+}
+
+export function partiesARationaliser({ root = ROOT, lire = null, modules = null, prestations = null, scriptsParSlug = null, normaliser = null, cout = null } = {}) {
+  const lireF = lire ?? ((c) => readFileSync(join(root, c), "utf8"));
+  if (!modules?.length || !prestations?.length || !scriptsParSlug || !Object.keys(scriptsParSlug).length) {
+    return { mesurable: false, pourquoi: "il manque la carte des modules, le catalogue des prestations ou la table slug→script : une liste de parties produite sans eux serait une liste écrite à la main, c'est-à-dire exactement ce que l'Article 24 refuse" };
+  }
+  const norm = normaliser ?? ((x) => String(x).toLowerCase());
+  const parModule = {};
+  for (const m of modules) {
+    const { outils, scripts } = scriptsDUnModule(m, { prestations, scriptsParSlug, normaliser: norm });
+    let lignes = 0, raisons = 0, lus = 0;
+    for (const chemin of scripts) {
+      let src = null;
+      try { src = String(lireF(chemin)); } catch { src = null; }
+      if (src === null) continue;
+      lus += 1;
+      lignes += src.split("\n").length;
+      raisons += blocsDeRaison(src).blocs;
+    }
+    parModule[m.cle] = { cle: m.cle, titre: m.titre, quoi: m.quoi, outils, scripts, scriptsLus: lus, lignes, raisons };
+  }
+  const arcs = dependancesEntreModules(parModule, { lire: (c) => lireF(c) });
+  const poids = (c) => parModule[c]?.lignes ?? 0;
+  const { ordre, cycles } = ordonnerLesParties(parModule, arcs, { poids });
+  const lignesOrdonnees = ordre.map((c, i) => ({
+    rang: i + 1, ...parModule[c],
+    dependDe: [...(arcs.get(c) ?? [])].sort(),
+    fournitA: Object.keys(parModule).filter((a) => (arcs.get(a) ?? new Set()).has(c)).sort(),
+  }));
+  return {
+    mesurable: true, parties: lignesOrdonnees, cycles,
+    total: lignesOrdonnees.length,
+    totalLignes: lignesOrdonnees.reduce((a, x) => a + x.lignes, 0),
+    totalRaisons: lignesOrdonnees.reduce((a, x) => a + x.raisons, 0),
+    horsPortee: "l'ordre dit dans quel ordre le travail coûte le MOINS CHER — un fournisseur avant ses clients — jamais ce qui compte le plus. La priorité d'importance est un arbitrage qui lui revient (Article 16). Et le poids est un VOLUME, jamais une DIFFICULTÉ.",
+    cout,
+  };
+}
+
+// CE QUI N'EST PAS RATIONALISABLE — sa seconde exigence, et chaque entrée porte SA raison, déjà
+// écrite ailleurs dans le dépôt plutôt que décidée ici. Un périmètre exclu sans raison écrite est
+// un abandon déguisé (Article 28, état « écarté »).
+export function ceQuiNEstPasRationalisable({ familles = FAMILLES, exemptes = null, cout = null } = {}) {
+  const lignes = [];
+  for (const f of familles) {
+    if (f.cle === "outillage") continue;   // c'est précisément le périmètre visé
+    lignes.push({
+      quoi: f.libelle, pourquoi: f.refonte, source: "FAMILLES (cout-de-la-refonte)",
+      fichiers: cout?.par?.[f.cle]?.fichiers ?? null, lignes: cout?.par?.[f.cle]?.lignes ?? null,
+    });
+  }
+  // LES DISPENSES DU KIT D'EXPORT SONT UN TABLEAU D'ENTRÉES `{ motif, pourquoi }`, et le premier
+  // jet les lisait comme un dictionnaire : la sortie rendait « 0 → [object Object] », treize fois.
+  // Un lecteur qui se trompe de forme ne plante pas, il imprime du bruit crédible.
+  for (const e of Array.isArray(exemptes) ? exemptes : []) {
+    const quoi = e?.quoi ?? (e?.motif instanceof RegExp ? String(e.motif) : null);
+    if (!e?.pourquoi) continue;
+    lignes.push({ quoi: quoi ?? "(dispense sans libellé)", pourquoi: String(e.pourquoi), source: "EXEMPTES_DU_KIT (safe-export)", fichiers: null, lignes: null });
+  }
+  if (!lignes.length) {
+    return { mesurable: false, pourquoi: "aucun périmètre exclu n'a pu être lu : rendre « tout est rationalisable » sur zéro lecture serait un satisfecit sur du vide (leçons L5/L11)" };
+  }
+  return { mesurable: true, lignes, total: lignes.length };
+}
+
+export function formatPartiesLines(r = {}, exclu = {}) {
+  const L = [];
+  L.push("--- LES PARTIES À RATIONALISER, DANS L'ORDRE — les fournisseurs avant leurs clients");
+  if (!r.mesurable) { L.push(`  PAS MESURÉ — ${r.pourquoi}`); } else {
+    L.push(`  ${r.total} partie(s) · ${r.totalLignes} ligne(s) d'outillage · ${r.totalRaisons} raison(s) écrite(s) à relire en chemin`);
+    L.push("");
+    L.push("  | # | Partie | Outils | Lignes | Raisons | Dépend de | Fournit à |");
+    L.push("  |---|---|---|---|---|---|---|");
+    for (const p of r.parties) {
+      L.push(`  | ${p.rang} | **${p.titre}** | ${p.outils.length} | ${p.lignes} | ${p.raisons} | ${p.dependDe.join(", ") || "—"} | ${p.fournitA.join(", ") || "—"} |`);
+    }
+    if (r.cycles.length) {
+      L.push("");
+      for (const c of r.cycles) {
+        L.push(`  ⚠️ CYCLE DE DÉPENDANCES — ${c.join(" ↔ ")}`);
+        L.push(`     ${c.length} module(s) sur ${r.total} s'importent mutuellement : il n'existe AUCUN ordre par dépendance entre eux, et en rendre un serait rendre un ordre faux qui a l'air juste.`);
+        L.push("     Ordre de repli, déclaré : le plus DEMANDÉ d'abord (celui dont le plus de modules dépendent coûte le plus cher à refaire en dernier), puis le plus lourd à égalité.");
+        L.push("     C'EST AUSSI UN RÉSULTAT EN SOI : la modularisation qu'il vise n'est pas gratuite, puisque les modules d'aujourd'hui ne forment pas des paquets détachables.");
+      }
+    }
+    L.push("");
+    L.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  }
+  L.push("");
+  L.push("  À NE PAS CONFONDRE : la partie « LE JEU » ci-dessus désigne les OUTILS qui regardent le jeu (le ton, le rendu, les simulations), jamais le moteur du jeu lui-même — celui-ci figure dans la liste des exclusions, juste en dessous.");
+  L.push("");
+  L.push("--- CE QUI N'EST PAS RATIONALISABLE — sa seconde exigence, chaque exclusion avec sa raison ÉCRITE");
+  if (!exclu?.mesurable) { L.push(`  PAS MESURÉ — ${exclu?.pourquoi}`); return L; }
+  for (const x of exclu.lignes) {
+    const taille = x.fichiers ? ` (${x.fichiers} fichier(s)${x.lignes ? `, ${x.lignes} ligne(s)` : ""})` : "";
+    L.push(`  · ${x.quoi}${taille}`);
+    L.push(`      → ${x.pourquoi}  [${x.source}]`);
+  }
+  return L;
 }
 
 export function mesurerLeCout({ root = ROOT, lire = readFileSync, arbre = null } = {}) {
@@ -237,7 +425,49 @@ async function main() {
   const m = mesurerLeCout();
   const a = await acquisRemisEnJeu();
   for (const l of formatLines(m, a)) console.log(l);
+
+  // LES PARTIES À RATIONALISER (tâche #1571) — rendues à CHAQUE passage plutôt que derrière un
+  // drapeau : une vue qu'il faut penser à demander est une vue qu'on oubliera le jour où elle
+  // compte, et c'est précisément le « repère » qu'il a demandé pour suivre l'avancement.
+  const lc = await import("./le-coordinateur.mjs");
+  const axa = await import("./axa-check.mjs");
+  const se = await import("./safe-export.mjs").catch(() => ({}));
+  const parties = partiesARationaliser({
+    modules: lc.MODULES_CIBLES, prestations: lc.PRESTATIONS,
+    scriptsParSlug: axa.AGENT_SCRIPT_FILES, normaliser: lc.normaliserNomDOutil, cout: m,
+  });
+  const exclu = ceQuiNEstPasRationalisable({ exemptes: se.EXEMPTES_DU_KIT, cout: m });
+  const lignesParties = formatPartiesLines(parties, exclu);
+  console.log("");
+  for (const l of lignesParties) console.log(l);
+
+  // LE LIVRABLE EST LE FICHIER (Article 31, faille 3), nom STABLE : c'est un état courant qui se
+  // réécrit, jamais un instantané qu'on empile.
+  try { mkdirSync(join(ROOT, "docs/cout-de-la-refonte"), { recursive: true }); } catch { /* déjà là */ }
+  const t = await import("./agent-du-temps.mjs").then((x) => x.maintenant()).catch(() => null);
+  const corps = [
+    DEBUT_DOCUMENT_GENERE,
+    "# Les parties à rationaliser, dans l'ordre — et ce qui ne l'est pas",
+    "",
+    `> Produit par \`node scripts/cout-de-la-refonte.mjs\` le ${t?.suivi ?? ""}${t?.source ? ` (heure de source ${t.source})` : ""}, en lisant la carte des modules, le catalogue des prestations et les imports réels entre scripts.`,
+    "> Ta demande : « la liste de TOUTES les parties à traiter dans le cadre de la rationnalisation, dans l'ordre ou nous allons le faire d'apres ton plan d'action […] Hors ce qui n'est pas rationnalisable ».",
+    "",
+    "**Rien ici n'est écrit à la main.** Les parties sont les modules déjà déclarés, l'ordre se dérive des imports réels, et chaque exclusion porte la raison déjà écrite ailleurs dans le dépôt.",
+    "",
+    "```",
+    ...lignesParties,
+    "```",
+    "",
+    FIN_DOCUMENT_GENERE,
+  ];
+  writeFileSync(join(ROOT, FICHIER_DES_PARTIES), corps.join("\n") + "\n", "utf8");
+  recordRegistryWrite(FICHIER_DES_PARTIES, { par: "cout-de-la-refonte" });
+  console.log(`\nParties déposées : ${FICHIER_DES_PARTIES} — réécrit à chaque passage.`);
+
   const ecarts = [];
+  if (!parties.mesurable) ecarts.push({ message: `les parties à rationaliser n'ont pas pu être mesurées : ${parties.pourquoi}`, quoiFaire: "rétablir la lecture de la carte des modules avant de planifier quoi que ce soit", numeroTache: 1571 });
+  else if (parties.cycles.length) ecarts.push({ aTrancher: true, message: `${parties.cycles[0].length} module(s) sur ${parties.total} s'importent mutuellement : il n'existe aucun ordre par dépendance entre eux`, quoiFaire: "trancher si la modularisation visée exige de casser ce cycle (gros chantier) ou si l'ordre de repli — le plus demandé d'abord — suffit comme feuille de route", numeroTache: 1571 });
+  ecarts.push({ aTrancher: true, message: "le document des parties vit chez l'outil, alors que sa demande dit « à enregistrer DANS la stratégie de rationalisation » — laquelle n'existe pas encore", quoiFaire: "décider s'il faut créer une fiche de stratégie de rationalisation dans `docs/strategies/` et y renvoyer ce document, ou laisser l'outil seul propriétaire — créer une stratégie à sa place serait décider pour lui (Article 16)", numeroTache: 1571 });
   if (m.mesurable && m.par.outillage.blocsDeRaison > 0) {
     ecarts.push({
       message: `${m.par.outillage.blocsDeRaison} raison(s) écrite(s) dans l'outillage seraient à relire une par une avant toute refonte`,
@@ -246,7 +476,13 @@ async function main() {
     });
   }
   console.log("");
-  imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "cout-de-la-refonte", numeroTache: (e) => e.numeroTache }));
+  // DEUX DES CONSTATS NE SONT PAS DES CORRECTIFS, CE SONT DES DÉCISIONS QUI LUI REVIENNENT
+  // (Article 16/28) : les ranger en « retenu » laisserait croire qu'un agent peut les clore seul.
+  imprimerPlanDaction(planDactionDepuisEcarts(ecarts, {
+    toolSlug: "cout-de-la-refonte", numeroTache: (e) => e.numeroTache,
+    etat: (e) => (e.aTrancher ? "a-trancher" : "retenu"),
+    pourquoi: (e) => (e.aTrancher ? e.quoiFaire : null),
+  }));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

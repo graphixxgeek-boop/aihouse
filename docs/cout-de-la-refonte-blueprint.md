@@ -75,3 +75,21 @@ Trois choses à adapter, et rien d'autre :
 3. **La source des acquis** (`acquisRemisEnJeu`) — l'outil local qui mesure déjà la santé du
    projet. S'il n'y en a pas, la fonction doit rendre PAS MESURÉ avec sa raison, jamais un
    contrepoids vide qui ferait pencher la décision.
+
+## Ordonner des chantiers : le critère se mesure, et le cycle se dit
+
+Dès qu'on demande « par quoi commencer ? » sur un parc de modules, la tentation est de rendre une
+liste d'importance. L'importance est un avis ; **l'ordre de dépendance est un fait** : un module
+dont les autres importent le code passe avant eux, parce que le refaire en dernier oblige à refaire
+ses dépendants — et l'inverse n'est jamais vrai. Il se lit dans les imports réels, jamais déclaré.
+
+**Le piège est ce qui arrive quand le graphe a un cycle, et c'est le cas courant sur un parc réel.**
+Rendre quand même un ordre produit un ordre faux qui a l'air juste. La règle : le cycle se **nomme**
+(combien de modules, lesquels), et l'ordre de repli se **déclare** au lieu d'être subi — par exemple
+le plus demandé d'abord. Et il faut le dire franchement : **un cycle qui avale la majorité des
+modules est un résultat en soi** — il mesure que les « modules » n'en sont pas encore, ce qui est
+précisément l'information qu'on cherchait en voulant les ordonner.
+
+**Toute exclusion de périmètre porte sa raison, et cette raison se LIT là où elle vit déjà** plutôt
+que de se réécrire. Un périmètre exclu sans raison écrite n'est pas une décision, c'est un abandon
+déguisé.

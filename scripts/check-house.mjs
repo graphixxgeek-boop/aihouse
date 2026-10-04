@@ -25711,6 +25711,89 @@ async function testChiffrageDeLaRefonte() {
 }
 await testChiffrageDeLaRefonte();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LES PARTIES À RATIONALISER, DANS L'ORDRE — et le cycle qu'on a trouvé en voulant
+// les ordonner (2026-10-04, tâche #1571)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLesPartiesARationaliser() {
+  const C = await import('../scripts/cout-de-la-refonte.mjs');
+
+  // ── 1. LES PARTIES NE S'INVENTENT PAS : sans la carte des modules, le catalogue ou la table
+  //    slug→script, l'outil REFUSE plutôt que de rendre une liste écrite à la main (Article 24).
+  assert.strictEqual(C.partiesARationaliser({ modules: [], prestations: [{ nom: 'x', outils: ['a'] }], scriptsParSlug: { a: 'scripts/a.mjs' } }).mesurable, false, 'no module map, no parts');
+  assert.strictEqual(C.partiesARationaliser({ modules: [{ cle: 'm', prestations: [] }], prestations: [], scriptsParSlug: { a: 'x' } }).mesurable, false, 'no catalogue either');
+  assert.strictEqual(C.partiesARationaliser({ modules: [{ cle: 'm', prestations: [] }], prestations: [{ nom: 'x' }], scriptsParSlug: {} }).mesurable, false, 'and no slug table either — three refusals rather than three invented lists');
+
+  // ── 2. LA RÉSOLUTION MODULE → SCRIPTS passe par les prestations, jamais par un nom deviné.
+  const presta = [{ nom: 'Pack A', outils: ['ALPHA'] }, { nom: 'Pack B', outils: ['beta', 'ALPHA'] }];
+  const slugs = { alpha: 'scripts/alpha.mjs', beta: 'scripts/beta.mjs', gamma: 'scripts/gamma.mjs' };
+  const n = (x) => String(x).toLowerCase();
+  const res = C.scriptsDUnModule({ prestations: ['Pack A', 'Pack B'] }, { prestations: presta, scriptsParSlug: slugs, normaliser: n });
+  assert.deepStrictEqual(res.scripts, ['scripts/alpha.mjs', 'scripts/beta.mjs'], 'the module owns exactly the scripts of its prestations, deduplicated');
+  assert.ok(!res.scripts.includes('scripts/gamma.mjs'), 'and never a script nobody offers');
+
+  // ── 3. L'ORDRE SE DÉRIVE DES IMPORTS RÉELS : un fournisseur passe avant son client.
+  const sources = {
+    'scripts/socle.mjs': 'export const x = 1;',
+    'scripts/milieu.mjs': 'import { x } from "./socle.mjs";',
+    'scripts/haut.mjs': 'import { y } from "./milieu.mjs";',
+  };
+  const parModule = {
+    haut: { cle: 'haut', titre: 'H', scripts: ['scripts/haut.mjs'], lignes: 10 },
+    socle: { cle: 'socle', titre: 'S', scripts: ['scripts/socle.mjs'], lignes: 5 },
+    milieu: { cle: 'milieu', titre: 'M', scripts: ['scripts/milieu.mjs'], lignes: 7 },
+  };
+  const arcs = C.dependancesEntreModules(parModule, { lire: (c) => sources[c] ?? '' });
+  assert.deepStrictEqual([...arcs.get('milieu')], ['socle'], 'an import across modules is a dependency');
+  assert.deepStrictEqual([...arcs.get('socle')], [], 'and the supplier depends on nobody');
+  const { ordre, cycles } = C.ordonnerLesParties(parModule, arcs, { poids: (c) => parModule[c].lignes });
+  assert.deepStrictEqual(ordre, ['socle', 'milieu', 'haut'], 'MUST CATCH: the supplier comes first — rationalising a base after what leans on it forces redoing the dependents');
+  assert.deepStrictEqual(cycles, [], 'and a clean graph reports no cycle');
+
+  // ── 4. UN CYCLE NE SE CASSE PAS EN SILENCE. Rendre un ordre au milieu d'un cycle, c'est rendre
+  //    un ordre faux qui a l'air juste (L4). Et c'est le cas RÉEL ici : 7 modules sur 9.
+  const boucle = { a: { cle: 'a', scripts: [], lignes: 1 }, b: { cle: 'b', scripts: [], lignes: 2 } };
+  const arcsBoucle = new Map([['a', new Set(['b'])], ['b', new Set(['a'])]]);
+  const r2 = C.ordonnerLesParties(boucle, arcsBoucle, { poids: (c) => boucle[c].lignes });
+  assert.strictEqual(r2.cycles.length, 1, 'MUST CATCH: a cycle is NAMED');
+  assert.deepStrictEqual(r2.cycles[0].sort(), ['a', 'b'], 'and it names which modules are caught in it');
+  assert.strictEqual(r2.ordre.length, 2, 'while still returning every module — a part left out of the list would simply never be done');
+
+  // ── 5. UN AUTO-IMPORT NE DIT RIEN SUR L'ORDRE : deux scripts du même module qui s'importent ne
+  //    créent pas une dépendance du module sur lui-même, qui bloquerait tout tri.
+  const interne = { seul: { cle: 'seul', scripts: ['scripts/a.mjs', 'scripts/b.mjs'], lignes: 3 } };
+  const arcsInterne = C.dependancesEntreModules(interne, { lire: () => 'import { x } from "./b.mjs";' });
+  assert.deepStrictEqual([...arcsInterne.get('seul')], [], 'a module never depends on itself');
+
+  // ── 6. CE QUI N'EST PAS RATIONALISABLE — chaque exclusion porte SA raison, déjà écrite
+  //    ailleurs. Un périmètre exclu sans raison écrite est un abandon déguisé (Article 28).
+  const exclu = C.ceQuiNEstPasRationalisable({ exemptes: [{ motif: /^scripts\/hooks\//, pourquoi: 'le câblage de ce dépôt-ci, pas un outil' }] });
+  assert.strictEqual(exclu.mesurable, true);
+  assert.ok(exclu.lignes.every((x) => x.pourquoi && x.pourquoi.length > 20), 'every exclusion carries a real written reason, never a bare label');
+  assert.ok(exclu.lignes.every((x) => x.source), 'and names WHERE that reason already lives — never one invented for the occasion');
+  assert.ok(!exclu.lignes.some((x) => /outillage/.test(String(x.quoi))), 'the tooling itself is NOT excluded: it is precisely the perimeter his proposal targets');
+  //    LE DÉFAUT PAYÉ EN CHEMIN : les dispenses sont un TABLEAU d'entrées, pas un dictionnaire.
+  //    Lu comme un dictionnaire, le rapport imprimait « 0 → [object Object] », treize fois. Un
+  //    lecteur qui se trompe de forme ne plante pas, il imprime du bruit parfaitement crédible.
+  assert.ok(!JSON.stringify(exclu.lignes).includes('[object Object]'), 'MUST CATCH: never an [object Object] in a report a human reads');
+  assert.strictEqual(C.ceQuiNEstPasRationalisable({ familles: [], exemptes: [] }).mesurable, false, 'and with nothing readable it refuses rather than announcing "everything is rationalisable" (L5/L11)');
+
+  // ── 7. EN DIRECT (Article 25), et c'est ce passage qui a rendu le vrai résultat.
+  const lc = await import('../scripts/le-coordinateur.mjs');
+  const axa = await import('../scripts/axa-check.mjs');
+  const reel = C.partiesARationaliser({ modules: lc.MODULES_CIBLES, prestations: lc.PRESTATIONS, scriptsParSlug: axa.AGENT_SCRIPT_FILES, normaliser: lc.normaliserNomDOutil });
+  assert.strictEqual(reel.mesurable, true, 'the real parts list must be measurable');
+  assert.strictEqual(reel.total, lc.MODULES_CIBLES.length, 'every declared module is a part — none may be dropped on the way');
+  assert.ok(reel.parties.every((p) => p.rang >= 1 && p.titre), 'each part is ranked and named');
+  assert.ok(reel.totalRaisons > 500, `and the written reasons to re-read along the way are counted (${reel.totalRaisons})`);
+  assert.ok(reel.cycles.length >= 1, 'and the real graph really does hold a cycle — that measured result is what forbids presenting the order as a strict dependency order');
+  const surDisque = fs.readFileSync(C.FICHIER_DES_PARTIES, 'utf8');
+  assert.ok(/LES PARTIES À RATIONALISER/.test(surDisque), 'the deliverable is really on disk (L2)');
+
+  console.log(`Passed: les parties à rationaliser, dans l'ordre, et le cycle trouvé en voulant les ordonner (2026-10-04, tâche #1571). Sa demande : « la liste de TOUTES les parties à traiter dans le cadre de la rationnalisation, dans l'ordre ou nous allons le faire d'apres ton plan d'action […] Hors ce qui n'est pas rationnalisable ». RIEN N'EST ÉCRIT À LA MAIN, et c'était la seule façon de ne pas se périmer : les parties sont les ${reel.total} MODULES déjà déclarés, lus à l'exécution ; leurs scripts se résolvent par le catalogue des prestations et la table slug→script ; et l'ordre se dérive des IMPORTS RÉELS entre eux. LE CRITÈRE D'ORDRE EST UN FAIT, PAS UNE PRÉFÉRENCE : un module dont les scripts sont importés par d'autres passe AVANT eux, parce que rationaliser un socle après ce qui s'appuie dessus oblige à refaire les dépendants — l'inverse n'est jamais vrai. ET C'EST EN VOULANT L'APPLIQUER QU'ON A TROUVÉ LE VRAI RÉSULTAT : ${reel.cycles[0]?.length ?? 0} modules sur ${reel.total} s'importent MUTUELLEMENT, donc il n'existe aucun ordre par dépendance entre eux. Le dire vaut mieux que d'en élire un au hasard, et c'est un constat en soi : la modularisation qu'il vise n'est pas gratuite, puisque les modules d'aujourd'hui ne forment pas des paquets détachables. L'ordre de repli est DÉCLARÉ plutôt que subi — le plus DEMANDÉ d'abord, le plus lourd à égalité. CHAQUE EXCLUSION PORTE SA RAISON, DÉJÀ ÉCRITE AILLEURS : le moteur du jeu, les documents qui font loi, les registres produits, et les treize dispenses du kit d'export — un périmètre exclu sans raison écrite est un abandon déguisé (Article 28). UN DÉFAUT PAYÉ EN CHEMIN, GARDÉ EN CONTRE-TEST : les dispenses sont un TABLEAU d'entrées et je les lisais comme un dictionnaire — le rapport imprimait « 0 → [object Object] » treize fois. Un lecteur qui se trompe de forme ne plante pas, il imprime du bruit parfaitement crédible.`);
+}
+await testLesPartiesARationaliser();
+
 // ────────────────────────────────────────────────────────────────────────────
 // LE FAUX CHIFFRE QUI RÉPONDAIT À « OÙ ON EN EST » (2026-10-01, tâche #1363)
 // ────────────────────────────────────────────────────────────────────────────

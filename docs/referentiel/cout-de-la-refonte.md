@@ -67,3 +67,65 @@ qui finit toujours par diverger (Article 24). Un seul assemblage, un seul endroi
 - Il ne convertit rien en jours : aucune mesure du dépôt ne dit qui ferait le travail.
 - **Il ne recommande RIEN.** La décision de refonte est de celles que l'Article 16 réserve
   explicitement à l'utilisateur.
+
+## LES PARTIES À RATIONALISER, DANS L'ORDRE (2026-10-04, tâche #1571)
+
+Sa demande, et c'est **un instrument de pilotage plutôt qu'une liste** : « il nous faut des
+reperes, pour voir au fur et à mesure les parties qui doivent etre rationnalisées […] la liste de
+TOUTES les parties à traiter dans le cadre de la rationnalisation, dans l'ordre ou nous allons le
+faire d'apres ton plan d'action ». Avec deux exigences explicites : **l'ordre**, et **la liste de
+ce qui n'est PAS rationalisable**.
+
+Rendu à **chaque** passage de `node scripts/cout-de-la-refonte.mjs`, déposé dans
+`docs/cout-de-la-refonte/parties-a-rationaliser.md`.
+
+### Pourquoi ici, et pas dans un outil de plus
+
+Cet outil sait déjà compter le **volume** et les **raisons écrites** par famille — exactement ce
+qu'il faut pour chiffrer une partie. Un outil séparé aurait porté une seconde copie de ce
+comptage, qui aurait fini par en diverger (leçon L29).
+
+### Rien n'est écrit à la main, et c'était la seule façon de ne pas se périmer
+
+| Ce qui est rendu | D'où ça vient |
+|---|---|
+| les PARTIES | les 9 modules déjà déclarés dans `MODULES_CIBLES` (le-coordinateur), lus à l'exécution |
+| leurs SCRIPTS | résolus par le catalogue des prestations + la table slug→script (`AGENT_SCRIPT_FILES`) |
+| l'ORDRE | dérivé des **imports réels** entre ces scripts |
+| les EXCLUSIONS | les familles hors périmètre + les 13 dispenses du kit d'export, chacune avec **sa raison déjà écrite ailleurs** |
+
+### Le critère d'ordre est un fait, pas une préférence
+
+Un module dont les scripts sont importés par d'autres passe **avant** eux : rationaliser un socle
+après ce qui s'appuie dessus oblige à refaire les dépendants, et l'inverse n'est jamais vrai.
+
+### Et c'est en voulant l'appliquer qu'on a trouvé le vrai résultat
+
+**SEPT modules sur neuf s'importent mutuellement.** Il n'existe donc **aucun** ordre par
+dépendance entre eux, et en rendre un serait rendre un ordre faux qui a l'air juste (leçon L4).
+Le cycle est **nommé**, et l'ordre de repli est **déclaré** plutôt que subi : le plus **demandé**
+d'abord (celui dont le plus de modules dépendent coûte le plus cher à refaire en dernier), le plus
+lourd à égalité.
+
+**C'est un constat en soi, et il porte sur sa proposition centrale** : la modularisation qu'il vise
+n'est pas gratuite, puisque les modules d'aujourd'hui ne forment pas des paquets détachables.
+
+### Ce que l'ordre n'est PAS
+
+Il dit dans quel ordre le travail **coûte le moins cher**, jamais ce qui **compte le plus** — cette
+priorité-là est un arbitrage qui lui revient (Article 16). Et le poids est un **volume**, jamais une
+**difficulté**.
+
+### Un défaut payé en chemin, gardé en contre-test
+
+Les dispenses du kit d'export sont un **tableau** d'entrées `{ motif, pourquoi }`, et je les lisais
+comme un dictionnaire : le rapport imprimait « 0 → [object Object] », treize fois. **Un lecteur qui
+se trompe de forme ne plante pas, il imprime du bruit parfaitement crédible.**
+
+### Ce qui reste à trancher, et qui ne l'est pas par l'agent
+
+Sa demande dit « document à enregistrer **DANS la stratégie de rationalisation** » — laquelle
+n'existe pas. Le document vit donc chez l'outil, et le plan d'action porte la question en
+**À TRANCHER** : créer une fiche de stratégie de rationalisation dans `docs/strategies/` et y
+renvoyer, ou laisser l'outil seul propriétaire. *(Le chemin exact n'est pas cité ici tant que le
+document n'existe pas : une référence morte ressemble à un lien, ce qui est pire qu'une absence.)* Créer une stratégie à sa place serait décider pour lui.
