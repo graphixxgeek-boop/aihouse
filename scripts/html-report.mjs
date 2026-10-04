@@ -301,7 +301,14 @@ export const THEME_CSS = `
      l'autre sens. */
   :root {
     --bg: #dfe7ed; --panel: #f3f7fa; --panel-border: #b9c9d6;
-    --accent: #0e6a72; --accent2: #16567e; --text: #1f3b50; --text-gris: #38505e; --muted: #4a5d6c;
+    --accent: #0e6a72; --accent2: #16567e; --text: #30597a; --text-gris: #4f6878; --muted: #4a5d6c;
+    /* LES TITRES SONT EN BLEU GRAS ET EN GRIS GRAS, PAS EN FONCÉ (2026-10-04, sa précision) :
+       « je veux des titres en bleu gras (bleu pas foncé) et gris gras (pas foncé) ». Les deux
+       teintes ci-dessous sont plus CLAIRES que le corps du texte — l'inverse de l'habitude — et
+       c'est le GRAS qui porte la hiérarchie, pas l'obscurité. Elles tiennent quand même 4,6:1
+       et 4,7:1, donc elles restent lisibles pour quelqu'un qui ne distingue pas bien les
+       contrastes : un titre clair ne doit pas être un titre qu'on devine. */
+    --titre-bleu: #17659f; --titre-gris: #4f6878;
     --ok: #0e6a72; --warn: #b01c16;
     /* LES DEUX NIVEAUX D'ALERTE, ET ILS NE SE VALENT PAS (2026-10-04, sa précision) : « le noir
        est exceptionnel, tout comme le rouge : uniquement pour alerter […] un exemple de texte en
@@ -364,14 +371,27 @@ export const THEME_CSS = `
   header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
   header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
   .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
-  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main h2 { font-size: 1.2rem; font-weight: 700; color: var(--titre-bleu); margin: 28px 0 10px; }
+  main h3 { font-size: 1.02rem; font-weight: 700; color: var(--titre-gris); margin: 20px 0 8px; text-transform: none; }
+  main h4 { font-size: 0.95rem; font-weight: 700; color: var(--titre-gris); margin: 16px 0 6px; }
   main p { margin: 8px 0; }
   main p.note {
     font-style: italic; color: var(--muted); border-left: 2px solid var(--accent);
     padding-left: 10px; margin: 10px 0;
   }
+  /* LES DÉGRADÉS, « si motif pertinent » (2026-10-04, sa question). Trois endroits seulement, et
+     chacun a une RAISON de dégradé plutôt qu'un goût : le filet d'un titre de section, qui
+     s'éteint vers la droite pour dire « la section commence ici et se poursuit » ; le fond d'un
+     encadré, qui s'éclaircit vers le bas pour le détacher sans le cerner d'un trait ; et la bande
+     d'en-tête, qui donne sa profondeur à la page. Partout ailleurs, l'aplat : un dégradé qui ne
+     dit rien fatigue l'œil et imprime mal. */
+  main h2::after {
+    content: ""; display: block; height: 2px; margin-top: 6px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--titre-bleu) 0%, var(--accent) 35%, transparent 100%);
+  }
   main .highlight {
-    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    background: linear-gradient(180deg, #fbfdfe 0%, var(--panel) 100%);
+    border: 1px solid var(--panel-border); border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0;
     padding: 18px 22px; margin: 22px 0;
   }
   main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }

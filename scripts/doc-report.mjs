@@ -71,6 +71,12 @@ export const DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES = [
   { path: "docs/rapports-de-nuit/", pourquoi: "les rapports de nuit autonome — un par nuit travaillée, rédigés par l'agent et non par un outil. Ils se complètent pendant la nuit, ils ne se régénèrent pas." },
   { path: "docs/rapports-gros-prompt/", pourquoi: "les rapports de grosse saisine — même nature : un par saisine, rédigé, jamais produit mécaniquement. Le dossier docs/reponses/, lui, EST un registre : il porte les réponses livrées, produites par scripts/rapport-gros-prompt.mjs." },
   { path: "docs/rapports-verification-froid/", pourquoi: "les vérifications à froid (Article 25) — un dossier par vérification, déclenché par une demande ou une vague de travail, jamais à date fixe et jamais produit par un outil unique : il RASSEMBLE les passages de plusieurs outils et l'analyse qui les lit. Les outils qu'il convoque ont chacun leur propre registre ; celui-ci n'appartient donc à aucune équipe, et le dire vaut mieux que de lui en inventer une (2026-09-27, tâches #436/#773)." },
+  // (2026-10-04, tâche #1669) LE DOSSIER DE L'IDENTITÉ VISUELLE : il porte des ACTIFS — un
+  // logo vectoriel — et non des passages d'outil. Rien n'y est produit périodiquement, donc
+  // il n'y a ni équipe propriétaire ni rien à relire d'une Ronde à l'autre. Le déclarer ici
+  // plutôt que de lui inventer un item de Ronde qui n'aurait jamais rien à dire (leçon L6 :
+  // un signal qui ne peut pas changer cesse d'être lu).
+  { path: "docs/identite/", pourquoi: "l'identité visuelle de l'Agence — le logo et ses déclinaisons. Ce sont des ACTIFS, dessinés une fois et remplacés quand ils changent, jamais des sorties produites passage après passage par un outil. Il n'y a donc ni producteur périodique, ni équipe propriétaire, ni rien à relire d'une Ronde à l'autre." },
   { path: "docs/contexte-projet/", pourquoi: "les archives historiques transmises par l'utilisateur lui-même (référentiel d'origine v34, extrait de session, diagnostic initial). Rien ici n'est produit par l'Agence, et rien ne doit l'être : ce sont des pièces d'entrée, jamais des sorties." },
   // LES QUATRE QUE LA GÉNÉRATION D'INDEX A RÉVÉLÉS (2026-09-26, tâche #982). Ils n'ont pas changé
   // de nature : ils ont reçu une TABLE DES MATIÈRES, et le garde-fou reconnaît un registre à la

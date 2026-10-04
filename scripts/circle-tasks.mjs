@@ -896,6 +896,12 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // une bibliothèque de matière collectée dehors. Aucune Ronde n'a à le relire périodiquement — une
   // recherche ne se périme pas de la même façon qu'une mesure, et son plan d'action est déjà porté
   // par les tâches qu'elle a ouvertes.
+  // (2026-10-04, tâche #1669) Le dossier de l'IDENTITÉ VISUELLE : il porte des ACTIFS — le logo
+  // de l'Agence et ses déclinaisons —, pas les passages d'un outil. Rien n'y est mesuré, rien
+  // n'y est consigné, et il ne change que le jour où le dessin change, ce qui est une décision
+  // de l'utilisateur et jamais un rendez-vous de calendrier. Lui donner un item de Ronde
+  // reviendrait à créer un signal qui ne pourrait jamais rien dire (leçon L6).
+  "identite": "les actifs d'identité visuelle (le logo et ses déclinaisons), pas le registre d'un outil : rien n'y est mesuré ni consigné, et ils ne changent que sur décision de l'utilisateur — jamais à une date fixe",
   "recherches": "bibliothèque de collectes extérieures (état de l'art), pas le registre d'un outil : rien à relancer, et chaque fiche porte déjà son plan d'action",
   // (2026-10-02) Le dossier des GABARITS : ce sont des patrons VIERGES, écrits sans aucun élément
   // propre à ce projet-ci, et c'est précisément ce qui les rend utilisables ailleurs. Un gabarit

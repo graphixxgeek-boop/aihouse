@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 190" role="img" aria-labelledby="t d">
+  <title id="t">Cycle Blue — logo de l'Agence</title>
+  <desc id="d">Signature manuscrite « Cycle Blue » surmontant une baseline en capitales espacées : L'AGENCE QUI TIENT LE CODE.</desc>
+
+  <!-- TOUT EST EN currentColor : le logo prend la couleur du texte qui l'entoure, donc il suit la
+       palette au lieu de la figer. Un logo qui porte sa propre couleur se désaccorde au premier
+       changement de charte. -->
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- C majuscule, attaque haute et déliée -->
+    <path d="M150 42 C 128 20, 86 20, 66 42 C 44 66, 44 104, 68 124 C 90 142, 126 140, 146 120"
+          stroke-width="7"/>
+    <!-- délié d'attaque du C -->
+    <path d="M150 42 C 156 34, 160 29, 168 26" stroke-width="3.2"/>
+
+    <!-- y -->
+    <path d="M160 70 C 162 92, 168 110, 178 118 C 188 126, 196 118, 198 104 C 200 90, 198 78, 196 70"
+          stroke-width="6"/>
+    <path d="M198 104 C 200 128, 196 150, 182 158 C 172 164, 164 160, 164 152"
+          stroke-width="5.2"/>
+
+    <!-- c -->
+    <path d="M238 82 C 228 70, 212 70, 206 82 C 200 94, 204 112, 216 118 C 226 123, 236 118, 240 110"
+          stroke-width="6"/>
+
+    <!-- l, haute boucle -->
+    <path d="M250 118 C 248 92, 252 56, 262 38 C 268 27, 276 29, 274 42 C 272 60, 260 84, 254 102 C 250 114, 254 120, 262 118"
+          stroke-width="6"/>
+
+    <!-- e, avec la sortie qui file vers le second mot -->
+    <path d="M268 100 C 278 96, 290 94, 296 88 C 301 83, 298 76, 290 77 C 280 78, 272 90, 274 104 C 276 116, 288 122, 300 116"
+          stroke-width="6"/>
+    <path d="M300 116 C 312 110, 322 100, 330 88" stroke-width="3" opacity="0.85"/>
+
+    <!-- B majuscule -->
+    <path d="M342 126 C 346 96, 352 62, 358 40 C 362 26, 372 22, 380 28 C 390 36, 386 54, 370 64 C 360 70, 352 72, 346 72"
+          stroke-width="7"/>
+    <path d="M352 72 C 372 70, 390 76, 392 92 C 394 110, 376 124, 352 122"
+          stroke-width="7"/>
+
+    <!-- l -->
+    <path d="M404 120 C 402 94, 406 58, 416 40 C 422 29, 430 31, 428 44 C 426 62, 414 86, 408 104 C 404 116, 408 122, 416 120"
+          stroke-width="6"/>
+
+    <!-- u -->
+    <path d="M424 80 C 422 96, 424 112, 434 118 C 444 124, 452 114, 454 100 C 456 88, 454 80, 452 74"
+          stroke-width="6"/>
+    <path d="M454 100 C 455 110, 458 117, 464 119" stroke-width="6"/>
+
+    <!-- e final, avec le délié de sortie -->
+    <path d="M466 100 C 476 96, 488 94, 494 88 C 499 83, 496 76, 488 77 C 478 78, 470 90, 472 104 C 474 116, 486 122, 498 114"
+          stroke-width="6"/>
+    <path d="M498 114 C 506 109, 510 102, 512 94" stroke-width="2.6" opacity="0.8"/>
+  </g>
+
+  <!-- Le filet qui sépare la signature de la baseline — il s'éteint aux deux bouts, comme les
+       filets de titre de la charte. -->
+  <defs>
+    <linearGradient id="filet" x1="0" x2="1">
+      <stop offset="0" stop-color="currentColor" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="currentColor" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="currentColor" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="60" y="150" width="400" height="1.4" fill="url(#filet)"/>
+
+  <!-- LA BASELINE EN CAPITALES ESPACÉES. Elle utilise une police système plutôt qu'un tracé :
+       une baseline doit rester NETTE à 24 px de haut, et un tracé manuscrit vectorisé devient
+       illisible à cette taille. Le contraste entre la main et la capitale est précisément ce qui
+       fait l'effet « maison de luxe ». -->
+  <text x="260" y="176" text-anchor="middle" fill="currentColor"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="15" letter-spacing="7.5" opacity="0.92">L'AGENCE QUI TIENT LE CODE</text>
+</svg>

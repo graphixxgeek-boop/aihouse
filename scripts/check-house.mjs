@@ -27345,6 +27345,40 @@ async function testLaListeDuPackDecouverte() {
     'Quel est le thème de cette liste ?',
     '- une puce APRÈS la borne de fin, qui ne doit pas compter',
   ].join('\n');
+  // ── CE QU'IL A COMMANDÉ « À LA BASE » (2026-10-04, tâche #1634). Il court après « la liste
+  //    precise que j'ai créée à la base » et il le dit deux fois. L'outil savait lire ses SUJETS
+  //    et pas ses ATTENDUS — les pièces à produire —, alors que ce sont les plus précis des deux
+  //    dans sa commande.
+  const commande = [
+    'bla bla',
+    '- LE « PACK DECOUVERTE AGENCE » c’est :',
+    '- 1 DOC VERSION « ADMIN » (une page HTML) + 1 DOC VERSION « COMMERCIALISABLE » (une page HTML) de présentation de LA LISTE',
+    '- + 1 DOC (6-8 PAGES HTML) DE PRESENTATION DE L’AGENCE VERSION « ADMIN »',
+    '- une puce qui ne nomme aucun document et ne doit pas compter',
+    'CE pack permet de découvrir',
+    '- une puce après la borne de fin, qui ne compte pas non plus',
+  ].join('\n');
+  const pieces = I.attendusDuPack(commande);
+  assert.strictEqual(pieces.length, 2, 'only the bullets that NAME a document count as pieces — a bullet of context is not a deliverable');
+  assert.ok(pieces[0].versionAdmin && pieces[0].versionCommercialisable, 'and each piece carries which VERSIONS he asked for, since that is the backbone of his brief');
+  assert.strictEqual(pieces[1].pages, '6-8', 'a page count written in his own text is read, never rounded');
+
+  // SES DOCUMENTS SONT COLLÉS D'UN TRAITEMENT DE TEXTE, donc pleins d'ESPACES INSÉCABLES. Une
+  // borne écrite avec des espaces ordinaires ne retrouve rien — et le premier passage a rendu
+  // « la borne a disparu » sur un texte où elle est parfaitement présente. Le défaut était dans
+  // l'instrument, pas dans la donnée, et c'est la troisième chose qui avait raté la nuit du
+  // 2026-10-01 : re-constater avant de rapporter qu'une chose MANQUE.
+  const avecInsecables = commande.replace(/« /g, '«\u00a0').replace(/ »/g, '\u00a0»');
+  assert.strictEqual(I.attendusDuPack(avecInsecables).length, 2, 'MUST CATCH: non-breaking spaces must not make his own brief unreadable');
+  assert.strictEqual(I.normaliserLesEspaces('a\u00a0b  c'), 'a b c', 'the normaliser collapses both the NBSP and the doubled space');
+
+  // SANS BORNE, IL PARLE — jamais zéro pièce en silence (leçons L5/L11).
+  assert.ok(I.findAttendusIllisibles({ root: '.', existsImpl: () => true, readFileImpl: () => 'aucune borne ici' }).length === 1, 'a brief whose borders moved must say so rather than report "he ordered nothing"');
+  assert.deepStrictEqual(I.findAttendusIllisibles({ root: '.' }), [], 'checked live: his real COMMANDE IMPORTANTE must still be readable today');
+  const reelles = I.attendusDuPack(fs.readFileSync(I.SOURCE_DES_SUJETS, 'utf8'));
+  assert.ok(reelles.length >= 3, `and his real brief really does name the pieces (${reelles.length})`);
+  assert.ok(reelles.every((x) => x.versionAdmin && x.versionCommercialisable), 'MESURE QUI COMPTE: every single piece he ordered exists in BOTH versions, ADMIN and COMMERCIALISABLE — which is the opposite of "ce versionnage est abandonné", and he asked to be told');
+
   const sujets = I.sujetsDeDecouverte(faux);
   assert.strictEqual(sujets.length, 2, 'only the bullets between the two bornes become subjects — not the prose line between them, not the bullet after the closing borne');
   assert.deepStrictEqual(sujets.map((s) => s.libelle), ['la classification de l’Agence', 'la gouvernance de l’Agence'], 'and the trailing comma is stripped from the label');

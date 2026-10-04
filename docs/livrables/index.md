@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-04. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**56 fichier(s).**
+**57 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -57,6 +57,7 @@
 | [outils-reductibles-en-extension.md](outils-reductibles-en-extension.md) | — |
 | [pack-decouverte-liste-2026-10-03.html](pack-decouverte-liste-2026-10-03.html) | — |
 | [pack-decouverte-liste-2026-10-03.md](pack-decouverte-liste-2026-10-03.md) | — |
+| [pack-decouverte-liste-2026-10-04.md](pack-decouverte-liste-2026-10-04.md) | — |
 | [reponse-au-prompt-word-du-1er-octobre.html](reponse-au-prompt-word-du-1er-octobre.html) | — |
 | [reponse-au-prompt-word-du-1er-octobre.md](reponse-au-prompt-word-du-1er-octobre.md) | — |
 | [systeme-de-suivi.html](systeme-de-suivi.html) | — |

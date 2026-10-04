@@ -292,6 +292,105 @@ export function findSourceDesSujetsIllisible({ root = ".", source = SOURCE_DES_S
   return [];
 }
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// LES ATTENDUS DU PACK — ce qu'il a COMMANDÉ, pas ce qu'on a compris (2026-10-04, tâche #1634)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// CE QU'IL CHERCHE, ET IL LE DIT DEUX FOIS DANS LE MÊME MESSAGE : « LE CONTENU DU PACK DECOUVERTE :
+// il a déjà été defini precisemment, mais il y a longtemps. Je veux la liste precise que j'ai créée
+// à la base, c'est apres cette info que je cours […] reviens à la VRAIE premiere fois ou j'ai parlé
+// du pack stp. »
+//
+// LA RÉPONSE EST DANS SA COMMANDE IMPORTANTE, ET ELLE N'EST PAS CELLE QU'IL ATTEND. Ce qu'il a
+// écrit « à la base » n'est PAS une liste de documents : c'est une liste de SUJETS (déjà lue par
+// `sujetsDeDecouverte()`) plus une liste de PIÈCES À PRODUIRE. La liste de documents, il l'a
+// explicitement laissée à dériver — « je voudrais la création d'une liste des docs/rapports qui
+// traitent de tous ces sujets ». **Il court après une liste qui n'a jamais existé comme liste**, et
+// le dire vaut mieux que de lui en fabriquer une en prétendant l'avoir retrouvée.
+//
+// CE QUE CETTE FONCTION AJOUTE À `sujetsDeDecouverte()` : les sujets disent DE QUOI le pack parle,
+// les attendus disent CE QU'IL FAUT PRODUIRE. L'outil savait répondre à la première question et
+// pas à la seconde, alors qu'elle est la plus précise des deux dans sa commande.
+export const BORNE_DEBUT_ATTENDUS = "PACK DECOUVERTE AGENCE » c";
+export const BORNE_FIN_ATTENDUS = "CE pack permet de découvrir";
+
+// SON DOCUMENT EST COLLÉ DEPUIS UN TRAITEMENT DE TEXTE, donc il porte des ESPACES INSÉCABLES
+// (U+00A0) autour des guillemets français et parfois en double. Une borne écrite avec des espaces
+// ordinaires ne la retrouve jamais — et le premier passage a rendu « la borne a disparu » sur un
+// texte où elle est parfaitement présente. Le défaut est dans l'instrument, pas dans la donnée :
+// c'est très exactement la troisième chose qui avait raté la nuit du 2026-10-01, et le correctif
+// écrit alors disait de re-constater avant de rapporter qu'une chose manque.
+export function normaliserLesEspaces(texte = "") {
+  return String(texte).replace(/\u00a0/g, " ").replace(/[ \t]{2,}/g, " ");
+}
+
+export function attendusDuPack(texte = "", { debut = BORNE_DEBUT_ATTENDUS, fin = BORNE_FIN_ATTENDUS } = {}) {
+  const t = normaliserLesEspaces(texte);
+  const i = t.indexOf(debut);
+  if (i === -1) return [];
+  const apres = t.slice(i + debut.length);
+  const j = apres.indexOf(fin);
+  const zone = j === -1 ? apres : apres.slice(0, j);
+  const pieces = [];
+  for (const ligne of zone.split("\n")) {
+    const m = ligne.match(/^\s*[-*•]\s+(.+?)\s*$/);
+    if (!m) continue;
+    const libelle = m[1].trim();
+    // La première puce est l'amorce « LE PACK c'est : » elle-même ; une puce sans verbe ni
+    // quantité ne décrit aucune pièce. On garde celles qui NOMMENT un document.
+    // LE FILTRE EST SENSIBLE À LA CASSE, ET C'EST UN CONTRE-TEST QUI L'A IMPOSÉ : en
+    // insensible, « une puce qui ne nomme aucun document » matchait sur le DOC de « document »
+    // et passait pour une pièce à produire. Ses pièces à lui sont écrites en capitales — DOC,
+    // DOCS, POSSIBILITE —, et c'est précisément ce qui les distingue de sa prose.
+    if (!/\bDOCS?\b|POSSIBILITE/.test(libelle)) continue;
+    pieces.push({
+      libelle,
+      versionAdmin: /ADMIN/i.test(libelle),
+      versionCommercialisable: /COMMERCIALISABLE/i.test(libelle),
+      pages: (libelle.match(/(\d+\s*[-–]\s*\d+)\s*PAGES?/i) ?? libelle.match(/(\d+)\s*PAGES?/i) ?? [])[1] ?? null,
+    });
+  }
+  return pieces;
+}
+
+// LE GARDE-FOU DE CETTE LECTURE-CI, pour la même raison que celui des sujets : si les bornes
+// bougent, zéro pièce ressemblerait à « il n'a rien commandé », ce qui est faux (leçons L5/L11).
+export function findAttendusIllisibles({ root = ".", source = SOURCE_DES_SUJETS, existsImpl = existsSync, readFileImpl = readFileSync } = {}) {
+  const chemin = join(root, source);
+  if (!existsImpl(chemin)) return [`PACK DÉCOUVERTE : ses attendus sont lus dans ${source}, qui n'existe plus.`];
+  const texte = readFileImpl(chemin, "utf8");
+  if (!normaliserLesEspaces(texte).includes(BORNE_DEBUT_ATTENDUS)) {
+    return [`PACK DÉCOUVERTE : la borne de début des ATTENDUS ("${BORNE_DEBUT_ATTENDUS}") a disparu de ${source} — sans elle, la liste des pièces à produire rendrait zéro en silence.`];
+  }
+  if (!attendusDuPack(texte).length) {
+    return [`PACK DÉCOUVERTE : les bornes des attendus sont présentes dans ${source} mais aucune pièce n'est reconnue entre elles — une liste vide n'est pas « aucune pièce commandée » (leçon L5).`];
+  }
+  return [];
+}
+
+export function formatAttendusLines(pieces = [], { ecarts = [] } = {}) {
+  if (ecarts.length) return ecarts.map((e) => `  🚨 ${e}`);
+  if (!pieces.length) return ["  PAS MESURÉ — aucune pièce lue dans sa commande"];
+  const L = [];
+  L.push(`CE QU'IL A COMMANDÉ « À LA BASE » — ${pieces.length} pièce(s), lues dans sa COMMANDE IMPORTANTE, jamais recopiées :`);
+  L.push("");
+  for (const p of pieces) {
+    L.push(`  · ${p.libelle}`);
+    const traits = [
+      p.versionAdmin ? "version ADMIN" : null,
+      p.versionCommercialisable ? "version COMMERCIALISABLE" : null,
+      p.pages ? `${p.pages} pages` : null,
+    ].filter(Boolean);
+    if (traits.length) L.push(`      → ${traits.join(" · ")}`);
+  }
+  L.push("");
+  L.push("  CE QUI N'EXISTE PAS DANS SA COMMANDE, ET C'EST LE POINT : aucune LISTE DE DOCUMENTS.");
+  L.push("  Il a écrit une liste de SUJETS et une liste de PIÈCES, puis a demandé que la liste de");
+  L.push("  documents en soit DÉRIVÉE : « je voudrais la création d'une liste des docs/rapports qui");
+  L.push("  traitent de tous ces sujets ». La liste qu'il cherche n'a donc jamais existé comme liste.");
+  return L;
+}
+
 // Un document répond à un sujet si son CHEMIN ou son TITRE porte un des mots du sujet. Volontairement
 // pas le corps : à chercher dans le corps de 660 documents, « organisation » ressort partout et le
 // classement ne distingue plus rien.
@@ -665,8 +764,16 @@ function mainPack() {
     process.exitCode = 1;
     return;
   }
+  // LES ATTENDUS PASSENT AVANT LA LISTE, et l'ordre a un sens (2026-10-04, tâche #1634) : ce
+  // qu'il a COMMANDÉ se lit avant ce qu'on a trouvé, sinon la liste dérivée passe pour la
+  // commande elle-même — et c'est exactement la confusion après laquelle il courait.
+  const brut = (() => { try { return readFileSync(join(".", SOURCE_DES_SUJETS), "utf8"); } catch { return ""; } })();
+  const pieces = attendusDuPack(brut);
+  const lignesAttendus = formatAttendusLines(pieces, { ecarts: findAttendusIllisibles({ root: "." }) });
   const sortie = `docs/livrables/pack-decouverte-liste-${date}.md`;
-  writeFileSync(sortie, `${r.lignes.join("\n")}\n`, "utf8");
+  writeFileSync(sortie, `${["## Ce qu'il a commandé « à la base »", "", "```", ...lignesAttendus, "```", "", ...r.lignes].join("\n")}\n`, "utf8");
+  for (const l of lignesAttendus) console.log(l);
+  console.log("");
   console.log(`${r.sujets.length} sujet(s) lu(s) dans ${SOURCE_DES_SUJETS}, ${r.fichiers} document(s) balayé(s).`);
   for (const s of r.sujets) console.log(`  ${String(s.documents.length).padStart(3)} — ${s.libelle}`);
   const vides = findSujetsSansDocument({ parSujet: r.sujets });

@@ -28,7 +28,14 @@
      l'autre sens. */
   :root {
     --bg: #dfe7ed; --panel: #f3f7fa; --panel-border: #b9c9d6;
-    --accent: #0e6a72; --accent2: #16567e; --text: #1f3b50; --text-gris: #38505e; --muted: #4a5d6c;
+    --accent: #0e6a72; --accent2: #16567e; --text: #30597a; --text-gris: #4f6878; --muted: #4a5d6c;
+    /* LES TITRES SONT EN BLEU GRAS ET EN GRIS GRAS, PAS EN FONCÉ (2026-10-04, sa précision) :
+       « je veux des titres en bleu gras (bleu pas foncé) et gris gras (pas foncé) ». Les deux
+       teintes ci-dessous sont plus CLAIRES que le corps du texte — l'inverse de l'habitude — et
+       c'est le GRAS qui porte la hiérarchie, pas l'obscurité. Elles tiennent quand même 4,6:1
+       et 4,7:1, donc elles restent lisibles pour quelqu'un qui ne distingue pas bien les
+       contrastes : un titre clair ne doit pas être un titre qu'on devine. */
+    --titre-bleu: #17659f; --titre-gris: #4f6878;
     --ok: #0e6a72; --warn: #b01c16;
     /* LES DEUX NIVEAUX D'ALERTE, ET ILS NE SE VALENT PAS (2026-10-04, sa précision) : « le noir
        est exceptionnel, tout comme le rouge : uniquement pour alerter […] un exemple de texte en
@@ -91,14 +98,27 @@
   header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
   header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
   .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
-  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main h2 { font-size: 1.2rem; font-weight: 700; color: var(--titre-bleu); margin: 28px 0 10px; }
+  main h3 { font-size: 1.02rem; font-weight: 700; color: var(--titre-gris); margin: 20px 0 8px; text-transform: none; }
+  main h4 { font-size: 0.95rem; font-weight: 700; color: var(--titre-gris); margin: 16px 0 6px; }
   main p { margin: 8px 0; }
   main p.note {
     font-style: italic; color: var(--muted); border-left: 2px solid var(--accent);
     padding-left: 10px; margin: 10px 0;
   }
+  /* LES DÉGRADÉS, « si motif pertinent » (2026-10-04, sa question). Trois endroits seulement, et
+     chacun a une RAISON de dégradé plutôt qu'un goût : le filet d'un titre de section, qui
+     s'éteint vers la droite pour dire « la section commence ici et se poursuit » ; le fond d'un
+     encadré, qui s'éclaircit vers le bas pour le détacher sans le cerner d'un trait ; et la bande
+     d'en-tête, qui donne sa profondeur à la page. Partout ailleurs, l'aplat : un dégradé qui ne
+     dit rien fatigue l'œil et imprime mal. */
+  main h2::after {
+    content: ""; display: block; height: 2px; margin-top: 6px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--titre-bleu) 0%, var(--accent) 35%, transparent 100%);
+  }
   main .highlight {
-    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    background: linear-gradient(180deg, #fbfdfe 0%, var(--panel) 100%);
+    border: 1px solid var(--panel-border); border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0;
     padding: 18px 22px; margin: 22px 0;
   }
   main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
@@ -171,36 +191,110 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-04T04:43:35.612Z</div>
+    <div class="date">2026-10-04T04:53:51.583Z</div>
     <h1>La charte graphique de l'Agence</h1>
-    <p class="sub">Bleus, cyans, gris · le rouge et le noir réservés à l'alerte · à valider pour toutes les sorties HTML</p>
+    <p class="sub">Titres bleu et gris gras · corps moins foncé · dégradés motivés · première proposition de logo</p>
   </header>
   <div class="divider"></div>
-  <main><p>Ce document n'est pas une maquette : il est passé par <strong>le même générateur</strong> que tous les rapports de l'Agence. Ce que tu vois ici est exactement ce que produiront les sorties HTML une fois le format validé — pas une image de ce qu'elles pourraient être.</p>
+  <main><p>Cette page est passée par <strong>le même générateur</strong> que tous les rapports de l'Agence. Ce que tu vois ici est exactement ce que produiront les sorties HTML — pas une maquette de ce qu'elles pourraient être.</p>
+<h3>Les titres sont clairs, c'est le gras qui porte la hiérarchie</h3>
+<p>Les titres de section sont en <strong>bleu franc</strong> et les sous-titres en <strong>gris moyen</strong> — plus clairs que le corps du texte, à l'inverse de l'habitude. Ce qui les distingue n'est pas l'obscurité mais la graisse, et c'est ce qui donne à la page son air posé plutôt que sévère.</p>
+<h4>Un sous-titre, en gris gras</h4>
+<p>Le corps du texte lui-même est passé à un bleu moins foncé. Lu sur une heure, il fatigue moins que le bleu nuit d'avant, et il reste à 5,9:1 de contraste — très au-dessus du minimum lisible.</p>
 <h3>La gamme, et pourquoi elle est fermée</h3>
-<p>Tout le texte vit en <strong>bleu foncé</strong> ou en <strong>gris foncé</strong>. Les fonds sont des gris bleutés, jamais un blanc pur : une page lue une heure sous un blanc pur fatigue l'œil, et ces documents sont faits pour être lus longtemps.</p>
-<table><thead><tr><th>Rôle</th><th>Couleur</th><th>Où elle sert</th></tr></thead><tbody><tr><td>Corps du texte</td><td>bleu foncé <code>#1f3b50</code></td><td>tout ce qui se lit</td></tr><tr><td>Texte secondaire</td><td>gris foncé <code>#38505e</code></td><td>précisions, légendes, notes de bas de bloc</td></tr><tr><td>Titres et accents</td><td>teal <code>#0e6a72</code></td><td>titres de section, filets, mises en avant</td></tr><tr><td>Liens</td><td>bleu <code>#16567e</code></td><td>toujours soulignés — la couleur seule ne dit jamais qu'un texte est cliquable</td></tr><tr><td>Fond de page</td><td>gris bleuté <code>#dfe7ed</code></td><td>la page</td></tr><tr><td>Fond d'encadré</td><td>blanc bleuté <code>#f3f7fa</code></td><td>jamais <code>#ffffff</code></td></tr></tbody></table>
-<div class="highlight"><p><strong>Un encadré, c'est ceci.</strong> Il sert à isoler ce qui mérite de s'arrêter : une définition, une
-décision prise, un chiffre qui change la lecture de tout le reste.</p><p>Il se pose sur le blanc bleuté, avec un filet teal à gauche.</p></div>
-<h3>Les deux niveaux d'alerte, et ils ne se valent pas</h3>
-<p class="alerte">🚨 <strong>Alerte critique — en rouge.</strong> Elle dit : il faut agir, et maintenant. Le rouge ne sert strictement à rien d'autre. Exemple réel : <em>« 2 parts sur 4 sortent en échec — 134 vérifications perdues. Ne pas se fier à ce lancement. »</em></p>
-<p class="alerte-grave">⛔ <strong>Alerte grave — en noir.</strong> Un cran en dessous. Elle dit : c'est sérieux, ça doit être traité, mais rien ne brûle. Exemple réel : <em>« 7 modules sur 9 s'importent mutuellement : il n'existe aucun ordre par dépendance entre eux. »</em></p>
-<p>La force de ces deux crans vient de leur <strong>rareté</strong>. Une page où tout crie ne dit plus rien — c'est pour ça que le reste de la gamme n'a aucune couleur vive.</p>
-<h3>Ce que donnent les autres éléments</h3>
-<h4>Une liste</h4>
-<ul><li>Un élément ordinaire, en bleu foncé.</li><li class="alerte">🚨 Un élément qui alerte en rouge garde son filet et son fond.</li><li class="alerte-grave">⛔ Un élément grave, d'un cran en dessous.</li><li>Un dernier élément ordinaire, pour voir le contraste entre les trois.</li></ul>
-<h4>Un tableau de mesures</h4>
-<table><thead><tr><th>Mesure</th><th>Avant</th><th>Après</th><th>Écart</th></tr></thead><tbody><tr><td>Filet de sécurité, en séquentiel</td><td>266,0 s</td><td>192,3 s</td><td>−28 %</td></tr><tr><td>Filet de sécurité, en 4 parts</td><td>266,0 s</td><td>67,1 s</td><td>−75 %</td></tr><tr><td>Vérifications</td><td>436</td><td>454</td><td>+18</td></tr><tr><td>Plancher du parallélisme</td><td>46,1 s</td><td>44,3 s</td><td>−4 %</td></tr></tbody></table>
-<h4>Du code</h4>
-<pre><code>node scripts/filet-en-parts.mjs
-  part 1 : ✅ en 58,5 s
-  part 4 : ✅ en 62,8 s</code></pre>
+<table><thead><tr><th>Rôle</th><th>Couleur</th><th>Contraste</th><th>Où elle sert</th></tr></thead><tbody><tr><td>Titres de section</td><td>bleu <code>#17659f</code></td><td>4,6:1</td><td>les <code>##</code>, en gras</td></tr><tr><td>Sous-titres</td><td>gris <code>#4f6878</code></td><td>4,7:1</td><td>les <code>###</code>, en gras</td></tr><tr><td>Corps du texte</td><td>bleu <code>#30597a</code></td><td>5,9:1</td><td>tout ce qui se lit</td></tr><tr><td>Accents et filets</td><td>teal <code>#0e6a72</code></td><td>5,1:1</td><td>mises en avant, bordures</td></tr><tr><td>Liens</td><td>bleu <code>#16567e</code></td><td>6,3:1</td><td>toujours soulignés</td></tr><tr><td>Fond de page</td><td>gris bleuté <code>#dfe7ed</code></td><td>—</td><td>la page</td></tr><tr><td>Fond d'encadré</td><td>blanc bleuté <code>#f3f7fa</code></td><td>—</td><td><strong>jamais</strong> <code>#ffffff</code></td></tr></tbody></table>
+<div class="highlight"><p><strong>Les dégradés sont admis à trois endroits, et chacun a une raison.</strong> Le filet sous un titre de
+section s'éteint vers la droite : il dit « la section commence ici et se poursuit ». Le fond d'un
+encadré s'éclaircit vers le bas, ce qui le détache sans l'enfermer dans un trait. Et la bande
+d'en-tête donne sa profondeur à la page.</p><p>Partout ailleurs, l'aplat. Un dégradé qui ne dit rien fatigue l'œil et imprime mal.</p></div>
+<h3>Les deux crans d'alerte</h3>
+<p class="alerte">🚨 <strong>Alerte critique — en rouge.</strong> Elle dit : il faut agir, et maintenant. Le rouge ne sert à rien d'autre. Exemple réel : <em>« 2 parts sur 4 sortent en échec — 134 vérifications perdues. »</em></p>
+<p class="alerte-grave">⛔ <strong>Alerte grave — en noir.</strong> Un cran en dessous : c'est sérieux, ça doit être traité, mais rien ne brûle. Exemple réel : <em>« 7 modules sur 9 s'importent mutuellement : il n'existe aucun ordre par dépendance entre eux. »</em></p>
+<p>Leur force vient de leur rareté. Une page où tout crie ne dit plus rien.</p>
+<h4>Dans une liste</h4>
+<ul><li>Un élément ordinaire, en bleu.</li><li class="alerte">🚨 Un élément critique garde son filet rouge et son fond.</li><li class="alerte-grave">⛔ Un élément grave, d'un cran en dessous.</li><li>Un dernier élément ordinaire, pour voir les trois côte à côte.</li></ul>
+<h3>Ce que la nuit a mesuré</h3>
+<table><thead><tr><th>Mesure</th><th>Avant</th><th>Après</th><th>Écart</th></tr></thead><tbody><tr><td>Filet de sécurité, en séquentiel</td><td>266,0 s</td><td>192,3 s</td><td>−28 %</td></tr><tr><td>Filet de sécurité, en 4 parts</td><td>266,0 s</td><td>67,1 s</td><td>−75 %</td></tr><tr><td>Vérifications</td><td>436</td><td>454</td><td>+18</td></tr></tbody></table>
 <hr>
-<h3>Le logo, quand il existera</h3>
-<p>Le format à viser est <strong>SVG</strong>, et pour trois raisons qui tiennent toutes à l'usage réel de ces documents.</p>
-<ul><li><strong>Ces pages s'ouvrent à 150 %</strong> et se copient dans d'autres documents. Un SVG reste net à n'importe quelle échelle ; un PNG devient flou au premier agrandissement.</li><li><strong>Chaque rapport est un fichier HTML autonome</strong>, souvent déplacé ou envoyé seul. Le logo doit donc être <strong>embarqué dans la page</strong>, jamais lié à un fichier voisin — un SVG s'écrit directement dans le HTML, ce qu'aucune image binaire ne permet proprement.</li><li><strong>Un SVG peut hériter de la palette.</strong> Dessiné en <code>currentColor</code>, il prend automatiquement le teal de la page, et resterait juste le jour où la palette bouge.</li></ul>
-<p>Ce qu'il faut te demander au moment de le créer : un tracé <strong>monochrome</strong> (une seule couleur, pas de dégradé), lisible à <strong>24 pixels de haut</strong>, et livré en <code>.svg</code>. Garde un <code>.png</code> à fond transparent, en 512 px, pour les endroits qui n'acceptent pas le vectoriel — une signature de courriel, une icône de dépôt.</p></main>
-  <div class="divider"></div><footer><p>Dérivé de /tmp/claude-0/demo-palette.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+<h3>Le logo, première proposition</h3>
+<p>Il est <strong>dessiné en tracés vectoriels</strong>, pas en police : aucun fichier de fonte à embarquer, aucune licence à traîner, et il reste net à n'importe quelle taille. Il est écrit en <code>currentColor</code>, donc il prend la couleur du texte qui l'entoure — il suivra la palette le jour où elle bougera, au lieu de se désaccorder.</p>
+<p><strong>Le parti pris que tu as demandé</strong> : une signature manuscrite déliée, posée au-dessus d'une baseline en capitales largement espacées. C'est le contraste entre les deux — la main et la capitale — qui fait l'effet « maison de luxe ». La baseline reste en caractères système, et c'est voulu : un tracé manuscrit vectorisé devient illisible à 24 px de haut, une capitale non.</p>
+<p>Le nom porté ici est <strong>Cycle Blue</strong>, que tu as dit aimer. Ce n'est pas une décision : les dix propositions de noms sont une tâche à part, et c'est toi qui nommes. Le tracé se remplace en changeant un seul fichier.</p><figure style="margin:24px 0 8px"><svg style="width:min(460px,92%);height:auto;color:var(--accent2);display:block;margin:18px auto 6px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 190" role="img" aria-labelledby="t d">
+  <title id="t">Cycle Blue — logo de l'Agence</title>
+  <desc id="d">Signature manuscrite « Cycle Blue » surmontant une baseline en capitales espacées : L'AGENCE QUI TIENT LE CODE.</desc>
+
+  <!-- TOUT EST EN currentColor : le logo prend la couleur du texte qui l'entoure, donc il suit la
+       palette au lieu de la figer. Un logo qui porte sa propre couleur se désaccorde au premier
+       changement de charte. -->
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- C majuscule, attaque haute et déliée -->
+    <path d="M150 42 C 128 20, 86 20, 66 42 C 44 66, 44 104, 68 124 C 90 142, 126 140, 146 120"
+          stroke-width="7"/>
+    <!-- délié d'attaque du C -->
+    <path d="M150 42 C 156 34, 160 29, 168 26" stroke-width="3.2"/>
+
+    <!-- y -->
+    <path d="M160 70 C 162 92, 168 110, 178 118 C 188 126, 196 118, 198 104 C 200 90, 198 78, 196 70"
+          stroke-width="6"/>
+    <path d="M198 104 C 200 128, 196 150, 182 158 C 172 164, 164 160, 164 152"
+          stroke-width="5.2"/>
+
+    <!-- c -->
+    <path d="M238 82 C 228 70, 212 70, 206 82 C 200 94, 204 112, 216 118 C 226 123, 236 118, 240 110"
+          stroke-width="6"/>
+
+    <!-- l, haute boucle -->
+    <path d="M250 118 C 248 92, 252 56, 262 38 C 268 27, 276 29, 274 42 C 272 60, 260 84, 254 102 C 250 114, 254 120, 262 118"
+          stroke-width="6"/>
+
+    <!-- e, avec la sortie qui file vers le second mot -->
+    <path d="M268 100 C 278 96, 290 94, 296 88 C 301 83, 298 76, 290 77 C 280 78, 272 90, 274 104 C 276 116, 288 122, 300 116"
+          stroke-width="6"/>
+    <path d="M300 116 C 312 110, 322 100, 330 88" stroke-width="3" opacity="0.85"/>
+
+    <!-- B majuscule -->
+    <path d="M342 126 C 346 96, 352 62, 358 40 C 362 26, 372 22, 380 28 C 390 36, 386 54, 370 64 C 360 70, 352 72, 346 72"
+          stroke-width="7"/>
+    <path d="M352 72 C 372 70, 390 76, 392 92 C 394 110, 376 124, 352 122"
+          stroke-width="7"/>
+
+    <!-- l -->
+    <path d="M404 120 C 402 94, 406 58, 416 40 C 422 29, 430 31, 428 44 C 426 62, 414 86, 408 104 C 404 116, 408 122, 416 120"
+          stroke-width="6"/>
+
+    <!-- u -->
+    <path d="M424 80 C 422 96, 424 112, 434 118 C 444 124, 452 114, 454 100 C 456 88, 454 80, 452 74"
+          stroke-width="6"/>
+    <path d="M454 100 C 455 110, 458 117, 464 119" stroke-width="6"/>
+
+    <!-- e final, avec le délié de sortie -->
+    <path d="M466 100 C 476 96, 488 94, 494 88 C 499 83, 496 76, 488 77 C 478 78, 470 90, 472 104 C 474 116, 486 122, 498 114"
+          stroke-width="6"/>
+    <path d="M498 114 C 506 109, 510 102, 512 94" stroke-width="2.6" opacity="0.8"/>
+  </g>
+
+  <!-- Le filet qui sépare la signature de la baseline — il s'éteint aux deux bouts, comme les
+       filets de titre de la charte. -->
+  <defs>
+    <linearGradient id="filet" x1="0" x2="1">
+      <stop offset="0" stop-color="currentColor" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="currentColor" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="currentColor" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="60" y="150" width="400" height="1.4" fill="url(#filet)"/>
+
+  <!-- LA BASELINE EN CAPITALES ESPACÉES. Elle utilise une police système plutôt qu'un tracé :
+       une baseline doit rester NETTE à 24 px de haut, et un tracé manuscrit vectorisé devient
+       illisible à cette taille. Le contraste entre la main et la capitale est précisément ce qui
+       fait l'effet « maison de luxe ». -->
+  <text x="260" y="176" text-anchor="middle" fill="currentColor"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="15" letter-spacing="7.5" opacity="0.92">L'AGENCE QUI TIENT LE CODE</text>
+</svg>
+<figcaption style="text-align:center">Le logo sur fond de page — il prend la couleur du texte qui l'entoure.</figcaption></figure></main>
+  <div class="divider"></div><footer><p>Dérivé de /tmp/claude-0/demo2.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
 </div>
 </body>
 </html>
