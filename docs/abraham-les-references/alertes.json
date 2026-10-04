@@ -6,22 +6,12 @@
     },
     "ezechiel-les-tests": {
       "quand": "2026-10-04",
-      "combien": 1
+      "combien": 0
     },
     "abraham-les-references": {
       "quand": "2026-10-03",
       "combien": 0
     }
   },
-  "alertes": [
-    {
-      "outil": "ezechiel-les-tests",
-      "cle": "la suite elle-même n'est pas au vert : 1 anomalie(s) de fonctionnement",
-      "objet": "scripts/check-house.mjs",
-      "gravite": "à surveiller",
-      "constat": "la suite elle-même n'est pas au vert : 1 anomalie(s) de fonctionnement",
-      "depuis": "2026-09-28",
-      "vueLe": "2026-10-04"
-    }
-  ]
+  "alertes": []
 }
