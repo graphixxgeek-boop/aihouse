@@ -91,7 +91,7 @@ valeur de référence, une fois la délégation faite.
 
 ## Sa ligne rouge, écrite dans le code plutôt que dans cette fiche
 
-Posée par l'utilisateur au sujet de la pertinence : *« sur ce type de choix, toujours me consulter,
+Posée par l'utilisateur qui traite de la question de la pertinence : *« sur ce type de choix, toujours me consulter,
 process »*. Abraham ne peut donc pas conclure — le champ `etat` d'une question ne prend **qu'une
 seule valeur**, « à trancher ». Une prose qui dirait « il ne faut pas conclure » aurait été une
 intention ; un type qui ne sait pas exprimer un verdict est un mécanisme.
@@ -595,7 +595,7 @@ pouvoir de détection reste prouvé sur une fixture.
 pose qu'au moment où l'on cite, jamais à chaque commit.
 
 **CE QU'ELLE RÉSOUT** : jusqu'au 2 octobre, un seul texte numérotait ses Articles, donc « Article
-19 » n'était ambigu pour personne. Depuis que le document de gouvernance porte sa propre
+19 » n'était ambigu pour personne. Depuis que la Vision Globale porte sa propre
 numérotation, **deux lois numérotent et leurs plages se chevauchent sur 31 numéros**.
 
 **NUMÉROTER N'EST PAS CITER, ET LE SÉPARATEUR EST LA DENSITÉ.** Premier passage, faux positif net :

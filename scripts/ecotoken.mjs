@@ -1447,7 +1447,7 @@ export function matchesDArticleHorsProposition(texte = "") {
 export function verifyNothingBroken(newCharterText, repoFiles, deplacements = [], readFile = (p) => (existsSync(p) ? readFileSync(p, "utf8") : null)) {
   const findings = [];
   // LE DÉPÔT PORTE DÉSORMAIS DEUX DOCUMENTS À ARTICLES NUMÉROTÉS (2026-10-02, tâche #1429), et
-  // rien ne les distinguait. Le document de gouvernance a sa PROPRE numérotation, qui va bien
+  // rien ne les distinguait. La Vision Globale a sa PROPRE numérotation, qui va bien
   // au-delà de celle de la charte : ses articles des soixantaine et soixante-dizaine ne citent
   // pas la charte, ils SONT ses articles à lui. Les compter comme des renvois faisait apparaître
   // une dizaine de renvois morts le jour où ce document a été établi.
@@ -1477,7 +1477,7 @@ export function verifyNothingBroken(newCharterText, repoFiles, deplacements = []
   }
   // LA BORNE HAUTE, ET ELLE CORRIGE LA CLASSE PLUTÔT QUE L'OCCURRENCE (2026-10-02, leçon L37).
   // La liste de chemins ci-dessus devait grandir d'une entrée à CHAQUE fichier qui mentionne un
-  // article du document de gouvernance — elle en a reçu deux en deux jours, et la troisième est
+  // article de la Vision Globale — elle en a reçu deux en deux jours, et la troisième est
   // arrivée par un simple COMMENTAIRE DE CODE illustrant un motif (« ## Article 64 — … »), que
   // rien ne distingue d'un renvoi. Une liste qui grandit à chaque mention n'est plus une
   // exception, c'est une dette.

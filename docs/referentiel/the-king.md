@@ -385,7 +385,7 @@ fait loi. »
 
 **Une ligne de corpus n'aurait rien ajouté du tout.** L'extracteur de THE-KING
 (`extractPrincipleUnits`) rend **zéro unité sur CLAUDE.md** : la Charte numérote ses règles
-autrement que le document de gouvernance. Ajouter CLAUDE.md à une liste de chemins aurait **doublé
+autrement que la Vision Globale. Ajouter CLAUDE.md à une liste de chemins aurait **doublé
 la couverture ANNONCÉE en comparant l'idée à une liste vide** — exactement le faux vert que ce
 projet traque partout ailleurs.
 
@@ -397,7 +397,7 @@ attend `numero`, et le traduire une fois vaut mieux que de laisser chaque appela
 
 ### Deux corpus et pas six, avec la raison écrite
 
-Des six textes qui font loi, **seuls la Charte et le document de gouvernance NUMÉROTENT** leurs
+Des six textes qui font loi, **seuls la Charte et la Vision Globale NUMÉROTENT** leurs
 règles. Les quatre autres n'ont pas d'article à citer : une tension avec eux ne pourrait pas être
 localisée, et **la signaler sans pouvoir dire OÙ serait une accusation qu'on ne peut pas
 instruire**. La liste est volontairement manuelle, et porte donc sa raison juste à côté (Article 24).
@@ -408,7 +408,7 @@ instruire**. La liste est volontairement manuelle, et porte donc sa raison juste
 elle ralentit le travail » : **11 tensions, toutes dans la Charte** — logique, c'est elle qui porte
 les obligations de conduite, et c'est précisément la moitié du terrain que l'outil ne voyait pas.
 Chaque unité garde le **nom de son document**, et le titre du rapport nomme les deux corpus :
-annoncer « le document de gouvernance » en comparant aussi à la Charte enverrait le lecteur
+annoncer « la Vision Globale » en comparant aussi à la Charte enverrait le lecteur
 chercher dans la mauvaise moitié.
 
 **Un bug attrapé par son propre test** : la première version supposait l'extracteur « principes »

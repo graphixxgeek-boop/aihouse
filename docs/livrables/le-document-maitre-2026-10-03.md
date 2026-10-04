@@ -25,7 +25,7 @@ Mesuré sur **668 documents** du dépôt, en suivant les liens et les chemins ci
 | **241** | 36 % | `CLAUDE.md` — la charte — la loi du projet, lue en entier avant toute intervention |
 | **143** | 21 % | `docs/grand-projet/index.md` — la porte d'entrée du grand chantier |
 | **27** | 4 % | `docs/strategies/strategie-globale-du-projet-entier.md` — la stratégie globale — où l'on va |
-| **0** | 0 % | `docs/philosophie-et-politique.md` — le document de gouvernance — ce en quoi le projet croit |
+| **0** | 0 % | `docs/philosophie-et-politique.md` — la Vision Globale — ce en quoi le projet croit |
 
 ## ③ CE QUE CE CLASSEMENT NE DIT PAS, ET C'EST LE PLUS IMPORTANT
 

@@ -1,4 +1,4 @@
-# GABARIT — DOCUMENT DE GOUVERNANCE « PHILOSOPHIE ET POLITIQUE »
+# GABARIT — LA VISION GLOBALE « PHILOSOPHIE ET POLITIQUE »
 
 ### Patron vierge · Cas de figure 2 — l'outillage est une aide exécutive
 

@@ -106,13 +106,13 @@ tâche #1539)* :
   n'était celui-là ; et les six niveaux existaient déjà, ils sont repris tels quels.
 - **Ce qui manquait était l'étage au-dessus** : on savait noter une RÈGLE, jamais un DOCUMENT. Le
   niveau d'un texte est désormais la MÉDIANE de ses règles.
-- **Et le premier passage a trouvé le trou qui compte** : le document de gouvernance — le second
+- **Et le premier passage a trouvé le trou qui compte** : la Vision Globale — le second
   texte suprême du projet — titre ses articles autrement que la charte, et **aucun détecteur ne le
   reconnaissait**. Ses 45 articles étaient hors de toute mesure de protection.
 - **La mesure qui en sort est dure** : 44 de ses 45 articles n'ont AUCUN porteur, et **26 numéros
   manquent entre 38 et 63** sans qu'une ligne le déclare.
 
-**Q3.5 — À TOI.** Les 26 numéros manquants du document de gouvernance. *(a) plage réservée, et on
+**Q3.5 — À TOI.** Les 26 numéros manquants de la Vision Globale. *(a) plage réservée, et on
 l'écrit noir sur blanc dans le document · (b) des articles ont été perdus, il faut les retrouver ·
 (c) on renumérote proprement de 2 à 46*
 

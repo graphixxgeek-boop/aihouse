@@ -258,10 +258,19 @@ export function renderDocumentHtml({ markdown, title, subtitle, dateLabel, foote
 // Thème partagé — même palette que la première page produite dans ce style (photo de la dream
 // team), pour une identité visuelle cohérente d'un rapport à l'autre.
 export const THEME_CSS = `
-  /* PALETTE CLAIRE — GRIS, BLEU, BLANC (2026-10-04, tâche #1600). Sa demande : « je veux un fond
-     gris et pas noir, et une écriture foncée et pas clair. Revois l'harmonie des couleurs pour un
-     rendu moderne gris-bleu-blanc : le corps du texte est toujours bleu foncé ou gris foncé ou
-     noir ; les encadrés, les éléments de décor/illustrations peuvent etre blanc ».
+  /* PALETTE CLAIRE — BLEUS, CYANS, GRIS (2026-10-04, tâche #1600, précisée le jour même).
+     SA PREMIÈRE DEMANDE : « je veux un fond gris et pas noir, et une écriture foncée et pas clair.
+     Revois l'harmonie des couleurs pour un rendu moderne gris-bleu-blanc ».
+     SA PRÉCISION, QUI RESSERRE LA GAMME ET INTERDIT LE BLANC PUR : « uniquement des tons
+     bleus-cyan-turquoises-ciel-gris clair-gris pale-gris-gris foncé, pas d'autres couleurs sauf
+     ROUGE ou NOIR pour mettre en evidence et/ou alerter. Le fond de texte ne doit jamais etre
+     blanc pur : l'ambiance de la fiche doit etre douce, studieuse, ne fait pas mal aux yeux, style
+     agence, moderne, classe, agreable à regarder. »
+     CE QUE ÇA CHANGE CONCRÈTEMENT, et aucune des trois n'est cosmétique : l'ambre de --accent
+     sort de la gamme et devient un TEAL ; --panel quitte #ffffff pour un blanc bleuté (#f3f7fa)
+     parce qu'un blanc pur sous une page lue longtemps est ce qui fatigue l'œil ; et --ok cesse
+     d'être vert, puisque le vert n'est pas dans la gamme — le rouge reste le seul signal, ce qui
+     le rend d'ailleurs plus fort.
      LE BESOIN RÉEL, QU'IL DONNE LUI-MÊME, ET C'EST LUI QUI JUGE : « c'est pour pouvoir copier
      coller sur du fond blanc que je te demande tout ca ». Une page sombre collée dans un document
      blanc perd son fond et garde son texte clair : elle devient illisible. Avec un texte foncé sur
@@ -271,9 +280,9 @@ export const THEME_CSS = `
      4,5:1. C'était déjà le raisonnement de la correction des liens du 2026-10-03 ; il tient dans
      l'autre sens. */
   :root {
-    --bg: #eef1f5; --panel: #ffffff; --panel-border: #cfd8e3;
-    --accent: #8a5a16; --accent2: #1f5b8f; --text: #1b2330; --muted: #566274;
-    --ok: #1f6b33; --warn: #a3281f;
+    --bg: #dfe7ed; --panel: #f3f7fa; --panel-border: #b9c9d6;
+    --accent: #0e6a72; --accent2: #16567e; --text: #16242f; --muted: #4a5d6c;
+    --ok: #0e6a72; --warn: #b01c16;
     /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
        réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
        rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
@@ -286,11 +295,15 @@ export const THEME_CSS = `
     /* DEUX VARIANTES FONCÉES, ET ELLES NE CONTOURNENT PAS LA RÈGLE CI-DESSUS (2026-10-04, #1600).
        --lia et --noe restent EXACTEMENT les couleurs du jeu, et le garde-fou les compare
        toujours à app/globals.css. Mais ces deux teintes sont faites pour un fond sombre : sur
-       blanc, #f29bc3 tombe à ~1,8:1, donc le nom du personnage devient illisible. Les variantes
-       ci-dessous servent UNIQUEMENT au TEXTE sur fond clair ; la couleur d'identité continue de
-       porter le filet de gauche, là où le contraste n'est pas en jeu. Changer --lia aurait
-       désynchronisé le rapport du jeu — ce que la règle interdit, et à juste titre. */
-    --lia-texte: #a3326b; --noe-texte: #0f6670;
+       fond clair, #f29bc3 tombe à ~1,8:1, donc le nom du personnage devient illisible. Les
+       variantes ci-dessous servent UNIQUEMENT au TEXTE ; la couleur d'identité continue de porter
+       le filet de gauche, là où le contraste n'est pas en jeu. Changer --lia aurait désynchronisé
+       le rapport du jeu — ce que la règle interdit, et à juste titre.
+       ELLES SONT DANS LA GAMME, et ce n'est pas un détail : sa précision du 2026-10-04 n'autorise
+       que les bleus, cyans et gris, plus le rouge et le noir pour alerter. Le rose de Lia ne peut
+       donc pas porter du texte ici ; les deux variantes sont un gris-ardoise et un teal, qui se
+       distinguent l'un de l'autre sans sortir de la palette. */
+    --lia-texte: #2d4150; --noe-texte: #0e6a72;
   }
   /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
      fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
@@ -311,7 +324,7 @@ export const THEME_CSS = `
   body { zoom: 1.5; }
   body {
     margin: 0; padding: 40px 20px 60px;
-    background: radial-gradient(circle at 20% -10%, #e2e8f0 0%, var(--bg) 55%);
+    background: radial-gradient(circle at 20% -10%, #eaf1f6 0%, var(--bg) 55%);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.5;
@@ -327,7 +340,7 @@ export const THEME_CSS = `
   main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
   main p { margin: 8px 0; }
   main p.note {
-    font-style: italic; color: #4a5565; border-left: 2px solid var(--accent);
+    font-style: italic; color: var(--muted); border-left: 2px solid var(--accent);
     padding-left: 10px; margin: 10px 0;
   }
   main .highlight {

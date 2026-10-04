@@ -1,4 +1,4 @@
-# Le document de gouvernance — forme arrêtée et régime d'intangibilité
+# La Vision Globale — forme arrêtée et régime d'intangibilité
 
 **À LIRE** : avant toute intervention touchant `docs/philosophie-et-politique.md`, et avant toute
 production d'une édition nouvelle.
@@ -7,7 +7,7 @@ production d'une édition nouvelle.
 
 ## CE QUE CETTE FICHE PORTE, ET POURQUOI ELLE EXISTE À PART
 
-Le document de gouvernance porte lui-même son régime, en tête. Cette fiche-ci porte ce qui n'a pas
+La Vision Globale porte lui-même son régime, en tête. Cette fiche-ci porte ce qui n'a pas
 sa place dedans : **comment ce régime est tenu**, par quel mécanisme, et ce qu'aucun mécanisme ne
 peut tenir. La distinction est celle que le document applique partout ailleurs — un texte énonce
 la règle, une fiche dit qui la porte (art. 61).
@@ -156,7 +156,7 @@ applique.*
 
 | Date | Évolution |
 |---|---|
-| **2026-10-02** | Établissement du document de gouvernance en forme officielle : 71 articles, trois niveaux, les objectifs ultimes au titre préliminaire. Empreinte d'ossature posée. |
+| **2026-10-02** | Établissement de la Vision Globale en forme officielle : 71 articles, trois niveaux, les objectifs ultimes au titre préliminaire. Empreinte d'ossature posée. |
 | **2026-10-02** | Création des deux gabarits et de l'exemplaire du cas de figure 2. |
 | **2026-10-02** | Inscription du renvoi au processus dans le régime du document, et dans les deux gabarits. |
 | **2026-10-02** | Annexe A portée à quatre questions de clôture (ajout d'INTELLIGENT), cinq exigences permanentes (ajout de RATIONNEL, ROBUSTE, PROPRE) et deux conditions transversales. |

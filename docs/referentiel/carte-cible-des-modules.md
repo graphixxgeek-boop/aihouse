@@ -2,7 +2,7 @@
 
 > **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`
 > *la carte cible est une DIRECTION, pas une conviction : elle appartient donc à la stratégie, et
-> hérite par elle de la cible du projet entier et du document de gouvernance.*
+> hérite par elle de la cible du projet entier et de la Vision Globale.*
 
 *(Établie le 2026-10-02T07:34Z — heure LUE, source système. Tâche **#1420**.)*
 

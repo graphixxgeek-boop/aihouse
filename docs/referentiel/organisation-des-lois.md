@@ -15,7 +15,7 @@ Mesure : `node scripts/abraham-les-references.mjs lois`.)*
 numérotés : la charte. « Article 19 » n'était donc ambigu pour personne, et une convention de
 citation aurait été une solution sans problème.
 
-**Ce qui a changé le 2 octobre** : le document de gouvernance porte désormais sa propre
+**Ce qui a changé le 2 octobre** : la Vision Globale porte désormais sa propre
 numérotation. **Deux lois numérotent, et leurs plages se chevauchent sur 31 numéros.** La même
 citation désigne deux dispositions différentes selon le texte qu'on avait en tête — ce qui s'est
 produit pour de vrai, trois fois en une nuit, avant que ce document n'existe.
@@ -51,7 +51,7 @@ cas du jour.**
 | Ce qu'on cite | Comment on l'écrit |
 |---|---|
 | la charte | **« Article N »**, tout court — la forme historique, conservée |
-| le document de gouvernance | **« article N du document de gouvernance »**, en toutes lettres |
+| la Vision Globale | **« article N de la Vision Globale »**, en toutes lettres |
 | les quatre autres | par leur nom, puisqu'ils ne numérotent pas |
 
 **POURQUOI LA CHARTE GARDE LA FORME NUE, et ce n'est pas un privilège arbitraire** : elle a été la
@@ -89,7 +89,7 @@ forme la plus coûteuse.
 - **`docs/loi-de-l-agence.md`** est le texte suprême **de l'outillage**, et il est le seul à partir
   avec l'Agence le jour de l'export. Les confondre rendrait l'Agence inexportable sans que personne
   ne s'en aperçoive.
-- **Le document de gouvernance** porte des **clauses intangibles** et son propre régime de révision.
+- **La Vision Globale** porte des **clauses intangibles** et son propre régime de révision.
 
 **CE QUI N'EST PAS ÉTABLI, et c'est une vraie question, pas une omission** : trois textes énoncent
 chacun une suprématie, sur trois domaines présentés comme distincts (le Jeu, l'outillage, les

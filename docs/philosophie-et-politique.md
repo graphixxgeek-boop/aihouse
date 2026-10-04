@@ -1,12 +1,12 @@
 # PHILOSOPHIE ET POLITIQUE DU PROJET
 
-### Document de gouvernance — Édition 1
+### La Vision Globale — Édition 1
 
 ---
 
 > **RÉGIME DU PRÉSENT DOCUMENT**
 >
-> **Statut.** Document de gouvernance de rang supérieur. Il énonce les convictions du projet
+> **Statut.** La Vision Globale de rang supérieur. Il énonce les convictions du projet
 > (philosophie) et les règles par lesquelles celles-ci s'appliquent (politique). Il s'impose à
 > l'ensemble des documents, processus, procédures et actions du projet.
 >

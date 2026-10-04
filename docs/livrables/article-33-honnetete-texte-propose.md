@@ -89,7 +89,7 @@ vert sans réponse.
 | « oui, en partie » quand la réponse est non | « non » |
 
 **Un exemple réel, de cette nuit même.** Ma tâche #1487 affirmait qu'un mot manquait dans le
-document de gouvernance, en jurant que c'était « mesuré, pas supposé ». C'était faux : le mot y
+Vision Globale, en jurant que c'était « mesuré, pas supposé ». C'était faux : le mot y
 était depuis quinze heures. Tu m'as donné ton GO pour un travail déjà fait. Sous cet Article, cette
 phrase apparaît en tête de ma réponse sur le sujet, pas enterrée dans une ligne de suivi.
 

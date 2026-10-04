@@ -150,7 +150,7 @@ export const CIRCLE_ITEMS = [
   {
     id: "controle-fidelite-gouvernance",
     theme: "KPI & scans",
-    label: "Contrôle de fidélité du document de gouvernance (article 72) — la philosophie remonte-t-elle ?",
+    label: "Contrôle de fidélité de la Vision Globale (article 72) — la philosophie remonte-t-elle ?",
     cout: "gratuit — relance la révélation sur le corpus local, zéro appel API",
     tokensEstimes: "modéré — le rapport nomme les cases vides et les convictions non couvertes",
     execute: "Lancer node scripts/the-king.mjs reveler. L'outil dépose son rapport, son état machine, et compare AUTOMATIQUEMENT au passage précédent s'il en existe un. LE SEUL CHIFFRE QUI COMPTE est la part des convictions retenues que le document couvre : elle valait 1 sur 87 au premier passage. Le nombre d'articles écrits n'est PAS un indicateur de fidélité — il peut croître sans que le corpus se reconnaisse davantage dans le document, et le verdict de comparaison refuse délibérément cette confusion. NE PAS déclencher tant que les dispositions du document n'ont pas été répercutées dans le dépôt : le chiffre serait juste et la conclusion fausse.",

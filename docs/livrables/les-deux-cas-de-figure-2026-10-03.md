@@ -24,7 +24,7 @@ fausses qui ressemblent trait pour trait à des justes.
 
 ## ② Les numéros qui désignent DEUX articles différents
 
-« article N du document de gouvernance » ne désigne pas la même disposition selon la version qu'on
+« article N de la Vision Globale » ne désigne pas la même disposition selon la version qu'on
 avait en tête. C'est la même ambiguïté que la charte et la gouvernance avaient entre elles,
 revenue **à l'intérieur** d'un seul des deux textes.
 

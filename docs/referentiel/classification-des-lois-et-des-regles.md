@@ -27,7 +27,7 @@ Le minimum est donné à côté : c'est lui qui dit où le texte est le plus fai
 |---|---|---|---|---|
 | **la Charte** | 33 | 5 — BLOQUANTE | 0 — AUCUNE | 8 (24 %) |
 | **les règles de travail** | 22 | 5 — BLOQUANTE | 0 — AUCUNE | 2 (9 %) |
-| **le document de gouvernance** | 45 | 0 — AUCUNE | 0 — AUCUNE | 44 (98 %) |
+| **la Vision Globale** | 45 | 0 — AUCUNE | 0 — AUCUNE | 44 (98 %) |
 | **le système de suivi** | — | *PAS MESURÉ* | — | — |
 | **la loi de l'Agence** | — | *PAS MESURÉ* | — | — |
 | **le manifeste de l'Agence** | — | *PAS MESURÉ* | — | — |
@@ -44,10 +44,10 @@ et appellent des gestes opposés.
 ### Les trous de numérotation
 
 Dans un texte qui fait loi, un numéro absent est une **citation morte en puissance** : « article 45 du
-document de gouvernance » a l'air d'un renvoi et ne mène nulle part. Un trou DÉCLARÉ serait légitime ;
+Vision Globale » a l'air d'un renvoi et ne mène nulle part. Un trou DÉCLARÉ serait légitime ;
 c'est le silence qui ne l'est pas.
 
-- **le document de gouvernance** — 26 numéro(s) manquant(s) : 38 à 63
+- **la Vision Globale** — 26 numéro(s) manquant(s) : 38 à 63
 
 ## ③ Comment citer une règle sans ambiguïté
 
@@ -55,12 +55,12 @@ Sa correction de format, appliquée telle qu'il l'a écrite.
 
 | Texte | Comment on le cite |
 |---|---|
-| `CLAUDE.md` | Article 19 de la Charte (Art. 19 au sujet de comprendre avant de toucher) |
-| `docs/philosophie-et-politique.md` | article 19 du document de gouvernance (art. 19 au sujet de comprendre avant de toucher) |
-| `docs/regles-de-travail.md` | les règles de travail au sujet de comprendre avant de toucher |
-| `docs/systeme-de-suivi.md` | le système de suivi au sujet de comprendre avant de toucher |
-| `docs/loi-de-l-agence.md` | la loi de l'Agence au sujet de comprendre avant de toucher |
-| `docs/manifeste-de-l-agence.md` | le manifeste de l'Agence au sujet de comprendre avant de toucher |
+| `CLAUDE.md` | Article 19 de la Charte (Art. 19 qui traite de la question de comprendre avant de toucher) |
+| `docs/philosophie-et-politique.md` | article 19 de la Vision Globale (art. 19 qui traite de la question de comprendre avant de toucher) |
+| `docs/regles-de-travail.md` | les règles de travail qui traite de la question de comprendre avant de toucher |
+| `docs/systeme-de-suivi.md` | le système de suivi qui traite de la question de comprendre avant de toucher |
+| `docs/loi-de-l-agence.md` | la loi de l'Agence qui traite de la question de comprendre avant de toucher |
+| `docs/manifeste-de-l-agence.md` | le manifeste de l'Agence qui traite de la question de comprendre avant de toucher |
 
 ## ④ Le détail, texte par texte
 
@@ -90,7 +90,7 @@ Sa correction de format, appliquée telle qu'il l'a écrite.
 | 4 — CONSTATÉE | 0 |
 | 5 — BLOQUANTE | 15 |
 
-### le document de gouvernance
+### la Vision Globale
 
 `docs/philosophie-et-politique.md` — les valeurs et la façon de trancher un conflit de valeurs — texte fondateur, révisé exceptionnellement
 
@@ -134,8 +134,8 @@ rien dans le dépôt ne s'en apercevra — il faudra qu'un humain le remarque.
 | État | Constat | Suite |
 |---|---|---|
 | ✅ MESURÉ | les six niveaux de protection sont réutilisés tels quels, jamais une échelle de plus | #1539 |
-| ? À INSTRUIRE | le document de gouvernance : 44 de ses 45 articles n'ont AUCUN porteur. Est-ce normal pour un texte de valeurs, ou faut-il en porter une partie ? | #1539 |
-| ? À TRANCHER | le document de gouvernance : 26 numéros manquants, non déclarés. Plage réservée, ou articles perdus ? | #1539 |
+| ? À INSTRUIRE | la Vision Globale : 44 de ses 45 articles n'ont AUCUN porteur. Est-ce normal pour un texte de valeurs, ou faut-il en porter une partie ? | #1539 |
+| ? À TRANCHER | la Vision Globale : 26 numéros manquants, non déclarés. Plage réservée, ou articles perdus ? | #1539 |
 | ? À INSTRUIRE | le système de suivi fait loi et ne se découpe pas en règles : ses obligations sont hors de toute mesure de protection | #1539 |
 | ? À INSTRUIRE | la loi de l'Agence fait loi et ne se découpe pas en règles : ses obligations sont hors de toute mesure de protection | #1539 |
 | ? À INSTRUIRE | le manifeste de l'Agence fait loi et ne se découpe pas en règles : ses obligations sont hors de toute mesure de protection | #1539 |

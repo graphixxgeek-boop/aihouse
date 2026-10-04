@@ -20,7 +20,7 @@ la révélation du 2026-10-01 n'avait jamais lus :
 qui FONT LOI. Son texte : *« L'Agence sert la finalité de celui qui l'emploie, jamais la sienne. Et
 elle est tournée vers lui de bout en bout : son expérience à lui passe toujours en premier. »*
 
-Le document de gouvernance établi le 2026-10-02 **ne la mentionne nulle part**, alors qu'il prétend
+La Vision Globale établi le 2026-10-02 **ne la mentionne nulle part**, alors qu'il prétend
 régir le niveau AGENCE. Un texte de gouvernance qui ignore une loi en vigueur sur son propre
 périmètre est incomplet, quelle que soit la qualité de ce qu'il contient.
 
@@ -71,7 +71,7 @@ Sa propre formule de la cascade contenait déjà la réponse : **« révélation
 - La **DÉRIVATION** lit les documents qui RÉPONDENT explicitement aux questions du cadre, et en
   reprend les réponses telles quelles.
 
-**La première édition du document de gouvernance n'a employé que la première.** C'est pourquoi elle
+**La première édition de la Vision Globale n'a employé que la première.** C'est pourquoi elle
 a reconstruit en plus faible ce qui existait en plus fort : un tableau de porteurs mécaniques
 — « cette interdiction lève une erreur ici » — vaut infiniment mieux qu'un principe énoncé en
 prose, et la révélation ne pouvait pas le voir.
@@ -80,7 +80,7 @@ prose, et la révélation ne pouvait pas le voir.
 
 ## LA CORRECTION PROPOSÉE, ET ELLE N'EST PAS APPLIQUÉE
 
-**Quatre amendements au document de gouvernance**, à soumettre à l'accord exprès prévu par son
+**Quatre amendements à la Vision Globale**, à soumettre à l'accord exprès prévu par son
 article 71 :
 
 | # | Amendement | Pourquoi |
@@ -102,5 +102,5 @@ empreinte d'ossature est inchangée.
 | Le corpus de révélation ignorait la stratégie du grand chantier et les fils | **RETENU** | corrigé : deux racines ajoutées, mesure refaite — tâche #1437 |
 | L'extracteur est aveugle aux titres et aux cellules de tableau | **RETENU** | tâche #1438 — c'est la cause principale, et elle reste ouverte |
 | La méthode manque son opération de DÉRIVATION | **RETENU** | tâche #1438 |
-| Quatre amendements au document de gouvernance | **À TRANCHER** | son article 71 exige son accord exprès et préalable ; inscrits au registre des décisions en attente |
+| Quatre amendements à la Vision Globale | **À TRANCHER** | son article 71 exige son accord exprès et préalable ; inscrits au registre des décisions en attente |
 | La loi de l'Agence n'est citée par aucun des documents de la série philo | **À TRANCHER** | amendement A1 |

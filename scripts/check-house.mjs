@@ -13237,7 +13237,7 @@ await testVerrousDOuverture();
     assert.ok(gros.ajouts.length > petit.ajouts.length, `same rank, different equipment: the one that keeps a memory and renders a page owes more (${gros.ajouts.length}) than the one that only calls others (${petit.ajouts.length}) — nobody promoted it, the measurement noticed`);
     assert.ok(gros.ajouts.every((a) => a.pourquoi && a.ou), 'every derived obligation says WHERE it lives and WHY it is owed — an obligation without a reason gets deleted by the next agent (Article 27)');
     // LA STRATÉGIE DE CHANTIER (2026-09-26, son gros prompt). Son intention : « on crée PAS un
-    // repertoire d'idees et notes en vrac au sujet d'un chantier, A LA PLACE : on crée tout de
+    // repertoire d'idees et notes en vrac qui traite de la question d'un chantier, A LA PLACE : on crée tout de
     // suite une STRATEGIE de chantier et on integre chaque nouvelle idée/note à la stratégie
     // existante, à sa place ». Elle vit chez check-tasks-details, sa décision : zéro outil de plus.
     const CT = await import('../scripts/check-tasks-details.mjs');
@@ -14596,7 +14596,31 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const bg = lireVar('bg'); const panel = lireVar('panel'); const texte = lireVar('text');
   assert.ok(bg && panel && texte, 'the three base colours must be readable from the theme');
   assert.ok(lum(bg) > 0.5, `MUST CATCH: the page background must be LIGHT, never dark again (luminance ${lum(bg).toFixed(2)}) — a dark page pasted onto a white document keeps its light text and becomes unreadable`);
-  assert.strictEqual(panel.toLowerCase(), '#ffffff', 'and the boxes are WHITE, exactly as he asked');
+  // LE FOND DE TEXTE N'EST JAMAIS BLANC PUR, et c'est sa précision du 2026-10-04 : « Le fond de
+  // texte ne doit jamais etre blanc pur : l'ambiance de la fiche doit etre douce, studieuse, ne
+  // fait pas mal aux yeux ». Un blanc pur sous une page lue longtemps est exactement ce qui
+  // fatigue l'œil — l'encadré est donc un blanc BLEUTÉ, plus clair que la page sans l'éblouir.
+  assert.notStrictEqual(panel.toLowerCase(), '#ffffff', 'MUST CATCH: the text background may never return to pure white');
+  assert.ok(lum(panel) > lum(bg), 'but the box must still be LIGHTER than the page, otherwise it stops reading as a box');
+  assert.ok(lum(panel) > 0.8, `and it stays clearly light (luminance ${lum(panel).toFixed(2)})`);
+  // LA GAMME EST FERMÉE : bleus, cyans, turquoises, gris — plus le ROUGE et le NOIR pour alerter.
+  // Une teinte hors gamme se reconnaît mécaniquement à sa TEINTE (le H de TSL) : tout ce qui
+  // n'est ni dans le secteur bleu-cyan, ni quasi gris, ni rouge, sort de ce qu'il a autorisé.
+  const teinte = (hex) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+    const max = Math.max(r, g, b); const min = Math.min(r, g, b); const d = max - min;
+    if (d < 0.08) return { h: null, gris: true };
+    let h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h = (h * 60 + 360) % 360;
+    return { h, gris: false };
+  };
+  for (const nom of ['bg', 'panel', 'panel-border', 'accent', 'accent2', 'muted', 'ok', 'text', 'lia-texte', 'noe-texte']) {
+    const c = lireVar(nom); const t = teinte(c);
+    const autorise = t.gris || (t.h >= 160 && t.h <= 250) || t.h <= 15 || t.h >= 345;
+    assert.ok(autorise, `MUST CATCH: --${nom} (${c}, teinte ${t.gris ? 'grise' : Math.round(t.h) + '°'}) sort de la gamme autorisée — bleus, cyans, turquoises, gris, plus le rouge pour alerter`);
+  }
+  assert.ok(teinte(lireVar('warn')).h <= 15 || teinte(lireVar('warn')).h >= 345, 'and the alert colour really is RED — the only signal colour left, which is what makes it strong');
+  assert.notStrictEqual(lireVar('ok'), lireVar('warn'), 'while the calm state stays distinct from the alert, without reaching for a green the palette does not allow');
   assert.ok(contraste(texte, bg) >= 4.5, `the body text holds its contrast on the page background (${contraste(texte, bg).toFixed(1)}:1, minimum 4.5)`);
   assert.ok(contraste(texte, panel) >= 4.5, `and inside a white box too (${contraste(texte, panel).toFixed(1)}:1)`);
   for (const nom of ['accent', 'accent2', 'muted', 'ok', 'warn']) {
@@ -14743,7 +14767,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.deepEqual(buildEvolutionDigest(fakePrinciples, { shImpl: () => '2026-09-01\n' }), ['2026-09-01 — 1.1 Principe fondateur', '2026-09-01 — 2.1 Toujours prudence budgétaire ambiante', '2026-09-10 — 1.2 Un principe récent', '2026-09-11 — 2.2 Jamais de prudence budgétaire ambiante'], 'with the git layer on, the digest must tell the story of ALL the principles (4/4 here, 19/19 on the real document) instead of only the 2 that happen to carry a declared date — the exact blind spot task #196 was opened to close');
   const realText = fs.readFileSync('docs/philosophie-et-politique.md', 'utf8');
   const realPrinciples = extractPrincipleUnits(realText);
-  // LA TROISIÈME SOURCE DE DATE (2026-10-02, tâche #1429). Un document de gouvernance établi d'un
+  // LA TROISIÈME SOURCE DE DATE (2026-10-02, tâche #1429). Un Vision Globale établi d'un
   // bloc n'a ni dates déclarées article par article, ni historique git — ses articles naissent
   // dans le commit en cours. Les deux sources existantes rendaient donc « non daté » sur la
   // TOTALITÉ du document : le dispositif conçu pour raconter son histoire devenait muet le jour
@@ -14966,7 +14990,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(casc.objets.length > 50, `on the real population, not a sample (currently ${casc.objets.length})`);
     assert.equal(casc.objets.filter((o) => o.etat !== 'ALIGNE').length, 0, `every object must reach a declared root: ${casc.objets.filter((o) => o.etat !== 'ALIGNE').map((o) => `${o.chemin} (${o.etat})`).join(' · ')}`);
 
-    // (12) L'INTANGIBILITÉ DU DOCUMENT DE GOUVERNANCE (2026-10-02, tâche #1429).
+    // (12) L'INTANGIBILITÉ DE LA VISION GLOBALE (2026-10-02, tâche #1429).
     // CE QU'AUCUN CODE NE PEUT VÉRIFIER : qu'un accord ait été donné. Ce qu'il peut vérifier, et
     // qui est testé ici : que l'ossature n'a pas bougé sans que personne ne s'en aperçoive.
     const nfs = await import('node:fs');
@@ -26567,7 +26591,7 @@ async function testLOrganisationDesLois() {
   assert.match(texte, /AUCUN renommage/, 'the convention states that it requires no mass rename — the existing citations all predate the second law and all mean the charter');
   assert.match(texte, /HORS PORTÉE/, 'and the report declares what it cannot check');
 
-  console.log("Passed: l'organisation des lois, et pourquoi elle n'était pas nécessaire il y a trois jours (2026-10-02, tâche #1445). Un seul texte de ce dépôt portait des Articles numérotés — la charte — donc « Article 19 » n'était ambigu pour personne. Depuis que le document de gouvernance porte sa propre numérotation, DEUX lois numérotent et leurs plages se chevauchent sur 31 numéros ; la même citation désigne deux dispositions différentes selon le texte qu'on avait en tête, ce qui s'est produit pour de vrai trois fois en une nuit. NUMÉROTER N'EST PAS CITER, ET LE SÉPARATEUR EST LA DENSITÉ : le premier passage faisait ressortir `docs/regles-de-travail.md` comme « numérote 5 articles de 0 à 18 », alors que ces cinq-là sont des CITATIONS de la charte écrites en gras exactement comme la charte écrit les siennes. Aucun motif de texte ne les distingue — les deux s'écrivent `**Article 18 — Titre.**` — et seule une propriété de l'ENSEMBLE le fait : une vraie numérotation est dense et continue (1,00), une poignée de citations est clairsemée (0,26). La frontière est large, et c'est ce qui la rend sûre plutôt qu'ajustée au cas du jour. LE CONTRÔLE NE REFUSE QUE CE QUI EST FAUX SANS JUGEMENT POSSIBLE : une citation d'un Article qu'AUCUNE loi ne porte. Il en a trouvé exactement UNE sur 709 fichiers — un renvoi aux numéros 122 et 123, qui voulait dire « tâche #122 » et « 123/123 tests » — corrigée le jour même. IL N'ACCUSE PAS les 5 068 citations de la plage commune, toutes antérieures au second texte et voulant toutes dire la charte : les accuser rendrait le signal illisible le jour de sa naissance (leçon L4), et c'est aussi pourquoi la convention ne demande AUCUN renommage. Ce qui reste hors de portée est déclaré plutôt que taise : savoir si une citation dans la plage commune visait la bonne loi est un jugement, jamais une mesure.");
+  console.log("Passed: l'organisation des lois, et pourquoi elle n'était pas nécessaire il y a trois jours (2026-10-02, tâche #1445). Un seul texte de ce dépôt portait des Articles numérotés — la charte — donc « Article 19 » n'était ambigu pour personne. Depuis que la Vision Globale porte sa propre numérotation, DEUX lois numérotent et leurs plages se chevauchent sur 31 numéros ; la même citation désigne deux dispositions différentes selon le texte qu'on avait en tête, ce qui s'est produit pour de vrai trois fois en une nuit. NUMÉROTER N'EST PAS CITER, ET LE SÉPARATEUR EST LA DENSITÉ : le premier passage faisait ressortir `docs/regles-de-travail.md` comme « numérote 5 articles de 0 à 18 », alors que ces cinq-là sont des CITATIONS de la charte écrites en gras exactement comme la charte écrit les siennes. Aucun motif de texte ne les distingue — les deux s'écrivent `**Article 18 — Titre.**` — et seule une propriété de l'ENSEMBLE le fait : une vraie numérotation est dense et continue (1,00), une poignée de citations est clairsemée (0,26). La frontière est large, et c'est ce qui la rend sûre plutôt qu'ajustée au cas du jour. LE CONTRÔLE NE REFUSE QUE CE QUI EST FAUX SANS JUGEMENT POSSIBLE : une citation d'un Article qu'AUCUNE loi ne porte. Il en a trouvé exactement UNE sur 709 fichiers — un renvoi aux numéros 122 et 123, qui voulait dire « tâche #122 » et « 123/123 tests » — corrigée le jour même. IL N'ACCUSE PAS les 5 068 citations de la plage commune, toutes antérieures au second texte et voulant toutes dire la charte : les accuser rendrait le signal illisible le jour de sa naissance (leçon L4), et c'est aussi pourquoi la convention ne demande AUCUN renommage. Ce qui reste hors de portée est déclaré plutôt que taise : savoir si une citation dans la plage commune visait la bonne loi est un jugement, jamais une mesure.");
 }
 await testLOrganisationDesLois();
 
@@ -26580,7 +26604,7 @@ async function testLaBorneHauteDesRenvoisMorts() {
   const charte = nfs.readFileSync('CLAUDE.md', 'utf8');
 
   // ── 1. UN COMMENTAIRE DE CODE QUI ILLUSTRE UN MOTIF N'EST PAS UN RENVOI MORT. C'est le cas réel
-  // qui a fait naître la borne : « // le document de gouvernance : ## Article 64 — … » accusait la
+  // qui a fait naître la borne : « // la Vision Globale : ## Article 64 — … » accusait la
   // charte d'avoir perdu un Article 64 qu'elle n'a jamais eu.
   const avecCommentaire = E.verifyNothingBroken(charte, { 'scripts/abraham-les-references.mjs': nfs.readFileSync('scripts/abraham-les-references.mjs', 'utf8') });
   assert.deepStrictEqual(avecCommentaire.filter((f) => f.check === 'article-disparu'), [], 'MUST CATCH: a number above the charter\'s own highest article was never one of its articles, so it can never be a disappeared one');
@@ -26608,7 +26632,7 @@ async function testLaBorneHauteDesRenvoisMorts() {
   const sansDisque = E.verifyNothingBroken('**Article 0 — Hiérarchie.**', { 'x.mjs': 'cf. Article 0 et Article 7' }, [], () => null);
   assert.ok(sansDisque.some((f) => f.check === 'article-disparu' && /Article 7/.test(f.message)), 'MUST CATCH: with no real charter readable, the bound is unknown and the check keeps its full perimeter rather than acquitting without looking');
 
-  console.log("Passed: le renvoi mort a désormais une borne haute, et c'est la CLASSE qui a été corrigée plutôt que l'occurrence (2026-10-02, leçon L37). Le contrôle qui vérifie qu'un allègement de la charte ne laisse pas de renvoi mort lisait TOUT « Article N » du dépôt comme un renvoi à la charte. Depuis que le document de gouvernance porte sa propre numérotation, il fallait exclure à la main chaque fichier qui mentionne un de SES articles — la liste a reçu deux entrées en deux jours, et la troisième est arrivée par un simple COMMENTAIRE DE CODE illustrant un motif (« ## Article 64 — … »), que rien ne distingue d'un renvoi. UNE LISTE QUI GRANDIT À CHAQUE MENTION N'EST PLUS UNE EXCEPTION, C'EST UNE DETTE. Ce qui ferme la classe est une propriété de la charte elle-même : elle ne renumérote JAMAIS, elle n'ajoute qu'à la suite. Un numéro au-dessus du plus haut qu'elle ait jamais porté n'a donc jamais été un de ses articles, et ne peut pas être un article DISPARU — le chercher revenait à accuser une autre loi d'un trou chez celle-ci. LA BORNE EST LUE SUR LA CHARTE RÉELLE, jamais fixée en dur : un article ajouté demain relève le plafond le jour même (Article 24), ce que le test vérifie en citant le numéro juste au-dessus du maximum réel. ET LE CONTRÔLE MORD TOUJOURS SUR CE QUI COMPTE (BP4) : un article réellement retiré de la charte et cité ailleurs reste refusé, y compris le tout dernier — sans ce second sens, la borne aurait pu éteindre le contrôle entier sans que personne ne le voie.");
+  console.log("Passed: le renvoi mort a désormais une borne haute, et c'est la CLASSE qui a été corrigée plutôt que l'occurrence (2026-10-02, leçon L37). Le contrôle qui vérifie qu'un allègement de la charte ne laisse pas de renvoi mort lisait TOUT « Article N » du dépôt comme un renvoi à la charte. Depuis que la Vision Globale porte sa propre numérotation, il fallait exclure à la main chaque fichier qui mentionne un de SES articles — la liste a reçu deux entrées en deux jours, et la troisième est arrivée par un simple COMMENTAIRE DE CODE illustrant un motif (« ## Article 64 — … »), que rien ne distingue d'un renvoi. UNE LISTE QUI GRANDIT À CHAQUE MENTION N'EST PLUS UNE EXCEPTION, C'EST UNE DETTE. Ce qui ferme la classe est une propriété de la charte elle-même : elle ne renumérote JAMAIS, elle n'ajoute qu'à la suite. Un numéro au-dessus du plus haut qu'elle ait jamais porté n'a donc jamais été un de ses articles, et ne peut pas être un article DISPARU — le chercher revenait à accuser une autre loi d'un trou chez celle-ci. LA BORNE EST LUE SUR LA CHARTE RÉELLE, jamais fixée en dur : un article ajouté demain relève le plafond le jour même (Article 24), ce que le test vérifie en citant le numéro juste au-dessus du maximum réel. ET LE CONTRÔLE MORD TOUJOURS SUR CE QUI COMPTE (BP4) : un article réellement retiré de la charte et cité ailleurs reste refusé, y compris le tout dernier — sans ce second sens, la borne aurait pu éteindre le contrôle entier sans que personne ne le voie.");
 }
 await testLaBorneHauteDesRenvoisMorts();
 
@@ -26799,7 +26823,7 @@ async function testLAlimentationDesDestinations() {
 await testLAlimentationDesDestinations();
 
 // ─────────────────────────────────────────────────────────────────────────────
-// L'ALERTE DE TENSION AVEC LE DOCUMENT DE GOUVERNANCE (2026-10-02, tâche #1435)
+// L'ALERTE DE TENSION AVEC LA VISION GLOBALE (2026-10-02, tâche #1435)
 // ─────────────────────────────────────────────────────────────────────────────
 async function testLAlerteDeTension() {
   const K = await import('./the-king.mjs');
@@ -26871,7 +26895,7 @@ async function testLAlerteDeTension() {
   assert.match(texte, /mots entièrement différents/, 'namely that two ideas can contradict each other with entirely different words, which this will never see');
   assert.match(texte, /Article 14/, 'and that it does not replace the vigilance the charter requires');
 
-  console.log("Passed: l'alerte de tension avec le document de gouvernance (2026-10-02, tâche #1435). Sa question : « est-ce que, une fois que le doc philo et politique sera en vigueur, tu seras capable de me prévenir si j'ai une idée ou une consigne en tension avec ce document ? » La réponse honnête était « pas de façon vérifiable » : je pouvais le remarquer ou ne pas le remarquer, et rien ne distinguait les deux cas — une capacité qui dépend de ma vigilance du moment n'existe plus à la session suivante (Article 27). TROIS VERDICTS, ET LE TROISIÈME EST CELUI QU'ON OUBLIE : en tension, DÉJÀ COUVERTE — ce n'est alors pas une idée neuve mais une redite, et le dire épargne un chantier — ou neuve. DEUX CORRECTIONS ONT ÉTÉ IMPOSÉES PAR DES CAS RÉELS, pas par une revue théorique. ① Le seuil ne pouvait pas être du Jaccard : une idée de dix mots comparée à un article de soixante rend au mieux 0,15 même en recouvrement total, donc le premier passage rendait « NEUVE » sur une idée qui contredisait frontalement un article — un seuil hors de portée par construction, la faute même que BP5 corrige ailleurs. La mesure juste est la CONTENANCE, aux deux bouts de la même échelle. ② La comparaison portait sur des mots entiers : « il suffit de RECOPIER la liste à la main » ne touchait PAS l'article qui dit « aucun élément ne se RECOPIE manuellement ». Une lettre d'écart, et la tension la plus nette qu'on puisse écrire contre cet article passait inaperçue. La comparaison se fait donc sur des racines tronquées, localement et avec sa raison. ET LA POLARITÉ DE L'ARTICLE NE DÉCIDE PAS : « on peut désactiver un test » contredit un article qui est une OBLIGATION et ne porte donc aucun « jamais ». Ce qui fait la tension n'est pas la forme grammaticale de l'article, c'est qu'une idée propose de se DISPENSER de quelque chose qui est gouverné. CE QUI EMPÊCHE L'ALERTE DE SONNER PARTOUT (leçon L4) : deux conditions réunies, un marqueur de permission explicite ET une contenance au-dessus du seuil avec un article précis. Vérifié dans les deux sens — « on peut peindre le salon en bleu ciel » porte le marqueur, touche zéro article, et reste muet.");
+  console.log("Passed: l'alerte de tension avec la Vision Globale (2026-10-02, tâche #1435). Sa question : « est-ce que, une fois que le doc philo et politique sera en vigueur, tu seras capable de me prévenir si j'ai une idée ou une consigne en tension avec ce document ? » La réponse honnête était « pas de façon vérifiable » : je pouvais le remarquer ou ne pas le remarquer, et rien ne distinguait les deux cas — une capacité qui dépend de ma vigilance du moment n'existe plus à la session suivante (Article 27). TROIS VERDICTS, ET LE TROISIÈME EST CELUI QU'ON OUBLIE : en tension, DÉJÀ COUVERTE — ce n'est alors pas une idée neuve mais une redite, et le dire épargne un chantier — ou neuve. DEUX CORRECTIONS ONT ÉTÉ IMPOSÉES PAR DES CAS RÉELS, pas par une revue théorique. ① Le seuil ne pouvait pas être du Jaccard : une idée de dix mots comparée à un article de soixante rend au mieux 0,15 même en recouvrement total, donc le premier passage rendait « NEUVE » sur une idée qui contredisait frontalement un article — un seuil hors de portée par construction, la faute même que BP5 corrige ailleurs. La mesure juste est la CONTENANCE, aux deux bouts de la même échelle. ② La comparaison portait sur des mots entiers : « il suffit de RECOPIER la liste à la main » ne touchait PAS l'article qui dit « aucun élément ne se RECOPIE manuellement ». Une lettre d'écart, et la tension la plus nette qu'on puisse écrire contre cet article passait inaperçue. La comparaison se fait donc sur des racines tronquées, localement et avec sa raison. ET LA POLARITÉ DE L'ARTICLE NE DÉCIDE PAS : « on peut désactiver un test » contredit un article qui est une OBLIGATION et ne porte donc aucun « jamais ». Ce qui fait la tension n'est pas la forme grammaticale de l'article, c'est qu'une idée propose de se DISPENSER de quelque chose qui est gouverné. CE QUI EMPÊCHE L'ALERTE DE SONNER PARTOUT (leçon L4) : deux conditions réunies, un marqueur de permission explicite ET une contenance au-dessus du seuil avec un article précis. Vérifié dans les deux sens — « on peut peindre le salon en bleu ciel » porte le marqueur, touche zéro article, et reste muet.");
 }
 await testLAlerteDeTension();
 
@@ -27392,11 +27416,11 @@ async function testLaClassificationDesLois() {
   // ── 3. SA CORRECTION DE FORMAT (P37), appliquée telle qu'il l'a écrite — et un texte qui ne
   // numérote pas n'a pas de numéro à citer : lui en inventer un serait une référence morte.
   assert.strictEqual(A.citationCanonique({ chemin: 'CLAUDE.md', numero: 19, sujet: 'comprendre avant de toucher' }).citation,
-    'Article 19 de la Charte (Art. 19 au sujet de comprendre avant de toucher)', 'his exact format for the charter');
+    'Article 19 de la Charte (Art. 19 qui traite de la question de comprendre avant de toucher)', 'his exact format for the charter');
   assert.strictEqual(A.citationCanonique({ chemin: 'docs/philosophie-et-politique.md', numero: 72, sujet: 'le contrôle de fidélité' }).citation,
-    'article 72 du document de gouvernance (art. 72 au sujet du contrôle de fidélité)', 'and the same shape for governance, lowercase as the document writes it');
+    'article 72 de la Vision Globale (art. 72 qui traite de la question du contrôle de fidélité)', 'and the same shape for governance, lowercase as the document writes it');
   assert.strictEqual(A.citationCanonique({ chemin: 'docs/loi-de-l-agence.md', sujet: 'la finalité du client' }).citation,
-    "la loi de l'Agence au sujet de la finalité du client", 'a text that does not number is cited by its name followed by its subject — never by an invented number');
+    "la loi de l'Agence qui traite de la question de la finalité du client", 'a text that does not number is cited by its name followed by its subject — never by an invented number');
   // « DE » SE CONTRACTE, et la première version rendait « article 72 de LE document de
   // gouvernance ». Le filet l'a refusée, et c'était le pire endroit possible pour une faute de
   // français : le document qui définit comment citer.
@@ -27440,8 +27464,13 @@ async function testLaClassificationDesLois() {
   const reel = A.classificationDesLoisEtDesRegles({ lois: C.DOCUMENTS_QUI_FONT_LOI, root: '.' });
   assert.deepStrictEqual(reel.ecarts, [], 'the real run has nothing to report about its own registries');
   assert.strictEqual(reel.textes.length, 6, 'the six law texts are read from the classifier registry, never recopied here');
-  const gouv = reel.textes.find((t) => /gouvernance/.test(t.nom));
-  assert.strictEqual(gouv.mesurable, true, 'and governance is now measured — before this form it returned "no numbering recognised", which was honest and left the project’s second supreme text entirely unclassified');
+  // LE NOM D'USAGE A CHANGÉ LE 2026-10-04 (tâche #1656) : « document de gouvernance » est devenu
+  // « La Vision Globale », sur sa décision. La recherche se fait donc sur le CHEMIN, qui ne bouge
+  // pas, plutôt que sur le nom d'affichage — un test accroché à un libellé se casse au premier
+  // renommage, et c'est exactement ce qui vient d'arriver à celui-ci.
+  const gouv = reel.textes.find((t) => /philosophie-et-politique/.test(String(t.chemin ?? ''))) ?? reel.textes.find((t) => /Vision Globale/i.test(t.nom));
+  assert.ok(gouv, `the supreme governance text must be found among the ${reel.textes.length} law texts, whatever name it currently carries (${reel.textes.map((t) => t.nom).join(' | ')})`);
+  assert.strictEqual(gouv.mesurable, true, 'and the Vision Globale is now measured — before this form it returned "no numbering recognised", which was honest and left the project’s second supreme text entirely unclassified');
   assert.ok(gouv.classement.total >= 40, `its ${gouv.classement.total} articles are classified`);
   assert.ok(gouv.trous.length >= 1, 'its undeclared numbering gap is reported: 26 numbers nothing carries, in a text whose articles get cited by number');
 
@@ -27460,7 +27489,7 @@ await testLaClassificationDesLois();
 async function testLesDeuxCasDeFigure() {
   const K = await import('../scripts/the-king.mjs');
 
-  // ── 1. LES ARTICLES SE LISENT EN TITRE. C'est la forme du document de gouvernance, et celle que
+  // ── 1. LES ARTICLES SE LISENT EN TITRE. C'est la forme de la Vision Globale, et celle que
   // la charte n'emploie pas — les deux coexistent, donc aucune ne se devine.
   const art = K.articlesDUnTexte('## Article 2 — Les objectifs\n\ndu texte\n\n### Article 8 — Un sous-article\n\n## Pas un article\n');
   assert.deepStrictEqual(art.map((a) => a.numero), ['2', '8'], 'both heading levels count, and a heading that is not an article does not');
@@ -27781,7 +27810,7 @@ async function testLeDocumentMaitre() {
   // ── 5. UN CORPUS VIDE N'EST PAS UNE PORTÉE NULLE (leçons L5/L11).
   assert.strictEqual(A.porteeDesCandidats({ root: '.', corpus: ['un-seul.md'] }).mesurable, false, 'fewer than two documents is not a measurement');
 
-  console.log('Passed: le document maître, mesuré par sa PORTÉE plutôt que déclaré (2026-10-03, tâche #1554, sa question P94/Q4.1). SA DÉFINITION SE MESURE, ce qui est rare pour une phrase de ce genre : « chaque élément du projet est en adéquation = la référence ultime » n\'est pas une qualité du texte, c\'est une propriété du GRAPHE — on part du document, on suit ses renvois, on regarde jusqu\'où on va. Un document déclaré maître sans que rien ne parte de lui n\'est pas un maître, c\'est un titre. ET LE PREMIER PASSAGE A RENDU UN ZÉRO SPECTACULAIRE ET FAUX, sur le candidat qu\'il a nommé lui-même : le Cerveau des fils « n\'atteignait aucun document », parce que ses liens s\'écrivent `(fil-04-x.md)` et pas le chemin complet, et qu\'une comparaison de chaînes brutes ne les reconnaissait pas. C\'est le pire résultat possible d\'une mesure fausse — spectaculaire, donc crédible, donc on le garde. Les liens relatifs se résolvent désormais contre le dossier du document qui les porte, `../` compris, et le classement devient lisible : l\'index généré du référentiel en tête (62 %), le Cerveau des fils deuxième (41 %), la charte troisième (36 %). LA NUANCE QUI COMPTE EST ÉCRITE DANS LE RAPPORT : la PORTÉE N\'EST PAS L\'AUTORITÉ. Un index généré atteint beaucoup parce qu\'il énumère — c\'est une propriété de sa fabrication, pas de son rang. La mesure établit une condition NÉCESSAIRE (on ne peut pas être la référence de ce qu\'on ne nomme jamais), jamais suffisante. ET UN RÉSULTAT MÉRITE UNE DÉCISION : le document de gouvernance atteint ZÉRO — il ne cite rien du dépôt, ce qui est cohérent avec ses 44 articles sur 45 sans porteur mesurés le même jour, et le disqualifie pour un rôle qui suppose l\'inverse.');
+  console.log('Passed: le document maître, mesuré par sa PORTÉE plutôt que déclaré (2026-10-03, tâche #1554, sa question P94/Q4.1). SA DÉFINITION SE MESURE, ce qui est rare pour une phrase de ce genre : « chaque élément du projet est en adéquation = la référence ultime » n\'est pas une qualité du texte, c\'est une propriété du GRAPHE — on part du document, on suit ses renvois, on regarde jusqu\'où on va. Un document déclaré maître sans que rien ne parte de lui n\'est pas un maître, c\'est un titre. ET LE PREMIER PASSAGE A RENDU UN ZÉRO SPECTACULAIRE ET FAUX, sur le candidat qu\'il a nommé lui-même : le Cerveau des fils « n\'atteignait aucun document », parce que ses liens s\'écrivent `(fil-04-x.md)` et pas le chemin complet, et qu\'une comparaison de chaînes brutes ne les reconnaissait pas. C\'est le pire résultat possible d\'une mesure fausse — spectaculaire, donc crédible, donc on le garde. Les liens relatifs se résolvent désormais contre le dossier du document qui les porte, `../` compris, et le classement devient lisible : l\'index généré du référentiel en tête (62 %), le Cerveau des fils deuxième (41 %), la charte troisième (36 %). LA NUANCE QUI COMPTE EST ÉCRITE DANS LE RAPPORT : la PORTÉE N\'EST PAS L\'AUTORITÉ. Un index généré atteint beaucoup parce qu\'il énumère — c\'est une propriété de sa fabrication, pas de son rang. La mesure établit une condition NÉCESSAIRE (on ne peut pas être la référence de ce qu\'on ne nomme jamais), jamais suffisante. ET UN RÉSULTAT MÉRITE UNE DÉCISION : la Vision Globale atteint ZÉRO — il ne cite rien du dépôt, ce qui est cohérent avec ses 44 articles sur 45 sans porteur mesurés le même jour, et le disqualifie pour un rôle qui suppose l\'inverse.');
 }
 await testLeDocumentMaitre();
 

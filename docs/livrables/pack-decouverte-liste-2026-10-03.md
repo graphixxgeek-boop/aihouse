@@ -64,10 +64,10 @@ Ta question exacte. Ces sujets de ta liste n'ont AUCUN document dans le dépôt 
 ### la gouvernance de l’Agence
 
 - `docs/gabarits/index.md` — Gabarits — les patrons vierges des documents de gouvernance
-- `docs/gabarits/philosophie-et-politique-gabarit-cas-2.md` — GABARIT — DOCUMENT DE GOUVERNANCE « PHILOSOPHIE ET POLITIQUE »
-- `docs/gabarits/philosophie-et-politique-gabarit.md` — GABARIT — DOCUMENT DE GOUVERNANCE « PHILOSOPHIE ET POLITIQUE »
+- `docs/gabarits/philosophie-et-politique-gabarit-cas-2.md` — GABARIT — LA VISION GLOBALE « PHILOSOPHIE ET POLITIQUE »
+- `docs/gabarits/philosophie-et-politique-gabarit.md` — GABARIT — LA VISION GLOBALE « PHILOSOPHIE ET POLITIQUE »
 - `docs/gouvernance-agence-virtuelle-cadre-cible.md` — DOSSIER DE CONCEPTION ET D'EXPLOITATION — Agence virtuelle de développement
-- `docs/referentiel/document-de-gouvernance.md` — Le document de gouvernance — forme arrêtée et régime d'intangibilité
+- `docs/referentiel/document-de-gouvernance.md` — La Vision Globale — forme arrêtée et régime d'intangibilité
 
 ### fonctions de l’Agence
 
@@ -162,8 +162,8 @@ Ta question exacte. Ces sujets de ta liste n'ont AUCUN document dans le dépôt 
 - `docs/angel-of-ia-process/reponses-evaluation.md` — Réponses de l'utilisateur à sa propre évaluation — registre
 - `docs/check-profil-utilisateur-blueprint.md` — check-profil-utilisateur — plan générique : le garde-fou d'un index et de son dossier
 - `docs/fils/fil-01-objectif-ultime-philo-politique.md` — FIL 01 — L'objectif ultime, la philosophie et la politique
-- `docs/gabarits/philosophie-et-politique-gabarit-cas-2.md` — GABARIT — DOCUMENT DE GOUVERNANCE « PHILOSOPHIE ET POLITIQUE »
-- `docs/gabarits/philosophie-et-politique-gabarit.md` — GABARIT — DOCUMENT DE GOUVERNANCE « PHILOSOPHIE ET POLITIQUE »
+- `docs/gabarits/philosophie-et-politique-gabarit-cas-2.md` — GABARIT — LA VISION GLOBALE « PHILOSOPHIE ET POLITIQUE »
+- `docs/gabarits/philosophie-et-politique-gabarit.md` — GABARIT — LA VISION GLOBALE « PHILOSOPHIE ET POLITIQUE »
 - `docs/grand-projet/00-sources/01-sa-demande/reponses-2026-09-30-soir-philo.md` — SES RÉPONSES PHILO & OBJECTIFS ULTIMES — 2026-09-30 au soir
 - `docs/grand-projet/00-sources/02-documents-prepares/texte/DE_LA_STRATEGIE_A_LA_TACHE.md`
 - `docs/grand-projet/00-sources/02-documents-prepares/texte/PHILOSOPHIE_ET_POLITIQUE.md`

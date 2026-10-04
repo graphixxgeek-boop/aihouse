@@ -71,7 +71,7 @@ const TOP_HEADING_PATTERN = /^## /gm;
 
 // LE DOCUMENT A CHANGÉ DE FORME LE 2026-10-02 (tâche #1429), ET LE PARSEUR DOIT SUIVRE.
 //
-// L'édition révélée est un document de gouvernance : articles numérotés en continu, sous des
+// L'édition révélée est une Vision Globale : articles numérotés en continu, sous des
 // titres et des chapitres, plus des tableaux de politique où chaque ligne porte son numéro. La
 // forme précédente numérotait « partie.numéro » et portait un tag entre crochets.
 //
@@ -215,7 +215,7 @@ export function datesDesTitres(titres = [], { fichier = PHILOSOPHY_PATH, shImpl 
 // LA DATE D'ÉDITION, TROISIÈME SOURCE (2026-10-02, tâche #1429) — et elle n'est pas un repli
 // commode, c'est une source de plein droit.
 //
-// LE CAS QUI L'A IMPOSÉE : un document de gouvernance établi d'un bloc. Ses articles n'ont aucune
+// LE CAS QUI L'A IMPOSÉE : une Vision Globale établi d'un bloc. Ses articles n'ont aucune
 // date déclarée individuellement, et l'historique git ne les connaît pas encore puisqu'ils
 // naissent dans le commit en cours. Les deux sources existantes rendaient donc « non daté » pour
 // la totalité du document — c'est-à-dire que le dispositif conçu pour raconter l'histoire du
@@ -427,7 +427,7 @@ export const RACINE_DE_LA_CASCADE = PHILOSOPHY_PATH;
 // LA CASCADE N'A PAS UNE RACINE, ELLE EN A PLUSIEURS (2026-10-02, tâche #1439) — et l'avoir cru
 // faisait compter comme « interrompues » sept chaînes parfaitement saines.
 //
-// CE QUE LA MESURE EXIGEAIT AVANT : que tout objet remonte jusqu'au document de gouvernance. Sept
+// CE QUE LA MESURE EXIGEAIT AVANT : que tout objet remonte jusqu'à la Vision Globale. Sept
 // chaînes s'arrêtaient ailleurs, et la correction évidente — leur donner un parent — aurait été
 // une FALSIFICATION dans la plupart des cas :
 //
@@ -449,7 +449,7 @@ export const RACINE_DE_LA_CASCADE = PHILOSOPHY_PATH;
 // d'un document ordinaire, et la deviner serait pire que la déclarer. Son garde-fou est
 // `findRacinesIntrouvables()` ci-dessous, qui refuse une racine déclarée qui n'existe pas.
 export const RACINES_DE_LA_CASCADE = [
-  { motif: /^docs\/philosophie-et-politique\.md$/, pourquoi: "le document de gouvernance : la racine principale" },
+  { motif: /^docs\/philosophie-et-politique\.md$/, pourquoi: "la Vision Globale : la racine principale" },
   { motif: /^CLAUDE\.md$/, pourquoi: "la charte : loi suprême du Jeu, racine et jamais branche" },
   { motif: /^docs\/loi-de-l-agence\.md$/, pourquoi: "la loi de l'Agence : second texte suprême, distinct de celui du Jeu et tranché comme tel" },
   { motif: /^docs\/manifeste-de-l-agence\.md$/, pourquoi: "troisième texte déclaré comme faisant loi" },
@@ -2081,7 +2081,7 @@ export const MARQUEUR_DE_PERMISSION = /\b(on peut|il suffit|suffirait|autoris[é
 // SA QUESTION ÉTAIT : « Veux-tu que tension lise aussi la charte ? » et j'avais répondu que c'était
 // « un petit changement, une ligne de corpus ». **C'ÉTAIT FAUX, et le dire vaut mieux que de le
 // taire** : l'extracteur de ce fichier rend **zéro unité** sur CLAUDE.md, parce que la charte
-// numérote ses règles autrement que le document de gouvernance. Une ligne de corpus n'aurait rien
+// numérote ses règles autrement que la Vision Globale. Une ligne de corpus n'aurait rien
 // ajouté du tout — elle aurait doublé la couverture annoncée en comparant l'idée à une liste vide,
 // ce qui est exactement le faux vert que ce projet traque partout.
 //
@@ -2090,12 +2090,12 @@ export const MARQUEUR_DE_PERMISSION = /\b(on peut|il suffit|suffirait|autoris[é
 // qui divergerait au premier changement de format (Article 24, anti-doublon §7ter).
 //
 // DEUX CORPUS ET PAS SIX, ET LA RAISON EST ÉCRITE : des six textes qui font loi, seuls la charte et
-// le document de gouvernance NUMÉROTENT leurs règles. Les quatre autres n'ont pas d'article à
+// la Vision Globale NUMÉROTENT leurs règles. Les quatre autres n'ont pas d'article à
 // citer, donc une tension avec eux ne pourrait pas être localisée — la signaler sans pouvoir dire
 // OÙ serait une accusation qu'on ne peut pas instruire. Cette liste est volontairement manuelle, et
 // c'est pour ça qu'elle porte sa raison juste ici (Article 24).
 export const CORPUS_QUI_NUMEROTENT = [
-  { chemin: "docs/philosophie-et-politique.md", nom: "le document de gouvernance", extracteur: "principes" },
+  { chemin: "docs/philosophie-et-politique.md", nom: "la Vision Globale", extracteur: "principes" },
   { chemin: "CLAUDE.md", nom: "la Charte", extracteur: "charte" },
 ];
 
@@ -2520,7 +2520,7 @@ export function apparierParTitre(a = [], b = [], { seuil = SEUIL_JACCARD_STRICT 
 }
 
 // LES NUMÉROS QUI DÉSIGNENT DEUX ARTICLES DIFFÉRENTS. C'est la trouvaille du premier passage, et
-// elle compte : « article 24 du document de gouvernance » ne désigne pas la même disposition selon
+// elle compte : « article 24 de la Vision Globale » ne désigne pas la même disposition selon
 // la version qu'on avait en tête — la même ambiguïté que la charte et la gouvernance avaient déjà
 // entre elles (tâche #1539), revenue À L'INTÉRIEUR d'un seul des deux textes.
 export function findNumerosEnCollision({ cas1 = [], cas2 = [], apparies = [] } = {}) {
@@ -2613,7 +2613,7 @@ export function lignesDeLaComparaisonDesDeuxCas(r = {}, { date = "" } = {}) {
   if (r.collisions.length) {
     L.push("## ② Les numéros qui désignent DEUX articles différents");
     L.push("");
-    L.push("« article N du document de gouvernance » ne désigne pas la même disposition selon la version qu'on");
+    L.push("« article N de la Vision Globale » ne désigne pas la même disposition selon la version qu'on");
     L.push("avait en tête. C'est la même ambiguïté que la charte et la gouvernance avaient entre elles,");
     L.push("revenue **à l'intérieur** d'un seul des deux textes.");
     L.push("");
@@ -2736,7 +2736,7 @@ async function main({ chemin = PHILOSOPHY_PATH } = {}) {
     const constats = [];
     for (const t of r.tensions ?? []) constats.push({ constat: `l'idée entre en opposition de polarité avec l'article ${t.numero} (${t.titre})`, etat: "a-trancher", tache: "vérifier à la main si c'est une vraie contradiction : le vocabulaire partagé est un signal, jamais une preuve" });
     for (const t of r.couvertes ?? []) constats.push({ constat: `l'idée est déjà contenue dans l'article ${t.numero} (${t.titre})`, etat: "ecarte", pourquoi: "ce n'est pas une idée neuve mais une redite — et le dire épargne un chantier" });
-    if (!r.mesurable) constats.push({ constat: `pas de mesure possible : ${r.pourquoi}`, etat: "retenu", tache: "rétablir la lecture du document de gouvernance avant de conclure quoi que ce soit" });
+    if (!r.mesurable) constats.push({ constat: `pas de mesure possible : ${r.pourquoi}`, etat: "retenu", tache: "rétablir la lecture de la Vision Globale avant de conclure quoi que ce soit" });
     console.log("");
     imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
     return;
@@ -2849,7 +2849,7 @@ async function main({ chemin = PHILOSOPHY_PATH } = {}) {
     const constats = [];
     if (!t.mesurable) constats.push({ constat: `pas de mesure : ${t.pourquoi}`, etat: "retenu", tache: 1534 });
     else {
-      if (t.inavouees) constats.push({ constat: `${t.inavouees} conviction(s) sur ${t.total} ne sont portées par AUCUN principe écrit de la boussole`, etat: "a-trancher", pourquoi: "faire redescendre une conviction dans le document de gouvernance exige son accord exprès (Article 14) — ce n'est pas une décision d'agent" });
+      if (t.inavouees) constats.push({ constat: `${t.inavouees} conviction(s) sur ${t.total} ne sont portées par AUCUN principe écrit de la boussole`, etat: "a-trancher", pourquoi: "faire redescendre une conviction dans la Vision Globale exige son accord exprès (Article 14) — ce n'est pas une décision d'agent" });
       if (t.debris) constats.push({ constat: `${t.debris} entrée(s) sur ${t.total} ne sont pas des convictions mais des fragments de tableau ramassés par l'extracteur`, etat: "retenu", tache: 1534 });
     }
     console.log("");
@@ -3132,7 +3132,7 @@ export function diagnostiquerUnProjet({ root = ROOT, cases = CASES_FONDATRICES, 
   // UNE ARCHIVE N'EST JAMAIS LE TEXTE EN VIGUEUR, et ce contrôle vient d'un vrai défaut attrapé
   // par un test : le diagnostic désignait l'édition ARCHIVÉE de la boussole comme la philosophie
   // du projet, parce qu'elle en portait encore le vocabulaire informel. C'est précisément ce que
-  // l'article 11 du document de gouvernance interdit — « le passé se garde entièrement, et ne
+  // l'article 11 de la Vision Globale interdit — « le passé se garde entièrement, et ne
   // fait jamais autorité ». Un outil qui désigne une archive comme source de vérité applique
   // l'inverse de la règle qu'il est censé garder.
   //
@@ -3289,7 +3289,7 @@ export function comparerRevelations(avant, apres) {
 }
 
 // ============================================================================
-// L'INTANGIBILITÉ DU DOCUMENT DE GOUVERNANCE (2026-10-02, tâche #1429)
+// L'INTANGIBILITÉ DE LA VISION GLOBALE (2026-10-02, tâche #1429)
 //
 // LA RÈGLE POSÉE : « CE document remplace définitivement les autres et devient le document
 // officiel du projet. Il ne peut etre modifié qu'avec mon accord. [...] Ce format doit être

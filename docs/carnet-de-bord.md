@@ -88,7 +88,7 @@ dans la nuit — ce qui montre au passage la différence entre les deux.
 | # | Demande | État |
 |---|---|---|
 | 1 | Process GROS PROMPT (calibré, pas construit) | à construire |
-| 2 | 30 questions sur le document de gouvernance | à poser |
+| 2 | 30 questions sur la Vision Globale | à poser |
 | 3 | OPTIMISER / FIABILISER insufflés dans la logique des process | à câbler |
 | 4 | Astuce fichier txt / tokens → à appliquer chez ecotoken et Smart Conso | à faire |
 | 5 | Scinder l'outil des tâches en deux | à faire |

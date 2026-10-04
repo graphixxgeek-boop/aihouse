@@ -920,7 +920,7 @@ leçon retenue est qu'une consigne seule ne suffit jamais à garantir un invaria
 naturellement. Un **refus explicite** de l'observateur (« non », « pas question », etc.) à une offre
 encore en attente déclenche une fenêtre plus longue et plus légère (`rouletteRefusalUntil`, 5 à 10
 tours tirés au hasard) : la relance est simplement retirée de la réplique (`stripRouletteAsk`), le
-reste de la réaction au sujet réel en cours passe tel quel — pour laisser une vraie chance à
+reste de la réaction qui traite de la question réel en cours passe tel quel — pour laisser une vraie chance à
 l'observateur de déclencher le geste spontanément après son refus, jamais retenté comme si de rien
 n'était.
 

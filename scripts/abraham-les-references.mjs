@@ -634,7 +634,7 @@ export const CANDIDATS_DOCUMENT_MAITRE = [
   { chemin: "docs/grand-projet/index.md", quoi: "la porte d'entrée du grand chantier" },
   { chemin: "docs/strategies/strategie-globale-du-projet-entier.md", quoi: "la stratégie globale — où l'on va" },
   { chemin: "docs/referentiel/index.md", quoi: "le référentiel — la règle telle qu'elle s'applique aujourd'hui" },
-  { chemin: "docs/philosophie-et-politique.md", quoi: "le document de gouvernance — ce en quoi le projet croit" },
+  { chemin: "docs/philosophie-et-politique.md", quoi: "la Vision Globale — ce en quoi le projet croit" },
 ];
 
 export function findCandidatsMaitresIntrouvables({ root = ".", candidats = CANDIDATS_DOCUMENT_MAITRE, existsImpl = existsSync } = {}) {
@@ -2331,7 +2331,7 @@ export function formatAlertesLines(s) {
 //
 // CE QUI A CHANGÉ LE 2 OCTOBRE, ET C'EST TOUT LE PROBLÈME. Jusque-là, un seul texte de ce dépôt
 // portait des Articles numérotés : la charte. « Article 19 » n'était donc ambigu pour personne, et
-// aucune convention n'était nécessaire. Depuis que le document de gouvernance porte sa propre
+// aucune convention n'était nécessaire. Depuis que la Vision Globale porte sa propre
 // numérotation, DEUX lois numérotent, et leurs plages se CHEVAUCHENT. La même citation désigne
 // désormais deux dispositions différentes selon le texte qu'on avait en tête.
 //
@@ -2344,7 +2344,7 @@ export function formatAlertesLines(s) {
 export const DOC_DE_LA_CHARTE = "CLAUDE.md";
 export const MOTIFS_D_ARTICLE_DECLARE = [
   /\*\*Article (\d+)\b/g,          // la charte : **Article 19 — …**
-  /^#{2,3}\s*Article (\d+)\b/gm,   // le document de gouvernance : ## Article 64 — …
+  /^#{2,3}\s*Article (\d+)\b/gm,   // la Vision Globale : ## Article 64 — …
   /^\|\s*\*\*(\d+)\*\*\s*\|/gm,    // ses tableaux de politique : | **43** | famille | disposition |
 ];
 export const MOTIF_ARTICLE_CITE = /\bArticle\s+(\d+)/g;
@@ -2452,7 +2452,7 @@ export function findCitationsSansLoi({ organisation, fichiers = new Map() } = {}
 // dans les DEUX sens (BP4) : une loi sans nom, et un nom qui désigne une loi disparue.
 export const NOMS_DUSAGE_DES_LOIS = {
   "CLAUDE.md": { nom: "la Charte", prefixe: "Article", court: "Art." },
-  "docs/philosophie-et-politique.md": { nom: "le document de gouvernance", prefixe: "article", court: "art." },
+  "docs/philosophie-et-politique.md": { nom: "la Vision Globale", prefixe: "article", court: "art." },
   "docs/regles-de-travail.md": { nom: "les règles de travail", prefixe: null, court: null },
   "docs/systeme-de-suivi.md": { nom: "le système de suivi", prefixe: null, court: null },
   "docs/loi-de-l-agence.md": { nom: "la loi de l'Agence", prefixe: null, court: null },
@@ -2472,10 +2472,10 @@ export function findLoisSansNomDUsage({ lois = [], noms = NOMS_DUSAGE_DES_LOIS }
 }
 
 // SA CORRECTION DE FORMAT (P37), appliquée telle qu'il l'a écrite : « Article N de la Charte
-// (Art. N au sujet de S) » pour la charte, de même pour la gouvernance, et les quatre autres
-// textes par leur NOM suivi de « au sujet de S ». Un texte qui ne numérote pas n'a pas de numéro à
+// (Art. N qui traite de la question de S) » pour la charte, de même pour la gouvernance, et les quatre autres
+// textes par leur NOM suivi de « qui traite de la question de S ». Un texte qui ne numérote pas n'a pas de numéro à
 // citer — lui en inventer un serait exactement la référence morte que l'Article 28 refuse.
-// « DE » SE CONTRACTE, ET LA PREMIÈRE VERSION RENDAIT « article 72 de LE document de gouvernance ».
+// « DE » SE CONTRACTE, ET LA PREMIÈRE VERSION RENDAIT « article 72 de LE Vision Globale ».
 // Le filet l'a refusée : une citation fautive dans le document qui définit COMMENT citer aurait
 // été le pire endroit possible pour une faute de français. La contraction est faite une seule fois
 // ici plutôt qu'à chaque appel, parce que le prochain nom d'usage la referait à la main.
@@ -2492,10 +2492,10 @@ export function citationCanonique({ chemin, numero = null, sujet = "", noms = NO
   if (!n) return { mesurable: false, pourquoi: `${chemin} n'a pas de nom d'usage : impossible de le citer dans une phrase` };
   const s = String(sujet).trim();
   if (!n.prefixe || numero === null || numero === undefined) {
-    return { mesurable: true, citation: s ? `${n.nom} au sujet ${deElide(s)}` : n.nom };
+    return { mesurable: true, citation: s ? `${n.nom} qui traite de la question ${deElide(s)}` : n.nom };
   }
   const tete = `${n.prefixe} ${numero} ${deElide(n.nom)}`;
-  const parenthese = s ? ` (${n.court} ${numero} au sujet ${deElide(s)})` : "";
+  const parenthese = s ? ` (${n.court} ${numero} qui traite de la question ${deElide(s)})` : "";
   return { mesurable: true, citation: `${tete}${parenthese}` };
 }
 
@@ -2526,10 +2526,10 @@ export function niveauDUnTexte(classement = {}, { niveaux = NIVEAUX_GARANTIE } =
 }
 
 // LES TROUS DE NUMÉROTATION, trouvés au premier passage réel et pas cherchés (tâche #1539) : le
-// document de gouvernance numérote ses articles de 2 à 72 et n'en porte que 45 — les numéros 38 à
+// Vision Globale numérote ses articles de 2 à 72 et n'en porte que 45 — les numéros 38 à
 // 63 n'existent nulle part, sans qu'une ligne le dise. Ce n'est pas un détail de forme : dans un
 // texte qui fait loi, un numéro absent est une CITATION MORTE EN PUISSANCE — « article 45 du
-// document de gouvernance » a l'air d'un renvoi, et ne mène nulle part. Un trou DÉCLARÉ (une plage
+// Vision Globale » a l'air d'un renvoi, et ne mène nulle part. Un trou DÉCLARÉ (une plage
 // réservée, une abrogation écrite) serait légitime ; c'est le silence qui ne l'est pas.
 export function findTrousDeNumerotation(numeros = []) {
   const n = [...new Set(numeros.filter((x) => Number.isInteger(x)))].sort((a, b) => a - b);
@@ -2616,7 +2616,7 @@ export function lignesDeLaClassificationDesLois(r = {}, { date = "", niveaux = N
     L.push("### Les trous de numérotation");
     L.push("");
     L.push("Dans un texte qui fait loi, un numéro absent est une **citation morte en puissance** : « article 45 du");
-    L.push("document de gouvernance » a l'air d'un renvoi et ne mène nulle part. Un trou DÉCLARÉ serait légitime ;");
+    L.push("Vision Globale » a l'air d'un renvoi et ne mène nulle part. Un trou DÉCLARÉ serait légitime ;");
     L.push("c'est le silence qui ne l'est pas.");
     L.push("");
     for (const t of avecTrous) {
@@ -2666,7 +2666,7 @@ export function lignesDeLaClassificationDesLois(r = {}, { date = "", niveaux = N
   L.push("|---|---|---|");
   L.push("| ✅ MESURÉ | les six niveaux de protection sont réutilisés tels quels, jamais une échelle de plus | #1539 |");
   const gouv = (r.textes ?? []).find((t) => /gouvernance/.test(t.nom ?? ""));
-  if (gouv && gouv.mesurable) L.push(`| ? À INSTRUIRE | le document de gouvernance : ${gouv.niveau.sansRien} de ses ${gouv.classement.total} articles n'ont AUCUN porteur. Est-ce normal pour un texte de valeurs, ou faut-il en porter une partie ? | #1539 |`);
+  if (gouv && gouv.mesurable) L.push(`| ? À INSTRUIRE | la Vision Globale : ${gouv.niveau.sansRien} de ses ${gouv.classement.total} articles n'ont AUCUN porteur. Est-ce normal pour un texte de valeurs, ou faut-il en porter une partie ? | #1539 |`);
   for (const t of avecTrous) {
     const total = t.trous.reduce((n, x) => n + x.manquants, 0);
     L.push(`| ? À TRANCHER | ${t.nom} : ${total} numéros manquants, non déclarés. Plage réservée, ou articles perdus ? | #1539 |`);

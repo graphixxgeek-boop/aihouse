@@ -506,7 +506,7 @@ ouvre une question qui attend une réponse.
 | **une règle de contenu du jeu ou une obligation permanente** | `CLAUDE.md`, **et seulement après son accord** | la charte ne se touche jamais sans accord préalable |
 | **une décision qui lui revient et qu'il n'a pas encore prise** | `docs/idees-a-trancher.md` | une décision en attente qui n'y figure pas est une décision invisible |
 | **une zone qu'on sait fragile** | `docs/referentiel/points-fragiles.md` | pour que le prochain intervenant le sache avant d'y toucher, pas après |
-| **un chiffre, une mesure** | le registre de l'outil qui l'a produit | un chiffre séparé de son instrument n'est plus vérifiable (art. 43 et 44 du document de gouvernance) |
+| **un chiffre, une mesure** | le registre de l'outil qui l'a produit | un chiffre séparé de son instrument n'est plus vérifiable (art. 43 et 44 de la Vision Globale) |
 | **un document qu'il dépose** | `docs/grand-projet/00-sources/` | ce sont des entrées figées, que le projet n'entretient pas et ne réécrit jamais |
 | **une règle de gouvernance ou une conviction** | `docs/philosophie-et-politique.md`, **et seulement après son accord** | document intangible : toute modification suit son article de révision |
 
@@ -3060,7 +3060,7 @@ l'utilisateur au moment où le message arrive ; les deux se complètent, jamais 
 l'autre.
 
 **Idées dites en avance sur un « gros chantier » → fichier préliminaire dédié (2026-09-22, demande
-explicite de l'utilisateur : « lorsqu'une idée est dite en avance au sujet d'un chantier à venir,
+explicite de l'utilisateur : « lorsqu'une idée est dite en avance qui traite de la question d'un chantier à venir,
 cette idée est automatiquement enregistrée sur un fichier préliminaire dédié [...] surtout si le
 chantier en question est un gros morceau du projet comme CASSANDRA ou la refonte »).** Distinct des
 trois cas ci-dessus (qui couvrent toute idée, petite ou grande, vers la liste de tâches technique

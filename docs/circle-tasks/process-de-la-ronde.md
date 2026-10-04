@@ -67,7 +67,7 @@ Il est surveillé par : scripts/circle-process-guardian.mjs — ce contrôleur p
 
 ### KPI & scans (11)
   · [the-king-signal] Digest THE-KING : fraîcheur et tensions possibles de la philosophie — gratuit — relit un seul fichier local, zéro appel API
-  · [controle-fidelite-gouvernance] Contrôle de fidélité du document de gouvernance (article 72) — la philosophie remonte-t-elle ? — gratuit — relance la révélation sur le corpus local, zéro appel API
+  · [controle-fidelite-gouvernance] Contrôle de fidélité de la Vision Globale (article 72) — la philosophie remonte-t-elle ? — gratuit — relance la révélation sur le corpus local, zéro appel API
   · [kpi] Lancer le rapport KPI (familles gratuites) — gratuit — node scripts/kpi-report.mjs, zéro nouvel appel API
   · [safe-export-kits] Scanner les kits d'export — de chaque fichier ET de l'Agence elle-même — gratuit — relit l'inventaire des sources et l'arborescence docs/, aucun appel API
   · [export-central] Le rapport EXPORT central — où on en est, ce qu'on sait faire, ce qu'on ne sait pas encore faire — gratuit — il n'appelle que des mesures déjà écrites et relit la file de tâches, zéro appel API

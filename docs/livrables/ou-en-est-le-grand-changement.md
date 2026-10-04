@@ -112,7 +112,7 @@ document maître (#1127), les deux ou trois stratégies globales (#1138), la str
 (#1137), et l'ordre calibrage → stratégie → plan → tâches (#1141). Les quinze autres suivent.
 
 **② Les 104 convictions hors boussole** (#1422). C'est l'étage 1, et c'est la seule chose qui
-bloque *par le haut*. Elle demande ton accord pour modifier le document de gouvernance.
+bloque *par le haut*. Elle demande ton accord pour modifier la Vision Globale.
 
 **③ Rien d'autre tant que ① n'est pas fait.** Avancer l'étage 3 maintenant produirait du travail
 à refaire, ce que ta propre consigne interdit.

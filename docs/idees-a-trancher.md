@@ -38,7 +38,7 @@ dès qu'elle est posée à l'utilisateur, avec sa décision réelle une fois obt
 | Tâche | Date | Idée | Décision | Fichier |
 |---|---|---|---|---|
 | #1409 | 2026-10-01 | 33 preuves d'étape sur 45 portent sur un fichier VERSIONNÉ et ne peuvent donc JAMAIS échouer : faut-il définir une vraie preuve étape par étape, ou déclarer par écrit que la présence du fichier suffit et pourquoi ? | à trancher | — (les deux issues sont détaillées plus bas dans ce document, section #1409) |
-| #1437 | 2026-10-02 | Quatre amendements au document de gouvernance, mesurés et prêts : (A1) nommer `docs/loi-de-l-agence.md` dans les dispositions générales — une loi en vigueur sur le périmètre AGENCE que le texte ignore ; (A2) reprendre au titre IV les cinq impossibles établis le 2026-09-29 AVEC leur colonne de porteurs mécaniques, plus forts que ceux qui y figurent ; (A3) dire à l'article 64 que sa réponse CONFIRME une décision du 2026-09-29 au lieu de l'instituer ; (A4) compléter l'article 69 par l'opération de DÉRIVATION, absente de la méthode décrite. Son article 71 exige un accord exprès et préalable : rien n'est appliqué. | à trancher | `docs/the-king/ecart-revelation-2026-10-02.md` |
+| #1437 | 2026-10-02 | Quatre amendements à la Vision Globale, mesurés et prêts : (A1) nommer `docs/loi-de-l-agence.md` dans les dispositions générales — une loi en vigueur sur le périmètre AGENCE que le texte ignore ; (A2) reprendre au titre IV les cinq impossibles établis le 2026-09-29 AVEC leur colonne de porteurs mécaniques, plus forts que ceux qui y figurent ; (A3) dire à l'article 64 que sa réponse CONFIRME une décision du 2026-09-29 au lieu de l'instituer ; (A4) compléter l'article 69 par l'opération de DÉRIVATION, absente de la méthode décrite. Son article 71 exige un accord exprès et préalable : rien n'est appliqué. | à trancher | `docs/the-king/ecart-revelation-2026-10-02.md` |
 
 ## Note méthodologique
 
@@ -987,7 +987,7 @@ est précisément ce qui rend la question valable **maintenant** plutôt qu'alor
 
 **DEUX ISSUES :**
 
-- **Issue 1 — écrire l'ordre maintenant**, une fois, dans le document de gouvernance. Coût : une
+- **Issue 1 — écrire l'ordre maintenant**, une fois, dans la Vision Globale. Coût : une
   décision à prendre à froid, sur un conflit qui n'a encore jamais eu lieu, donc sans l'éclairage
   d'un cas réel.
 - **Issue 2 — déclarer par écrit que les trois domaines sont disjoints**, et que tout conflit entre

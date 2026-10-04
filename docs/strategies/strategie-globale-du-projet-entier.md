@@ -89,7 +89,7 @@ Les mesures disent qu'on y est déjà presque : moins d'une douzaine de ses 93 f
 posait bien les trois objectifs par niveau, puis tout le reste du document repartait en un seul bloc
 — sous la section ①, le mot AGENCE ou le mot JEU n'apparaissait plus qu'UNE fois, dans un titre.
 Un socle à trois niveaux suivi d'une stratégie à un seul niveau n'est pas une stratégie incomplète :
-c'est une stratégie qui ne sert pas le socle qu'elle affiche. Le document de gouvernance est
+c'est une stratégie qui ne sert pas le socle qu'elle affiche. La Vision Globale est
 articulé en trois niveaux depuis le 2 octobre ; la marche juste en dessous ne pouvait pas rester
 plate.)*
 
@@ -148,7 +148,7 @@ et c'est la seule chose de ce projet qu'aucun gain de coût, de propreté ou de 
 
 **CE QUE CETTE DÉCLINAISON NE FAIT PAS, et il faut le dire** : elle ne hiérarchise pas les trois
 niveaux entre eux. Le rang se lit par **PORTANCE** — ce qui porte le plus d'autres règles passe
-devant — jamais par étendue, et cette règle vit dans le document de gouvernance, pas ici. Le niveau
+devant — jamais par étendue, et cette règle vit dans la Vision Globale, pas ici. Le niveau
 JEU est aujourd'hui en pause par décision explicite : *« tout ce qui a trait au jeu est laissé de
 côté pour l'instant »*. **Une pause n'est pas une dépriorisation** : ses jalons restent écrits, et
 ils restent les mêmes au réveil.

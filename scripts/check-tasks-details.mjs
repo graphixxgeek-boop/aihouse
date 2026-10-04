@@ -2634,7 +2634,7 @@ function rondeCli() {
 // ══════════════════════════════════════════════════════════════════════════
 //
 // SON INTENTION, DANS SES MOTS : « à la base, on crée PAS un repertoire d'idees et notes en vrac
-// au sujet d'un chantier, A LA PLACE : on crée tout de suite une STRATEGIE de chantier et on
+// qui traite de la question d'un chantier, A LA PLACE : on crée tout de suite une STRATEGIE de chantier et on
 // integre chaque nouvelle idée/note à la stratégie existante, à sa place. »
 //
 // CE QUI EXISTAIT DÉJÀ, MESURÉ AVANT DE CONSTRUIRE (sa consigne : « beaucoup de choses existent
