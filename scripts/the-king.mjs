@@ -642,6 +642,151 @@ export function dessinerLArbre(arbre, { depuis = null, profondeurMax = null } = 
 // LA BRANCHE D'UN SEUL DOCUMENT : ce qui est au-dessus de lui jusqu'à la racine, et ce qui pend
 // en dessous. C'est exactement « l'arborescence incluse » qu'il demande pour CHAQUE stratégie —
 // l'arbre entier dans chaque fichier serait illisible et ferait treize copies du même dessin.
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// LA CLASSIFICATION DES STRATÉGIES (2026-10-04, tâche #1569)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE : « peux tu me rappeler la liste des strategies et les classer stp (classification à
+// enregistrer) ». Les trois mots qui comptent sont « à ENREGISTRER » — une liste affichée dans une
+// conversation disparaît avec elle, et une liste recopiée à la main se périme au prochain document
+// écrit (Article 24). La classification est donc DÉRIVÉE du dossier réel à chaque passage.
+//
+// POURQUOI CHEZ THE-KING ET PAS DANS UN OUTIL NEUF (Article 31 : on étend) : il tient déjà la
+// cascade, donc il sait déjà de qui chaque stratégie découle et à quelle profondeur. Le rang d'une
+// stratégie n'est pas une étiquette qu'on lui colle, c'est sa position dans un graphe qu'il calcule
+// déjà. Un outil séparé aurait recalculé ce graphe, donc en aurait tenu une seconde version (L29).
+//
+// LES QUATRE AXES, ET CHACUN SE LIT PLUTÔT QUE DE SE DÉCIDER :
+//   · le TYPE, lu dans le titre du document lui-même (« STRATÉGIE GLOBALE », « STRATÉGIE DE
+//     CHANTIER », ou rien de déclaré) ;
+//   · le RANG, qui est le nombre de sauts jusqu'à la racine de la cascade ;
+//   · la DESCENDANCE, c'est-à-dire combien de documents déclarent découler de celui-ci — c'est ce
+//     qui distingue une stratégie qui en gouverne d'autres d'une feuille ;
+//   · l'ÉTAT : écrite à la main ou GÉNÉRÉE, et porte-t-elle un plan d'action (Article 28).
+//
+// CE QU'ELLE NE FAIT PAS, ET IL FAUT QUE CE SOIT ÉCRIT : elle ne juge pas si une stratégie est
+// BONNE, ni si elle est à jour sur le fond. Elle range, elle ne note pas. Un document peut être
+// parfaitement classé et complètement périmé.
+export const DOSSIER_DES_STRATEGIES = "docs/strategies";
+export const MOTIF_TYPE_GLOBALE = /STRAT[ÉE]GIE\s+GLOBALE/i;
+export const MOTIF_TYPE_CHANTIER = /STRAT[ÉE]GIE\s+DE\s+CHANTIER/i;
+export const MOTIF_GENERE = /<!--\s*DOCUMENT GÉNÉRÉ/i;
+export const MOTIF_PLAN_DACTION = /^#{1,4}\s*Plan d'action/im;
+
+export function typeDUneStrategie(titre = "", texte = "") {
+  const ou = `${titre}\n${String(texte).slice(0, 400)}`;
+  if (MOTIF_TYPE_GLOBALE.test(ou)) return "globale";
+  if (MOTIF_TYPE_CHANTIER.test(ou)) return "chantier";
+  return "non déclaré";
+}
+
+export function classerLesStrategies({ root = ROOT, dossier = DOSSIER_DES_STRATEGIES, lireImpl = null, listerImpl = null, alignement = null } = {}) {
+  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  const lister = listerImpl ?? ((d) => { try { return fsReaddir(join(root, d)); } catch { return []; } });
+  const fichiers = lister(dossier).filter((f) => f.endsWith(".md") && f !== "index.md").map((f) => `${dossier}/${f}`);
+  if (!fichiers.length) {
+    return { mesurable: false, pourquoi: `aucun document dans ${dossier} : ce zéro dit qu'on n'a rien lu, jamais que le projet n'a pas de stratégie` };
+  }
+  // LA CASCADE EST RÉUTILISÉE, JAMAIS RECALCULÉE : c'est elle qui sait de qui chacun découle.
+  const a = alignement ?? mesurerLAlignement({ root, lireImpl, listerImpl });
+  const parChemin = new Map((a.objets ?? []).map((o) => [o.chemin, o]));
+  const enfants = new Map();
+  for (const o of a.objets ?? []) {
+    if (!o.parent) continue;
+    enfants.set(o.parent, (enfants.get(o.parent) ?? 0) + 1);
+  }
+  const lignes = [];
+  for (const chemin of fichiers) {
+    let texte = "";
+    try { texte = lire(chemin); } catch { continue; }
+    const titre = (String(texte).split("\n").find((l) => l.startsWith("# ")) ?? "").replace(/^#\s*/, "").trim();
+    const o = parChemin.get(chemin);
+    lignes.push({
+      chemin,
+      nom: chemin.split("/").pop().replace(/\.md$/, ""),
+      titre: titre.slice(0, 90),
+      type: typeDUneStrategie(titre, texte),
+      // LE RANG EST LA LONGUEUR DE LA REMONTÉE, et il se compte sur le chemin que la cascade a
+      // réellement parcouru — jamais sur un champ `sauts` qui n'existe pas. Premier jet : je
+      // lisais `o.sauts`, absent de l'objet, donc les seize stratégies ressortaient « sans rang »
+      // alors que la cascade les aligne toutes. Un champ mal nommé rend un null parfaitement
+      // crédible, et c'est le genre de zéro qui se lit comme une mesure.
+      rang: Array.isArray(o?.remontee) && o.remontee.length ? o.remontee.length - 1 : null,
+      parent: o?.parent ?? null,
+      descendance: enfants.get(chemin) ?? 0,
+      generee: MOTIF_GENERE.test(texte),
+      planDaction: MOTIF_PLAN_DACTION.test(texte),
+      octets: texte.length,
+    });
+  }
+  lignes.sort((x, y) => (x.rang ?? 99) - (y.rang ?? 99) || y.descendance - x.descendance || x.nom.localeCompare(y.nom));
+  const parType = {};
+  for (const l of lignes) (parType[l.type] ??= []).push(l.nom);
+  return {
+    mesurable: true, lignes, total: lignes.length, parType,
+    // « SANS RANG » ET « SANS PARENT » NE SONT PAS LA MÊME CHOSE, et les confondre accuse à tort
+    // (leçon L4) : un document peut déclarer son parent et rester hors de l'arbre si ce parent
+    // est introuvable. Les deux populations sont donc rendues séparément.
+    sansRang: lignes.filter((l) => l.rang === null).map((l) => l.nom),
+    sansParent: lignes.filter((l) => !l.parent).map((l) => l.nom),
+    sansPlan: lignes.filter((l) => !l.planDaction && !l.generee).map((l) => l.nom),
+    horsPortee: "elle RANGE, elle ne NOTE pas : un document peut être parfaitement classé et complètement périmé sur le fond. Le type est lu dans le titre que le document se donne, le rang vient des déclarations « DÉCOULE DE » réelles — aucun des deux ne dit si la stratégie est bonne.",
+  };
+}
+
+export function formatStrategiesLines(c = {}) {
+  if (!c.mesurable) return [`PAS MESURÉ — ${c.pourquoi}`];
+  const L = [`${c.total} stratégie(s) classée(s), rangées par RANG dans la cascade puis par descendance :`, ""];
+  L.push("| Rang | Type | Document | Découle de | Gouverne | État |");
+  L.push("|---|---|---|---|---|---|");
+  for (const l of c.lignes) {
+    const etat = [l.generee ? "générée" : "écrite à la main", l.planDaction ? "plan d'action" : null].filter(Boolean).join(" · ");
+    L.push(`| ${l.rang === null ? "—" : l.rang} | ${l.type} | \`${l.nom}\` | ${l.parent ? `\`${String(l.parent).split("/").pop().replace(/\.md$/, "")}\`` : "—"} | ${l.descendance || "—"} | ${etat} |`);
+  }
+  L.push("");
+  for (const [t, noms] of Object.entries(c.parType)) L.push(`  · ${t} : ${noms.length} — ${noms.join(", ")}`);
+  if (c.sansParent.length) L.push(`  ⚠️ ${c.sansParent.length} ne déclarent aucun parent : ${c.sansParent.join(", ")}`);
+  if (c.sansRang.length) L.push(`  ⚠️ ${c.sansRang.length} hors de l'arbre malgré un parent déclaré (parent introuvable) : ${c.sansRang.join(", ")}`);
+  L.push(`  HORS PORTÉE : ${c.horsPortee}`);
+  return L;
+}
+
+// LE DOCUMENT ENREGISTRÉ, et c'est la moitié « classification à enregistrer » de sa demande.
+// POURQUOI UN DOCUMENT ICI ALORS QUE LA CASCADE EN REFUSE UN (voir le bloc CLI `cascade`) : le
+// refus là-bas vise un SECOND PORTEUR de l'arbre, qui divergerait des branches insérées dans
+// chaque stratégie (leçon L29). Celui-ci ne porte pas l'arbre : il porte un RANGEMENT dérivé —
+// type, rang, descendance, état — que personne d'autre n'écrit, et il est marqué GÉNÉRÉ de bout
+// en bout, donc il ne peut pas diverger de la mesure : il EST la mesure, réécrite à chaque
+// passage.
+export function lignesDuDocumentDesStrategies(c = {}, { date = "", source = "" } = {}) {
+  const L = [];
+  L.push("<!-- DOCUMENT GÉNÉRÉ — produit intégralement par un outil, aucune ligne n'est écrite à la main -->");
+  L.push("# La liste des stratégies du projet, classée");
+  L.push("");
+  L.push(`> Produit par \`node scripts/the-king.mjs strategies\` le ${date}${source ? ` (heure de source ${source})` : ""}, en lisant les documents réels de \`${DOSSIER_DES_STRATEGIES}/\`.`);
+  L.push("> Ta demande : « peux tu me rappeler la liste des strategies et les classer stp (classification à enregistrer) ».");
+  L.push("");
+  L.push("**Les quatre axes de ce classement, et aucun n'est décidé — tous sont lus :**");
+  L.push("");
+  L.push("- le **TYPE** est lu dans le titre que le document se donne lui-même (« STRATÉGIE GLOBALE », « STRATÉGIE DE CHANTIER », ou rien de déclaré) ;");
+  L.push("- le **RANG** est le nombre de sauts jusqu'à la racine de la cascade, compté sur les déclarations « DÉCOULE DE » réelles ;");
+  L.push("- la **DESCENDANCE** compte les documents qui déclarent découler de celui-ci : c'est ce qui sépare une stratégie qui en gouverne d'autres d'une feuille ;");
+  L.push("- l'**ÉTAT** dit si le document est écrit à la main ou généré, et s'il porte un plan d'action (Article 28).");
+  L.push("");
+  if (!c.mesurable) { L.push(`**PAS MESURÉ** — ${c.pourquoi}`); L.push("<!-- /DOCUMENT GÉNÉRÉ -->"); return L; }
+  L.push(...formatStrategiesLines(c));
+  L.push("");
+  L.push("## Le détail, document par document");
+  L.push("");
+  L.push("| Document | Titre qu'il se donne | Taille |");
+  L.push("|---|---|---|");
+  for (const l of c.lignes) L.push(`| \`${l.chemin}\` | ${String(l.titre).replace(/\|/g, "\\|") || "*(sans titre de niveau 1)*"} | ${l.octets} caractères |`);
+  L.push("");
+  L.push("<!-- /DOCUMENT GÉNÉRÉ -->");
+  return L;
+}
+
 export function brancheDe(chemin, arbre, alignement) {
   if (!arbre?.mesurable || !alignement?.mesurable) {
     return { mesurable: false, pourquoi: "arbre ou alignement non mesuré : une branche dessinée sans eux montrerait un document isolé, ce qui est faux et rassurant à tort" };
@@ -2443,7 +2588,7 @@ export function lignesDeLaComparaisonDesDeuxCas(r = {}, { date = "" } = {}) {
   return L;
 }
 
-function main({ chemin = PHILOSOPHY_PATH } = {}) {
+async function main({ chemin = PHILOSOPHY_PATH } = {}) {
   printReportHeader({ tool: "the-king", title: "THE-KING — veille philosophie et politique", scriptPath: "scripts/the-king.mjs" });
   recordCliUsage("the-king");
   const requestText = process.argv.slice(2).join(" ");
@@ -2524,6 +2669,33 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
   // `cascade` (2026-10-03, tâche #1531) — sa question P01 : « existe-t-il pour chaque stratégie une
   // arborescence incluse ? ». La réponse était zéro sur treize, alors que la donnée existait depuis
   // le 2026-09-29 et n'était jamais dessinée.
+  if (process.argv[2] === "strategies") {
+    const c = classerLesStrategies();
+    for (const l of formatStrategiesLines(c)) console.log(l);
+    // LE LIVRABLE EST LE FICHIER (Article 31, faille 3), et son nom est STABLE plutôt que daté :
+    // un rangement n'est pas un instantané qu'on empile, c'est un état courant qui se réécrit.
+    // Une série de copies datées aurait fabriqué exactement les porteurs multiples que la
+    // leçon L29 reproche.
+    const dossier = join(ROOT, "docs/the-king");
+    try { mkdirSync(dossier, { recursive: true }); } catch { /* déjà là */ }
+    const t = await import("./agent-du-temps.mjs").then((m) => m.maintenant()).catch(() => null);
+    const jour = t?.suivi ?? new Date().toISOString().slice(0, 16).replace("T", " ");
+    const sortie = join(dossier, "classification-des-strategies.md");
+    writeFileSync(sortie, lignesDuDocumentDesStrategies(c, { date: jour, source: t?.source ?? "" }).join("\n") + "\n", "utf8");
+    console.log(`\nClassification enregistrée : docs/the-king/classification-des-strategies.md`);
+    const constats = [];
+    if (!c.mesurable) constats.push({ constat: `aucune stratégie lue : ${c.pourquoi}`, etat: "retenu", tache: 1569 });
+    else {
+      const nonDeclares = (c.parType["non déclaré"] ?? []);
+      if (nonDeclares.length) constats.push({ constat: `${nonDeclares.length} document(s) de \`${DOSSIER_DES_STRATEGIES}/\` ne disent pas dans leur titre quel TYPE de stratégie ils sont (${nonDeclares.join(", ")})`, etat: "a-trancher", pourquoi: "un titre est le nom que le document se donne : le corriger à sa place changerait ce qu'il prétend être, et ce n'est pas une décision d'agent" });
+      if (c.sansParent.length) constats.push({ constat: `${c.sansParent.length} stratégie(s) ne déclarent aucun parent : elles ne figurent dans aucune cascade`, etat: "retenu", tache: 1569 });
+      if (c.sansRang.length) constats.push({ constat: `${c.sansRang.length} stratégie(s) déclarent un parent introuvable : la déclaration est devenue fausse en silence`, etat: "retenu", tache: 1569 });
+      if (c.sansPlan.length) constats.push({ constat: `${c.sansPlan.length} stratégie(s) écrites à la main ne portent aucun plan d'action (Article 28) : ${c.sansPlan.join(", ")}`, etat: "a-instruire", pourquoi: "la mesure est mécanique (un titre de section cherché dans le texte) ; savoir si chacune en appelle vraiment un demande un passage réel sur son contenu" });
+    }
+    console.log("");
+    imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
+    return;
+  }
   if (process.argv[2] === "cascade") {
     const a = mesurerLAlignement();
     const arbre = arbreDeLaCascade(a);
@@ -3159,4 +3331,8 @@ export function formatRevelationLines(r) {
   return L;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  // `main` est devenue asynchrone (elle lit l'heure réelle, Article 32) : sans ce `catch`, une
+  // erreur partirait en rejet non traité, c'est-à-dire en silence suivi d'un code de sortie nul.
+  main().catch((e) => { console.error(e); process.exitCode = 1; });
+}

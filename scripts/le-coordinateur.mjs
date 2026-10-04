@@ -269,6 +269,18 @@ export const PRESTATIONS = [
   // comme la conséquence de son absence. Exactement le défaut relevé le 2026-09-29 pour
   // ezechiel-les-tests et html-report, et commis une troisième fois sur un outil que j'ai écrit.
   { nom: "Pack Suis-je à jour", description: "Répond mécaniquement à « es-tu à jour ? » par SIX contrôles et TROIS verdicts (OUI / NON / PAS ENTIÈREMENT MESURÉ), fil de discussion par fil : qui a la balle, depuis quand, où le sujet se place dans la stratégie, et si chaque engagement pris porte une tâche qui existe vraiment.", demande: "Savoir si je suis à jour sur tous ses sujets, et ce qui attend une réponse de qui", outils: ["fils-de-discussion"], cout: "0 appel API — il relit des documents locaux", tokensEstimes: "faible — un verdict, six lignes de contrôle et la liste des fils" },
+  // CE QUE THE-KING SAIT FAIRE N'ÉTAIT OFFERT QU'À MOITIÉ (2026-10-04, tâche #1569). « Pack
+  // Régence » ne parle que du rappel de philosophie ; la CASCADE et les stratégies — ce que
+  // l'outil mesure depuis le 2026-09-29 — n'étaient demandables sous aucun nom, donc invisibles
+  // à tool-brain, donc jamais recommandées. Un outil au catalogue n'est pas la même chose qu'un
+  // outil dont tout le travail est demandable.
+  //
+  // ET J'AI FAILLI ÉCRIRE ICI QU'IL N'AVAIT AUCUNE OFFRE DU TOUT : mon `grep the-king` sur ce
+  // fichier ne rendait rien, parce que « Pack Régence » écrit `THE-KING` en capitales. Une
+  // recherche sensible à la casse sur un nom d'outil rend un zéro qui ressemble trait pour trait
+  // à une absence réelle — c'est exactement pour ça que `normaliserNomDOutil()` existe, et je ne
+  // l'avais pas appelé.
+  { nom: "Pack Stratégies", description: "Rappelle la liste des stratégies du projet et la CLASSE sur quatre axes qui se lisent tous (le type que chaque document se donne, son rang dans la cascade, combien de documents découlent de lui, s'il est généré et s'il porte un plan d'action), puis enregistre le rangement dans un document régénérable. Il RANGE, il ne NOTE pas : un document parfaitement classé peut être complètement périmé sur le fond.", demande: "Savoir quelles stratégies existent, comment elles s'emboîtent, et laquelle gouverne laquelle", outils: ["the-king"], cout: "0 appel API — il relit les documents du dépôt", tokensEstimes: "faible — un tableau de seize lignes et un plan d'action" },
   { nom: "Pack Chiffrage de refonte", description: "Chiffre ce que coûterait de tout reprendre à zéro : le volume par famille, le nombre de RAISONS déjà écrites qu'une refonte devrait relire ou regagner (le vrai coût, et il est concentré, pas réparti), et les acquis que la refonte remettrait en jeu. Il rend des volumes ; il ne recommande jamais.", demande: "Décider s'il faut tout reprendre à zéro, sur des chiffres plutôt que sur une impression", outils: ["cout-de-la-refonte"], cout: "0 appel API — il relit le dépôt", tokensEstimes: "faible — trois sections chiffrées et un plan d'action" },
   // JESUS-LE-SAUVEUR (2026-09-28) — la prestation réclamée par le garde-fou d'intégration le jour
   // de sa naissance, comme pour filet-en-parts juste en dessous.
@@ -3073,7 +3085,7 @@ export function schemaDeLaCarteActuelle(c, { maxParFamille = 6 } = {}) {
 // porter la comparaison, sinon elle aussi existera en double.
 export const MODULES_CIBLES = [
   { cle: "gouvernance", titre: "GOUVERNANCE", quoi: "la loi du projet : la charte, la philosophie, les règles, et ce qui les allège",
-    prestations: ["Pack Tables de Loi", "Pack Références", "Pack Régence", "Pack Classification", "Pack Diète", "Pack Espion", "Pack Criticité"] },
+    prestations: ["Pack Tables de Loi", "Pack Références", "Pack Régence", "Pack Stratégies", "Pack Classification", "Pack Diète", "Pack Espion", "Pack Criticité"] },
   { cle: "qualite-du-code", titre: "QUALITÉ DU CODE", quoi: "ce que le code vaut : dette, duplication, tests, robustesse, découpage",
     prestations: ["Pack Rénovation", "Pack Blindage", "Pack Chasse", "Pack Chasse aux clones", "Pack Même notion, deux écritures", "Pack Points de coupe", "Pack Découpage", "Pack Le filet lui-même", "Pack Filet en parts", "Pack Sentinelle", "Pack Éclaireur", "Pack Uniformité"] },
   { cle: "pilotage", titre: "PILOTAGE DU TRAVAIL", quoi: "ce qu'on fait, dans quel ordre, et si les règles de travail ont été tenues",

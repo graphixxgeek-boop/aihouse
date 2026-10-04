@@ -70,3 +70,21 @@ détectée puis résolue) — même schéma dossier + index que les autres outil
   consulter, il ne consulte jamais à la place de qui décide.
 - Un correcteur du document de philosophie lui-même : aucune écriture automatique, jamais.
 - Un détecteur de contradiction fiable : c'est un signal de tension possible, jamais une preuve.
+
+## Classer le corpus, et les deux pièges du classement
+
+Dès qu'un projet porte plusieurs documents de gouvernance, « rappelle-moi la liste » arrive, et
+juste après « classe-les ». Deux règles transportables :
+
+**① Tous les axes se LISENT, aucun ne se décide.** Le type d'un document est le titre qu'il se
+donne, son rang est le nombre de sauts jusqu'à la racine du graphe de filiation déjà calculé
+ailleurs, sa descendance est le nombre de documents qui le déclarent comme parent. Un axe qu'on
+décide à la place du document fabrique un classement qui n'est vrai que le jour où il est écrit.
+
+**② Deux absences ressemblent à une seule, et les confondre accuse à tort.** « Ce document ne
+déclare aucun parent » et « ce document déclare un parent introuvable » sont deux défauts
+différents, dont un seul est une déclaration devenue fausse. Les fondre dans un compteur unique
+produit des accusations fausses, et un signal qui accuse à tort cesse d'être lu.
+
+**Le classement RANGE, il ne NOTE pas** — et le dire dans la sortie elle-même, sinon un document
+parfaitement classé passera pour un document à jour.

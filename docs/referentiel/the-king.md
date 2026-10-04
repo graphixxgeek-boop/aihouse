@@ -414,3 +414,53 @@ chercher dans la mauvaise moitié.
 **Un bug attrapé par son propre test** : la première version supposait l'extracteur « principes »
 pour tout chemin explicite, si bien qu'un appel visant CLAUDE.md rendait « pas mesurable » — un
 refus poli sur un document parfaitement lisible, par le seul fait qu'on l'avait nommé.
+
+## LA CLASSIFICATION DES STRATÉGIES — ranger, jamais noter (2026-10-04, tâche #1569)
+
+Sa demande : « peux tu me rappeler la liste des strategies et les classer stp (classification à
+enregistrer) ». Commande : `node scripts/the-king.mjs strategies`.
+
+### Pourquoi THE-KING plutôt qu'un outil de plus
+
+Il tient déjà la cascade, donc il sait déjà de qui chaque stratégie découle. Un outil séparé aurait
+porté une SECONDE copie de ce graphe, qui aurait fini par diverger de la première (leçon L29).
+`classerLesStrategies()` réutilise `mesurerLAlignement()` au lieu de le recalculer, et accepte
+qu'on le lui injecte pour les tests.
+
+### Les quatre axes, tous LUS, aucun décidé
+
+| Axe | D'où il vient |
+|---|---|
+| **TYPE** | le titre que le document se donne (« STRATÉGIE GLOBALE », « STRATÉGIE DE CHANTIER », ou rien de déclaré) |
+| **RANG** | le nombre de sauts jusqu'à la racine, pris sur la remontée réelle de la cascade |
+| **DESCENDANCE** | combien de documents déclarent découler de celui-ci — ce qui sépare une stratégie qui en gouverne d'autres d'une feuille |
+| **ÉTAT** | générée ou écrite à la main, et porte-t-elle un plan d'action (Article 28) |
+
+### Deux populations qu'il ne faut jamais confondre
+
+`sansParent` (le document ne déclare rien) et `sansRang` (il déclare un parent, mais ce parent est
+introuvable) **ne sont pas la même chose**. Le premier jet les confondait et annonçait « 16 sans
+rang, aucun parent déclaré » alors que les seize en déclarent un : une accusation fausse, et une
+accusation fausse fait cesser de lire le signal (leçon L4). La cause était un champ mal nommé —
+le code lisait `o.sauts`, qui n'existe pas, au lieu de `o.remontee`. **Un champ inexistant rend un
+`null` parfaitement crédible.**
+
+### Le document enregistré, et pourquoi lui est permis ce que la cascade refuse
+
+`docs/the-king/classification-des-strategies.md`, **nom stable plutôt que daté** : un rangement est
+un état courant qui se réécrit, pas un instantané qu'on empile. Le bloc CLI `cascade` refuse, lui,
+de déposer un document de l'arbre entier — et ce refus tient toujours : il viserait un SECOND
+porteur de l'arbre déjà inséré dans chaque stratégie. Celui-ci ne porte pas l'arbre, il porte un
+rangement dérivé que personne d'autre n'écrit, et il est marqué GÉNÉRÉ de bout en bout : il ne peut
+pas diverger de la mesure, puisqu'il EST la mesure.
+
+### Mesure du 2026-10-04
+
+16 stratégies : **3 globales**, **10 de chantier**, **3 qui ne disent pas ce qu'elles sont**
+(`strategie-cascade-philo-politique`, `les-deux-scenarios-par-zip`, `total-recall-strategie` — la
+seule générée des seize). Zéro sans parent, zéro hors de l'arbre.
+
+### Hors portée, et c'est écrit dans la sortie elle-même
+
+Elle RANGE, elle ne NOTE pas. Un document peut être parfaitement classé et complètement périmé sur
+le fond.

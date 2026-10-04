@@ -26079,6 +26079,96 @@ async function testArborescenceDeLaCascade() {
 await testArborescenceDeLaCascade();
 
 // ─────────────────────────────────────────────────────────────────────────────
+// LA CLASSIFICATION DES STRATÉGIES — « rappelle-moi la liste et classe-les »
+// (2026-10-04, tâche #1569)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testClassificationDesStrategies() {
+  const K = await import('../scripts/the-king.mjs');
+
+  // ── 1. LE TYPE SE LIT DANS LE TITRE QUE LE DOCUMENT SE DONNE, jamais décidé à sa place.
+  assert.strictEqual(K.typeDUneStrategie('STRATÉGIE GLOBALE DU PROJET ENTIER'), 'globale');
+  assert.strictEqual(K.typeDUneStrategie('STRATÉGIE DE CHANTIER — renommage'), 'chantier');
+  assert.strictEqual(K.typeDUneStrategie('TOTAL RECALL — le cadrage'), 'non déclaré', 'a document that does not say what KIND of strategy it is gets "non déclaré" — never a kind guessed for it');
+  assert.strictEqual(K.typeDUneStrategie('', 'STRATEGIE GLOBALE sans accent'), 'globale', 'the accent is optional: a title typed without it is the same title');
+  assert.strictEqual(K.typeDUneStrategie('Note', `${'x'.repeat(500)}\nSTRATÉGIE GLOBALE`), 'non déclaré', 'only the HEAD of the document counts — a mention 500 characters down is prose, not a title');
+
+  // ── 2. LE RANG VIENT DE LA REMONTÉE RÉELLE, et c'est le défaut que ce test fige : le premier
+  //    jet lisait `o.sauts`, un champ qui n'existe pas, donc les seize stratégies ressortaient
+  //    « sans rang » alors que la cascade les aligne toutes. Un champ mal nommé rend un null
+  //    parfaitement crédible.
+  const faux = {
+    mesurable: true,
+    objets: [
+      { chemin: 'docs/strategies/a.md', parent: 'RACINE', remontee: ['docs/strategies/a.md', 'RACINE'] },
+      { chemin: 'docs/strategies/b.md', parent: 'docs/strategies/a.md', remontee: ['docs/strategies/b.md', 'docs/strategies/a.md', 'RACINE'] },
+      // DÉCLARE UN PARENT, MAIS CE PARENT EST INTROUVABLE : hors de l'arbre, avec une déclaration.
+      { chemin: 'docs/strategies/c.md', parent: 'docs/strategies/fantome.md', remontee: [] },
+      // NE DÉCLARE RIEN DU TOUT : l'autre population, et ce n'est pas la même.
+      { chemin: 'docs/strategies/d.md', parent: null, remontee: [] },
+    ],
+  };
+  const textes = {
+    'docs/strategies/a.md': '# STRATÉGIE GLOBALE — A\n\n## Plan d\'action\n',
+    'docs/strategies/b.md': '# STRATÉGIE DE CHANTIER — B\n',
+    'docs/strategies/c.md': '# Quelque chose\n',
+    'docs/strategies/d.md': '<!-- DOCUMENT GÉNÉRÉ — produit par un outil -->\n# D\n',
+  };
+  const c = K.classerLesStrategies({
+    lireImpl: (ch) => textes[ch] ?? (() => { throw new Error('absent'); })(),
+    listerImpl: () => ['a.md', 'b.md', 'c.md', 'd.md', 'index.md', 'pas-du-markdown.txt'],
+    alignement: faux,
+  });
+  assert.strictEqual(c.mesurable, true);
+  assert.strictEqual(c.total, 4, 'index.md and non-markdown files are not strategies');
+  const par = Object.fromEntries(c.lignes.map((l) => [l.nom, l]));
+  assert.strictEqual(par.a.rang, 1, 'the rank is the LENGTH of the real climb minus the document itself — read from `remontee`, never from a field that does not exist');
+  assert.strictEqual(par.b.rang, 2);
+  assert.strictEqual(par.a.descendance, 1, 'and the descent counts who declares THIS document as parent');
+  assert.strictEqual(par.b.descendance, 0);
+  assert.strictEqual(par.a.type, 'globale');
+  assert.strictEqual(par.d.generee, true, 'a document marked GÉNÉRÉ is recognised as such');
+  assert.strictEqual(par.a.planDaction, true);
+  assert.strictEqual(par.b.planDaction, false);
+
+  // ── 3. LE CONTRE-TEST QUI COMPTE : « sans rang » et « sans parent » sont DEUX populations.
+  //    Les confondre accuse à tort (leçon L4) — c'est très exactement ce que la première
+  //    sortie faisait, en annonçant « aucun parent déclaré » à propos de seize documents qui
+  //    en déclarent tous un.
+  assert.deepStrictEqual(c.sansParent, ['d'], 'only the document declaring NOTHING is "sans parent"');
+  assert.deepStrictEqual(c.sansRang.sort(), ['c', 'd'], 'while "sans rang" also holds the one whose declared parent is untraceable — a declaration that became false in silence');
+  assert.ok(c.sansRang.length > c.sansParent.length, 'the two sets are genuinely different sizes here: a single list could not have said both things');
+  const lignes = K.formatStrategiesLines(c).join('\n');
+  assert.ok(/parent introuvable/.test(lignes), 'and the output NAMES the difference rather than lumping them together');
+
+  // ── 4. UN DOSSIER VIDE DIT « PAS MESURÉ », jamais « zéro stratégie » (leçon L5).
+  const vide = K.classerLesStrategies({ listerImpl: () => [], alignement: faux });
+  assert.strictEqual(vide.mesurable, false);
+  assert.ok(/jamais que le projet n'a pas de stratégie/.test(vide.pourquoi), 'the refusal says what the zero does NOT mean');
+  assert.ok(K.formatStrategiesLines(vide)[0].startsWith('PAS MESURÉ'), 'and it never prints as a measurement');
+
+  // ── 5. EN DIRECT, sur le vrai dépôt (Article 25).
+  const reel = K.classerLesStrategies();
+  assert.strictEqual(reel.mesurable, true, 'the real docs/strategies/ folder must be readable');
+  assert.ok(reel.total >= 13, `every real strategy is classified (currently ${reel.total})`);
+  assert.deepStrictEqual(reel.sansRang, [], 'no real strategy declares a parent that cannot be found — if one does, the cascade has a broken link');
+  assert.deepStrictEqual(reel.sansParent, [], 'and none is floating outside the cascade');
+  assert.ok((reel.parType.chantier ?? []).length >= 10, 'the ten CHANTIER strategies are recognised by the title they give themselves');
+
+  // ── 6. LA CLASSIFICATION EST ENREGISTRÉE, et c'est la moitié de sa demande (« classification
+  //    à enregistrer »). Un rangement qui ne vit que dans une sortie de terminal est une
+  //    intention (leçon L2).
+  const doc = K.lignesDuDocumentDesStrategies(reel, { date: '2026-10-04', source: 'système' }).join('\n');
+  assert.ok(doc.startsWith('<!-- DOCUMENT GÉNÉRÉ'), 'the document declares itself fully generated — otherwise the twin-document detector counts it as a second hand-written holder');
+  assert.ok(doc.trimEnd().endsWith('<!-- /DOCUMENT GÉNÉRÉ -->'), 'and closes its marker, without which the stripper swallows the end of the file');
+  const surDisque = fs.readFileSync('docs/the-king/classification-des-strategies.md', 'utf8');
+  assert.ok(surDisque.includes('| Rang | Type | Document |'), 'and the file is really ON DISK with the classification in it');
+  assert.ok(!/\d{4}-\d{2}-\d{2}\.md$/.test('docs/the-king/classification-des-strategies.md'), 'its name is STABLE rather than dated: a ranking is a current state that rewrites itself, not a snapshot one stacks');
+
+  console.log(`Passed: la classification des stratégies (2026-10-04, tâche #1569). Sa demande : « peux tu me rappeler la liste des strategies et les classer stp (classification à enregistrer) ». QUATRE AXES, ET AUCUN N'EST DÉCIDÉ — tous se lisent : le TYPE dans le titre que le document se donne lui-même, le RANG dans la remontée réelle de la cascade, la DESCENDANCE dans le nombre de documents qui déclarent découler de celui-ci, l'ÉTAT dans ses marqueurs. Mesure actuelle : ${reel.total} stratégies, ${(reel.parType.globale ?? []).length} globales, ${(reel.parType.chantier ?? []).length} de chantier, ${(reel.parType['non déclaré'] ?? []).length} qui ne disent pas ce qu'elles sont. LA CASCADE EST RÉUTILISÉE, JAMAIS RECALCULÉE (leçon L29) : c'est elle qui sait déjà de qui chacune découle, un second calcul aurait fini par diverger du premier. LE DÉFAUT QUE CE TEST FIGE : le premier jet lisait \`o.sauts\`, un champ inexistant, donc les seize ressortaient « sans rang » — un champ mal nommé rend un null parfaitement crédible, et la sortie accusait en prime « aucun parent déclaré » alors que toutes en déclarent un. « Sans rang » et « sans parent » sont désormais DEUX populations distinctes, parce qu'un document peut déclarer un parent introuvable (leçon L4).`);
+}
+await testClassificationDesStrategies();
+
+// ─────────────────────────────────────────────────────────────────────────────
 // L'ORGANISATION DES LOIS — numéroter n'est pas citer (2026-10-02, tâche #1445)
 // ─────────────────────────────────────────────────────────────────────────────
 async function testLOrganisationDesLois() {
