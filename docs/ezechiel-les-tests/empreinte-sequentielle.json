@@ -1,5 +1,5 @@
 {
-  "quand": "2026-10-04T00:24:46.775Z",
+  "quand": "2026-10-04T01:42:32.162Z",
   "pourquoi": "la liste des SUJETS vérifiés par le dernier filet séquentiel vert. Un COMPTE ne voit pas « un test perdu, un test ajouté » ; cette liste, si.",
   "sujets": [
     "Passed: 18 % du registre échappait à tous les contrôles, en ",
@@ -190,6 +190,7 @@
     "Passed: la circulation des données — deux faux négatifs de C",
     "Passed: la classification des lois et des règles, et le text",
     "Passed: la classification des rapports et des datas (2026-09",
+    "Passed: la classification des stratégies (2026-10-04, tâche ",
     "Passed: la cle ecrite quatre fois (2026-09-29, tache #1206).",
     "Passed: la concordance à deux outils (2026-09-28, tâche #695",
     "Passed: la conformité mécanique des kits, l'inventaire nomin",
@@ -418,6 +419,7 @@
     "Passed: un item COÛTEUX n'est pas un item muet (2026-09-28, ",
     "Passed: un numéro de tâche n'est pas un décompte (2026-10-01",
     "Passed: un outil cité par son NOM compte désormais comme por",
+    "Passed: un prompt de réveil qui porte un état est un prompt ",
     "Passed: un registre de decisions cite mais absent se signale",
     "Passed: un réveil n'est pas un contrôle (2026-09-27, tâche #",
     "Passed: un schéma sans titre, et une règle déjà suivie à 92 ",

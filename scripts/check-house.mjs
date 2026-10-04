@@ -18371,6 +18371,16 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   console.log('Passed: the charter now protects itself mechanically (2026-09-23, task #631), answering a direct question from the user — it already ORDERED its own protection in two places, the Article 13 garde-fou against lightening that costs quality and the preamble ban on renumbering, and neither had the slightest mechanism while the charter was being actively cut. Five checks, each born of a real risk in this campaign: an Article that vanished, one renumbered or inserted mid-list, one emptied of most of its obligations, a path become unreachable, and a change left out of the operations memory where the WHY lives since git only keeps the WHAT. Two of the five are blocking and three only open questions, because emptying an Article is sometimes precisely the intended gesture — Article 19 deliberately lost three fifths of its text the same day. The distinction that makes it usable rather than obstructive is between a path that is lost and one still reached through a document the charter keeps: the second is the whole point of a renvoi, and treating it as a regression would forbid every legitimate compression. It declares its own limit rather than hiding it: no program can judge that a removed rule had really become useless, so it guards the structure and never the meaning.');
 
   console.log('Passed: the three throwaway scripts of one charter analysis now live in the tools (2026-09-23, task #628) — counting obligations per rule, checking that no path is lost in a compression, and finding documents nothing reaches. Each had found something real and each would have vanished with the command that carried it. The obligation counter matters most: public guidance and this project\'s own measurement independently agree that a frontier model reliably follows 150 to 200 instructions, so a lightening pass is judged in ORDERS REMOVED, never in tokens saved — cutting three thousand tokens of narrative frees no attention at all. The path check keeps two states rather than one, because a path dropped from a document but still reached through another is exactly what a renvoi means, and calling that a regression would block every legitimate compression; only a path nothing reaches is a loss. The orphan walk follows several hops for the same reason, and refuses to answer at all without a file reader, since an empty orphan list reads exactly like a clean bill of health.');
+}
+
+// ── COUPURE DE BLOC, PAS DE CONTENU (2026-10-04, tâche #1599). Ce qui suit vivait dans le MÊME
+//    bloc de niveau zéro que ce qui précède : 835 lignes, 28,3 s, soit l'unité la plus lourde du
+//    filet — et une unité tombe dans UNE part, entière, donc elle fixait à elle seule le plancher
+//    du parallélisme. Aucune assertion n'a bougé, aucun ordre n'a changé : seules les accolades
+//    de niveau zéro se sont refermées entre deux sujets qui ne partagent aucune variable (vérifié
+//    dans les deux sens avant la coupe, pas après).
+//    CE QUI SUIT : la classification des règles (ABRAHAM) — 4,1 s à elle seule
+{
 
   // LA CLASSIFICATION DES RÈGLES (2026-09-24, chantier 1 du plan de nuit) — deux axes croisés,
   // force de garantie × gravité, calibrés explicitement par l'utilisateur.
@@ -18479,6 +18489,16 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal((await adt.heureReseau({ fetchImpl: null })).ok, false, 'with no HTTP client at all the network path fails cleanly instead of throwing');
 
   console.log('Passed: AGENT-DU-TEMPS knows the time and, above all, never gives it without saying where it comes from (2026-09-24, chantier 3.1) — an AI has no clock: it infers the date from the last timestamp it saw go by, and that inference drifts with every minute of work. The defect is measured, not feared: the very night this agent was asked for, a suivi row was dated fifteen minutes in the future because the time had been typed rather than read, and a guard written two hours earlier refused the commit. The design principle is the whole tool in one line — a fallback clock presented as network time is the worst kind of error, invisible, because a wrong time looks exactly like a right one. So three sources are always named, and "no readable source" means refusing to answer rather than defaulting. The failure MOTIVE is kept too, since "refused by network policy" and "the service is down" call for opposite gestures. In this execution environment both time APIs return HTTP 403 and the source is therefore always "système": that is an environment setting the user owns, not a fault of the tool, and it is printed at every run instead of being swallowed. It also holds the estimation memory, which belongs here rather than beside it because an estimate is a claim about time and only measured time can correct it: the ±30 % tolerance is derived from this project\'s first real measurement rather than chosen as a round number, a factor is PROPOSED and never applied, never on fewer than three points, and it is the median — one run interrupted halfway would otherwise drag every later estimate down with it.');
+}
+
+// ── COUPURE DE BLOC, PAS DE CONTENU (2026-10-04, tâche #1599). Ce qui suit vivait dans le MÊME
+//    bloc de niveau zéro que ce qui précède : 835 lignes, 28,3 s, soit l'unité la plus lourde du
+//    filet — et une unité tombe dans UNE part, entière, donc elle fixait à elle seule le plancher
+//    du parallélisme. Aucune assertion n'a bougé, aucun ordre n'a changé : seules les accolades
+//    de niveau zéro se sont refermées entre deux sujets qui ne partagent aucune variable (vérifié
+//    dans les deux sens avant la coupe, pas après).
+//    CE QUI SUIT : le recensement des scripts (CASSANDRA-RH) — le groupe le plus lourd du filet, 23,9 s
+{
 
   // ————————————————————————————————————————————————————————————————————————
   // LE RECENSEMENT DES SCRIPTS (2026-09-24, chantiers 1.3 et 1.4 du plan de nuit)
@@ -18974,6 +18994,16 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok('obligations' in planKing, 'and the plan carries them, since a requirement nobody is shown at integration time is a requirement discovered one test at a time afterwards');
 
   console.log('Passed: the Agence\'s own scripts are classified by TYPE and by TRANSVERSE CLASS (2026-09-24, chantiers 1.3 and 1.4 of the night plan) — two axes neither of the existing registries carried, since AGENT_CATEGORIES gives a RANK a library cannot have and TOOL_PORTEE gives what a tool ANALYSES, neither saying what a file IS nor what it KNOWS HOW TO DO. It lives with CASSANDRA rather than in a twenty-sixth script, because she already holds the roster and the same prompt asked to reduce the tool count. Everything is derived and nothing enumerated: the type is read from the file itself, each class is a probe on its source, so a script added tomorrow gets both without anyone thinking about it. Its first four real runs produced four false verdicts and each one is kept as a counter-test, because all four came from the same laziness — measuring what was easy rather than what the question asked. It looked for a fiche named after the FILE while a fiche is named after the TOOL, accusing 22 at once; it counted one way of reaching a script when this repository has five, declaring the charter\'s own Article 0 diagnostic dead; then, over-correcting, it took a mere documentary mention for an entry point and promoted a library imported eighteen times to a tool; and it accepted a launch command found in a SUIVI row, that is the story of a past run, which erased the one genuinely useful finding — that the charter orders check-spirit.mjs to be run by hand and nowhere writes the command.');
+}
+
+// ── COUPURE DE BLOC, PAS DE CONTENU (2026-10-04, tâche #1599). Ce qui suit vivait dans le MÊME
+//    bloc de niveau zéro que ce qui précède : 835 lignes, 28,3 s, soit l'unité la plus lourde du
+//    filet — et une unité tombe dans UNE part, entière, donc elle fixait à elle seule le plancher
+//    du parallélisme. Aucune assertion n'a bougé, aucun ordre n'a changé : seules les accolades
+//    de niveau zéro se sont refermées entre deux sujets qui ne partagent aucune variable (vérifié
+//    dans les deux sens avant la coupe, pas après).
+//    CE QUI SUIT : le faux positif d'ABRAHAM lancé sur cette suite de tests
+{
 
   // #873 — LE FAUX POSITIF LE PLUS COÛTEUX RENCONTRÉ, parce que son résultat ressemble trait pour
   // trait à une analyse valide. Lancé sur cette suite de tests, Abraham annonçait « Forme reconnue :
@@ -19420,6 +19450,72 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   // IL REFUSE DE CONCLURE SANS LES DURÉES (leçons L5/L11) — une absence de mesure n'est jamais un vert.
   assert.equal(ez.comparerLesCouches({}).mesurable, false, 'with no durations at all it must declare NOT MEASURED, never compute a verdict from nothing');
+
+  // ── DÉFAUT 4 — UNE MESURE PÉRIMÉE N'EST PAS UNE MESURE MANQUANTE (2026-10-04, tâche #1597).
+  //    Trouvé en relisant Ezechiel après la campagne d'optimisation du filet : couches.json
+  //    annonçait « filet nu 266,5 s » pendant que la mesure de santé du MÊME outil, huit heures
+  //    plus tard, relevait 194,0 s. Deux porteurs du même chiffre divergeaient de 37 % (L29) et
+  //    rien dans la sortie ne disait lequel croire — un chiffre sans âge se lit comme un chiffre
+  //    d'aujourd'hui (Article 32).
+  const vieux = { presentes: true, quand: '2026-10-03T17:18:00.000Z', nuMs: 266462 };
+  const histo = [
+    { quand: '2026-10-03T12:00:00.000Z', totalMs: 265000, code: 0 },   // AVANT : ne compte pas
+    { quand: '2026-10-03T23:44:00.000Z', totalMs: 190650, code: 0 },
+    { quand: '2026-10-04T00:24:00.000Z', totalMs: 193959, code: 0 },
+  ];
+  const perimee = ez.fraicheurDesCouches({ couches: vieux, historique: histo, maintenant: Date.parse('2026-10-04T01:30:00.000Z') });
+  assert.equal(perimee.comparable, true);
+  assert.equal(perimee.perimee, true, 'MUST CATCH: a layer measurement 37 % away from the last green sequential run is STALE, and saying so is the whole point');
+  assert.equal(perimee.reference, 193959, 'the reference is the LAST green run, never the interval of all of them: an interval spanning the optimisation campaign absolves everything that happened inside it');
+  assert.ok(perimee.ecartPct > 30, `and the gap is reported as a figure (currently ${perimee.ecartPct.toFixed(0)} %)`);
+  assert.ok(perimee.ageJours > 0.3 && perimee.ageJours < 1, 'with its age in days, computed on a time passed in rather than deduced (Article 32)');
+  assert.match(ez.formatFraicheurDesCouchesLines(perimee).join('\n'), /PÉRIMÉE/, 'and the reader is told BEFORE the figures, never after');
+
+  // MUST LET PASS : une mesure qui colle au dernier passage ne déclenche rien.
+  const fraiche = ez.fraicheurDesCouches({ couches: { presentes: true, quand: '2026-10-04T00:30:00.000Z', nuMs: 194500 }, historique: [{ quand: '2026-10-04T00:40:00.000Z', totalMs: 193959, code: 0 }], maintenant: Date.parse('2026-10-04T01:30:00.000Z') });
+  assert.equal(fraiche.perimee, false, 'MUST LET PASS: a measurement within the declared noise margin is not stale — an alert that fires on noise stops being read (L4)');
+  assert.equal(fraiche.margePct, ez.MARGE_DE_BRUIT_PCT, 'and the margin is the one ALREADY declared in this file, never a second threshold planted beside it (L29)');
+
+  // UN PASSAGE QUI A ÉCHOUÉ NE MESURE RIEN : sa durée est celle d'une suite interrompue.
+  const quEchecs = ez.fraicheurDesCouches({ couches: vieux, historique: [{ quand: '2026-10-04T00:24:00.000Z', totalMs: 12000, code: 1 }] });
+  assert.equal(quEchecs.comparable, false, 'a red run is not a reference: counting its 12 s would make the stale 266 s look catastrophically slow for the wrong reason');
+
+  // ── DÉFAUT 5 — UNE COMMANDE ÉCRITE DANS UN CROCHET N'EST PAS UNE COMMANDE QUI TOURNE
+  //    (2026-10-04, tâche #1597). Depuis que le crochet lance le runner parallèle avec repli
+  //    automatique, les DEUX lancements du filet figurent dans le fichier, et Ezechiel annonçait
+  //    deux exécutions bloquantes par commit là où il n'en tourne qu'une.
+  //    LA DÉTECTION COMPTE DES ACCOLADES, donc elle est fausse jusqu'à preuve du contraire
+  //    (leçon L39) : les deux sens sont vérifiés, et l'imbrication aussi.
+  const hook = [
+    '#!/bin/sh',
+    'lancer_sequentiel() {',
+    '  node scripts/check-house.mjs',
+    '  if [ -f x ]; then',
+    '    node scripts/autre.mjs',
+    '  fi',
+    '}',
+    'node scripts/filet-en-parts.mjs || lancer_sequentiel',
+    'npx tsc --noEmit',
+  ].join('\n');
+  const dedans = ez.lignesSousCondition(hook);
+  assert.equal(dedans[2], 'lancer_sequentiel', 'MUST CATCH: a command inside a shell function body belongs to that function');
+  assert.equal(dedans[4], 'lancer_sequentiel', 'including one nested deeper inside an if — the closing "fi" is not a closing brace, and a detector fooled by it would release the function one line too early');
+  assert.equal(dedans[1], null, 'the declaration line itself is not INSIDE the function');
+  assert.equal(dedans[7], null, 'MUST LET PASS: the command that really runs at every commit is not marked conditional');
+  assert.equal(dedans[8], null, 'nor is the one after the function closed — a brace counter that never comes back to zero would swallow the whole rest of the file');
+  const chaine = ez.chaineDuFilet({ crochets: ['faux-hook'], lire: () => hook });
+  assert.equal(chaine.mesurable, true);
+  assert.equal(chaine.conditionnelles.length, 2, 'both fallback commands are named as conditional');
+  assert.ok(chaine.bloquantesToujours < chaine.bloquantes || chaine.bloquantes === 0, 'and what really runs is counted apart from what is merely written in the file');
+  const reelle = ez.chaineDuFilet();
+  assert.equal(reelle.mesurable, true, 'and it still reads the REAL hooks (Article 25)');
+  assert.equal(reelle.conditionnelles.length, 1, `the real pre-commit hook carries exactly one fallback — the sequential net behind the parallel runner (currently ${reelle.conditionnelles.map((c) => c.repliDe).join(', ')})`);
+
+  // ET SANS RIEN DE PLUS RÉCENT, IL NE DIT RIEN — jamais « à jour » (leçons L5/L11).
+  const rien = ez.fraicheurDesCouches({ couches: vieux, historique: [] });
+  assert.equal(rien.comparable, false);
+  assert.match(ez.formatFraicheurDesCouchesLines(rien).join('\n'), /NON JUGEABLE/, 'an absence of comparison point is declared, never rendered as a clean bill');
+  assert.equal(ez.fraicheurDesCouches({ couches: null }).comparable, false, 'and with no layer measurement at all there is nothing to judge either');
 
   console.log("Passed: EZECHIEL-LES-TESTS (2026-09-27, tâche #1026) — l'enquêteur du filet de sécurité, et les trois faux positifs qu'il a produits à son premier vrai passage, verrouillés ici dans les deux sens. Cinq lignes de succès consécutives sont UN groupe et pas cinq, sans quoi quatre groupes au corps vide se faisaient accuser de n'avoir aucune assertion. Une ligne qui appelle une assertion n'importe rien : huit chemins de fixture étaient dénoncés comme des fichiers disparus, et aucun ne l'était. Un surcoût négatif est du bruit de mesure et se déclare comme tel, au lieu de produire « l'enveloppe -3 % », un pourcentage négatif qui se lit comme un résultat alors qu'il dit seulement qu'on n'a pas su distinguer. Et sans les trois durées, il rend PAS MESURÉ plutôt qu'un verdict : optimiser un filet sans savoir d'où vient son temps est exactement ce que cet outil existe pour empêcher.");
 }
@@ -28066,6 +28162,43 @@ async function testLePlancherDuGrain() {
 
   // ── UN FILET SANS MESURE N'A PAS DE PLANCHER NUL, IL N'EN A PAS (leçons L5/L11).
   assert.strictEqual(F.plancherDuParallelisme({ src, mesures: [] }).mesurable, false, 'no timing means no floor at all');
+
+  // ── LA MACHINE A UN NOMBRE DE CŒURS, ET LA PROJECTION L'IGNORAIT (2026-10-04, tâche #1599).
+  //    « à 8 parts → 44,3 s » se lit comme un objectif ; sur quatre cœurs, huit parts se
+  //    partagent les mêmes quatre processeurs et ajoutent chacune une épine. La mesure du
+  //    2026-10-03 le disait déjà sans qu'on sache le lire : 8 parts avaient mis 107,9 s là où la
+  //    théorie promettait 46 s.
+  //    Le grain du filet ci-dessus écrase tout (une unité de 30 s), donc la borne des cœurs se
+  //    vérifie sur un filet à GRAIN FIN, où c'est bien le nombre de bras qui décide.
+  const fin = ['import x from "y";', ...Array.from({ length: 8 }, (_, i) => `{\n  f${i}();\n}`)].join('\n');
+  const mesuresFines = Array.from({ length: 8 }, (_, i) => ({ ligne: 3 + i * 3, ms: 4000 }));
+  const surQuatre = F.plancherDuParallelisme({ src: fin, mesures: mesuresFines, parts: [2, 4, 8], coeurs: 4 });
+  assert.strictEqual(surQuatre.coeurs, 4, 'the core count is part of the measure, never an implicit assumption');
+  const a4 = surQuatre.projection.find((x) => x.parts === 4);
+  const a8 = surQuatre.projection.find((x) => x.parts === 8);
+  assert.strictEqual(a4.borneParLesCoeurs, false, 'four parts on four cores is not core-bound');
+  assert.strictEqual(a8.borneParLesCoeurs, true, 'MUST CATCH: eight parts on four cores IS, and the projection must say so rather than promise');
+  assert.ok(a8.msSurCetteMachine > a8.msTheorique, 'and on this machine it costs MORE than the theory, never less — each extra part adds a spine without adding an arm');
+  assert.ok(a8.msSurCetteMachine >= a4.msSurCetteMachine, 'so going past the core count makes the wall WORSE, which is exactly what the 8-part run measured');
+  const seize = F.plancherDuParallelisme({ src: fin, mesures: mesuresFines, parts: [4], coeurs: 16 });
+  assert.strictEqual(seize.projection[0].borneParLesCoeurs, false, 'MUST LET PASS: on a bigger machine the same four parts are not core-bound — the bound is the machine, never a constant written into the tool');
+
+  // ── UNE UNITÉ SANS CHRONOMÉTRAGE N'EST PAS UNE UNITÉ GRATUITE (2026-10-04, tâche #1599).
+  //    Le cas « aveugle » (AUCUNE mesure) était traité depuis le projet témoin ; le cas MIXTE,
+  //    qui est le courant, ne l'était pas — on avait corrigé l'occurrence et pas la CLASSE (L37).
+  const melange = [{ debut: 1, ms: 1000 }, { debut: 2, ms: 3000 }, { debut: 3, ms: 0 }, { debut: 4, ms: 9000 }, { debut: 5 }];
+  assert.strictEqual(F.poidsParDefaut(melange), 3000, 'the default is the MEDIAN of what IS measured — the mean would be dragged up by the monsters and would wildly overcharge a small unknown unit');
+  const complete = F.completerLesPoids(melange);
+  assert.strictEqual(complete.estimees, 2, 'the two unmeasured units are counted and NAMED as estimated');
+  assert.strictEqual(complete.mesurees, 3);
+  assert.ok(complete.unites.every((u) => u.ms > 0), 'MUST CATCH: not one unit may keep a zero weight — a zero weight never raises a counter, so the unit never leaves the part it fell into');
+  assert.ok(complete.unites.filter((u) => u.poidsEstime).length === 2, 'and an estimated weight says it is estimated: a guess presented as a measurement gets copied on as a truth (L5/L11)');
+  assert.strictEqual(F.poidsParDefaut([]), 0, 'with nothing measured there is no median to take, and the blind branch of repartir() handles that case by COUNT');
+  assert.strictEqual(F.poidsParDefaut([{ ms: 0 }, { ms: 0 }]), 0, 'same when every unit is unmeasured — the tool must not invent a scale out of nothing');
+
+  // MUST LET PASS : le cas aveugle garde son comportement, qui répartit au NOMBRE.
+  const aveugle = F.repartir([{ debut: 1 }, { debut: 2 }, { debut: 3 }, { debut: 4 }], 2);
+  assert.deepStrictEqual(aveugle.map((x) => x.blocs.length), [2, 2], 'with no timing at all the blocks are still dealt out evenly, as the witness project forced in September');
 
   // ── LE PASSAGE RÉEL (Article 25), ET C'EST LUI QUI VALIDE LE MODÈLE : sur le vrai filet, la
   // projection à quatre parts doit tomber près du lancement réellement chronométré. L'ancienne

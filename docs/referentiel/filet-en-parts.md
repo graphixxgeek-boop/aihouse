@@ -189,3 +189,56 @@ La séparation socle/déplaçable est lue dans le TEXTE. Un bloc qui toucherait 
 une fonction appelée ailleurs resterait invisible, et serait déplacé à tort. C'est pourquoi le mode
 séquentiel reste la référence et pourquoi le message d'échec du runner rappelle, en toutes lettres,
 de relancer à l'ancienne avant de conclure.
+
+## LA PASSE DU 2026-10-04 — trois corrections, dont une qui dit NON (tâche #1599)
+
+Sa consigne : « je voudrais encore une passe sur le filet stp, si tu peux creuser encore ».
+
+### ① L'unité la plus lourde était un bloc de 835 lignes, et elle fixait le plancher à elle seule
+
+Un bloc de niveau zéro tombe dans UNE part, entière. Celui des lignes 18165–19000 pesait **28,3 s**
+— 2,8 fois l'unité suivante. Il portait quatre sujets sans rapport entre eux (MOÏSE, ABRAHAM,
+AGENT-DU-TEMPS, CASSANDRA-RH), réunis par l'histoire et non par une dépendance.
+
+**Coupé en quatre blocs, et la coupe ne touche AUCUNE assertion** : seules les accolades de niveau
+zéro se referment entre deux sujets. Les trois points de coupe ont été vérifiés AVANT (aucune
+variable déclarée d'un côté n'est lue de l'autre), pas après. Plancher : **46,1 s → 44,3 s**, et
+l'unité la plus lourde descend de 28,3 s à 23,8 s.
+
+### ② Une unité sans chronométrage était pesée ZÉRO — et ce n'était pas le cas « aveugle »
+
+Le cas « aucune mesure du tout » était traité depuis le projet témoin de septembre. Le cas MIXTE,
+lui, ne l'était pas : **32 unités sur 281 n'avaient aucune durée**. Le remplissage de sacs les
+plaçait en dernier et, comme elles ne font monter aucun compteur, elles s'empilaient toutes dans la
+même part — **53 blocs dans la part 4 contre 22 à 25 ailleurs**. On avait corrigé l'occurrence, pas
+la classe (leçon L37).
+
+`completerLesPoids()` les pèse désormais à la **MÉDIANE** des unités mesurées (pas la moyenne : la
+suite est « une poignée de monstres », la moyenne surestimerait grossièrement une petite unité
+inconnue), et le rapport dit combien d'unités sont estimées.
+
+**RÉSULTAT HONNÊTE : la répartition des BLOCS s'est égalisée (32/36/28/34), le temps n'a PAS
+bougé** (79,0 s → 78,8 s). Ici la médiane vaut quelques dizaines de millisecondes : ces 32 unités
+ne coûtent réellement presque rien. La correction reste juste — elle protège le cas général et tout
+autre dépôt — mais **elle n'a rien rapporté sur celui-ci, et le dire vaut mieux que de l'attribuer
+au gain d'à côté.**
+
+### ③ La projection ignorait que la machine a un nombre de cœurs — et c'est elle qui mentait
+
+« à 8 parts → 46,1 s » se lit comme un objectif atteignable. Sur **quatre cœurs**, huit parts se
+partagent les mêmes quatre processeurs et chacune ajoute une épine : le mur MONTE. La mesure du
+2026-10-03 le disait déjà sans qu'on sache la lire — **8 parts avaient mis 107,9 s** là où la
+théorie promettait 46 s.
+
+La projection porte maintenant deux colonnes : « en théorie » (bras illimités) et « sur cette
+machine » (bornée par `cpus().length`), avec la mention explicite quand il y a plus de parts que de
+cœurs. Sur 4 cœurs : 4 parts → 63,8 s, 6 parts → **72,6 s**, 8 parts → **82,3 s**. Le nombre de
+cœurs se LIT, il n'est jamais une constante écrite dans l'outil.
+
+### Ce qui reste INEXPLIQUÉ, et qui est dit plutôt que comblé
+
+Après l'épine (16,8 s), les parts 1 à 3 tombent à 1 à 5 secondes de leur plan ; **la part 4 est à
++18,5 s**, et ce n'est pas le déséquilibre des unités non pesées (corrigé en ②, sans effet). Trois
+lancements de suite donnent le même écart, toujours sur la part 4. La cause n'est pas établie :
+elle est consignée **À INSTRUIRE**, jamais expliquée par une hypothèse plausible — c'est exactement
+le genre de diagnostic élégant et faux que cette campagne a déjà payé une fois.

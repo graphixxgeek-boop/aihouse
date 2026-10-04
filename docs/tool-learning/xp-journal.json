@@ -607,5 +607,134 @@
       "docs/regles-de-travail.md"
     ],
     "date": "2026-10-03T08:54:09.142Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "fin de compte rendu de travail",
+    "titre": "Élargir un critère de sûreté peut tuer tout le gain, et seule la mesure le dit",
+    "quoi": "Pour sécuriser le découpage du filet en parts, j'ai élargi le détecteur de SOCLE (ce qui doit rester dans toutes les parts). Résultat mesuré : 129 blocs sur 167 partaient au socle et le plancher du parallélisme montait à 240,6 s — c'est-à-dire plus que le séquentiel d'aujourd'hui. Le gain entier était mort, et le code paraissait plus prudent.",
+    "pourquoi": "Un critère de sûreté élargi ne se juge jamais sur sa prudence apparente : il se juge sur ce qu'il reste à paralléliser. J'ai gardé le résultat négatif comme contre-test plutôt que de l'effacer — c'est la seule trace qui empêchera quelqu'un de refaire exactement ce geste en croyant bien faire.",
+    "terrain": [
+      "scripts/filet-en-parts.mjs"
+    ],
+    "date": "2026-10-04T01:30:32.983Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "un garde-fou bloque ou un test échoue de façon imprévue",
+    "titre": "Une ligne de registre illisible par le motif ressemble trait pour trait à une ligne absente",
+    "quoi": "Le lecteur qui confronte le registre de filet-en-parts n'acceptait que des entiers nus. Les lignes « 167,0 s » et « **82,2 s** » (une décimale, du gras) passaient sans un mot : le rapport disait « 5 lignes confrontées » là où le registre en comptait 7, et personne ne pouvait voir les deux manquantes.",
+    "pourquoi": "Leçon L11 vue par l'autre bout : un motif qui ne peut PAS matcher rend le même silence qu'un motif qui ne matche pas. La correction ne s'arrête pas à élargir le motif — elle NOMME désormais les lignes qu'il n'a pas su lire. Un compteur de lignes traitées qui ne dit pas combien il en a sautées est un compteur qui ment par construction.",
+    "terrain": [
+      "scripts/ezechiel-les-tests.mjs",
+      "docs/filet-en-parts/index.md"
+    ],
+    "date": "2026-10-04T01:30:32.983Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "un garde-fou bloque ou un test échoue de façon imprévue",
+    "titre": "Un diagnostic plausible qui colle au symptôme est l'erreur la plus chère",
+    "quoi": "Le découpage en 8 parts échouait. J'ai annoncé une collision entre parts — explication élégante, cohérente avec le symptôme, et fausse. La cause réelle : les journaux d'usage d'outils par part n'étaient jamais nettoyés, donc les événements d'un passage planté survivaient, et la sauvegarde/restauration du test les perpétuait.",
+    "pourquoi": "Un diagnostic qui explique le symptôme n'est pas un diagnostic vérifié. Ce qui m'a sauvé n'est pas la relecture, c'est d'avoir listé les fichiers que le passage laissait derrière lui. Et la correction porte sur la CLASSE (leçon L37) : UNE seule liste déclare désormais tous les brouillons d'une part, au lieu de trois endroits qui oubliaient chacun le leur.",
+    "terrain": [
+      "scripts/filet-en-parts.mjs"
+    ],
+    "date": "2026-10-04T01:30:32.983Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "un garde-fou bloque ou un test échoue de façon imprévue",
+    "titre": "Une optimisation doit rendre le MÊME octet, et seule la capture de l'avant le prouve",
+    "quoi": "J'ai remplacé un balayage linéaire par un index inversé dans THE-KING : même résultat, beaucoup plus vite — sauf que l'ordre de `listeZones` changeait, et 304 lignes de sortie différaient. Aucun test ne portait sur l'ordre. Trouvé uniquement parce que j'avais capturé la sortie AVANT.",
+    "pourquoi": "La règle que je m'applique désormais : avant toute optimisation de performance, capturer la sortie complète, et comparer octet pour octet après. « Même résultat » au sens du développeur veut dire « même ensemble » ; au sens de l'utilisateur, ça veut dire « même texte ». Ce sont deux choses différentes, et c'est la seconde qui compte.",
+    "terrain": [
+      "scripts/the-king.mjs"
+    ],
+    "date": "2026-10-04T01:30:32.983Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "fin de compte rendu de travail",
+    "titre": "J'ai rendu DEUX fois de suite un chiffre faux sur la même mesure, et les deux fois avec aplomb",
+    "quoi": "① J'ai prédit que la couverture de code s'effondrerait en parallèle : faux, un point d'écart. ② J'ai ensuite affirmé que le parallèle mesurait MIEUX (41 fonctions à 81 % contre 30 à 42 %) : faux aussi — mon dossier de couverture séquentielle était incomplet. La vérité : identique. ③ Et j'ai répondu « dix cœurs passent sous 30 s », un mensonge arithmétique : la formule du plancher ignorait qu'une unité de test ne se coupe pas en deux. Plancher réel : 52,3 s.",
+    "pourquoi": "Trois chiffres faux dans une seule campagne, tous énoncés avec assurance, tous démentis par une mesure. Le point commun : aucun des trois ne venait d'un outil — ils venaient d'un raisonnement qui me paraissait solide. C'est exactement ce que l'Article 31 interdit, et le constater sur moi-même vaut mieux que de le lire.",
+    "terrain": [
+      "scripts/axa-check.mjs",
+      "scripts/filet-en-parts.mjs",
+      "docs/referentiel/filet-en-parts.md"
+    ],
+    "date": "2026-10-04T01:30:32.983Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "un garde-fou bloque ou un test échoue de façon imprévue",
+    "titre": "La phrase écrite pour EXPLIQUER une alerte la maintenait allumée",
+    "quoi": "Le voyant de santé du filet comptait les occurrences de « ExperimentalWarning » dans TOUTE la sortie — y compris dans ma propre prose de test qui expliquait pourquoi cet avertissement est légitime. Documenter l'alerte la perpétuait. Corrigé en ne regardant que le flux d'erreur : suite VERTE pour la première fois depuis le 2026-09-28.",
+    "pourquoi": "Un outil qui lit du texte lit aussi le texte qui parle de lui (déjà capté le 2026-10-02) — mais ici le piège était retors : le geste correct, documenter, était précisément celui qui entretenait le défaut. Quand un garde-fou cherche un mot, il doit chercher dans le canal où ce mot a un sens, jamais dans tout ce qui passe.",
+    "terrain": [
+      "scripts/ezechiel-les-tests.mjs"
+    ],
+    "date": "2026-10-04T01:30:32.983Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "fin de compte rendu de travail",
+    "titre": "Un champ qui n'existe pas rend un `null` parfaitement crédible",
+    "quoi": "En classant les stratégies (#1569), je lisais `o.sauts` pour le rang dans la cascade. Ce champ n'existe pas : le vrai est `o.remontee`. Les seize stratégies ressortaient donc « sans rang », et ma sortie accusait en prime « aucun parent déclaré » alors que toutes en déclarent un.",
+    "pourquoi": "Un accès à une propriété absente ne lève rien en JavaScript : il rend `undefined`, et `undefined` se transforme en un zéro ou un null qui ressemble à une mesure. Le garde-fou pratique : quand une mesure rend le MÊME verdict pour 100 % de sa population, c'est presque toujours le lecteur qui est cassé, pas la population. Et deux absences voisines (« rien déclaré » / « déclaré mais introuvable ») ne se fondent jamais dans un seul compteur (leçon L4).",
+    "terrain": [
+      "scripts/the-king.mjs"
+    ],
+    "date": "2026-10-04T01:30:32.983Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "fin de compte rendu de travail",
+    "titre": "Un `grep` sensible à la casse sur un nom d'outil rend un zéro qui ressemble à une absence réelle",
+    "quoi": "J'ai cherché `the-king` dans le catalogue des prestations : rien. J'ai failli écrire noir sur blanc que l'outil n'avait AUCUNE offre déclarée. Il en a une — « Pack Régence » — qui écrit `THE-KING` en capitales. Le dépôt porte justement un `normaliserNomDOutil()` pour ça, et je ne l'avais pas appelé.",
+    "pourquoi": "Le mécanisme existait, il était disponible, et je ne l'ai pas sollicité : c'est la limite honnête de l'Article 31 prise sur le fait. Règle pratique : une recherche par nom d'outil se fait en insensible à la casse, ou par le résolveur du dépôt — jamais par un `grep` brut, dont le zéro est indiscernable d'une vraie absence.",
+    "terrain": [
+      "scripts/le-coordinateur.mjs"
+    ],
+    "date": "2026-10-04T01:30:32.983Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "fin de compte rendu de travail",
+    "titre": "Une mesure sans âge se lit comme une mesure d'aujourd'hui, et celle-ci avait 37 % d'écart",
+    "quoi": "Ezechiel annonçait « filet nu 266,5 s · total bloquant 270,9 s » pendant que sa PROPRE mesure de santé, prise huit heures plus tard, relevait 194,0 s. Deux porteurs du même chiffre dans le même rapport, divergents de 37 %, et rien n'indiquait lequel croire.",
+    "pourquoi": "Leçon L29 et Article 32 au même endroit. Ce qui manquait n'était pas la mesure, c'était sa CONFRONTATION : une mesure enregistrée doit se comparer au dernier passage réel et se déclarer périmée elle-même. Et le seuil ne s'invente pas — la marge de bruit était déjà déclarée dix lignes plus bas dans le même fichier.",
+    "terrain": [
+      "scripts/ezechiel-les-tests.mjs",
+      "docs/ezechiel-les-tests/couches.json"
+    ],
+    "date": "2026-10-04T01:30:32.983Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "fin de compte rendu de travail",
+    "titre": "Une commande écrite dans un crochet n'est pas une commande qui tourne",
+    "quoi": "Depuis que le crochet de pré-commit lance le runner parallèle avec un repli automatique, les DEUX lancements du filet figurent dans le fichier. Ezechiel les comptait tous les deux comme bloquants : il annonçait deux exécutions complètes du filet par commit, là où il n'en tourne qu'une.",
+    "pourquoi": "Lire un fichier de configuration ligne à ligne, c'est lire ce qui est ÉCRIT, pas ce qui s'EXÉCUTE. Dès qu'un fichier porte des branches (fonction shell, condition, repli), un inventaire plat surestime. La détection porte désormais sur la structure — les accolades — et jamais sur le nom de la fonction, qu'une liste aurait manqué au premier repli nommé autrement.",
+    "terrain": [
+      "scripts/ezechiel-les-tests.mjs",
+      "scripts/hooks/pre-commit"
+    ],
+    "date": "2026-10-04T01:30:32.983Z"
+  },
+  {
+    "nature": "jugement-agent",
+    "contestable": true,
+    "declencheur": "fin de compte rendu de travail",
+    "titre": "Réparer un chronomètre a rendu visible un plafond que personne ne pouvait voir",
+    "quoi": "La chaîne causale de la campagne : réparer le chronométrage (#1582) a rendu le classement des coûts fiable pour la première fois → ce classement a montré que dix tests portent 57 % du temps → corriger le calcul du plancher (#1589) a montré que le test le plus lourd fixe à lui seul le plancher du parallélisme → d'où quatre optimisations de contenu (#1591–#1594). Résultat : 266 s → 191,8 s en séquentiel, 266 s → 76,6 s en 4 parts, à protection strictement égale.",
+    "pourquoi": "Mon jugement, contestable à la Ronde : la réparation d'un instrument de mesure a rapporté plus que n'importe quelle optimisation directe, parce qu'elle a changé l'ORDRE dans lequel je voyais les problèmes. Avant elle, j'aurais optimisé les tests qui me paraissaient lourds ; après, j'ai optimisé ceux qui l'étaient. Le corollaire : quand un chantier d'optimisation démarre, la première question n'est pas « que couper ? » mais « mon instrument dit-il vrai ? ».",
+    "terrain": [
+      "scripts/ezechiel-les-tests.mjs",
+      "scripts/filet-en-parts.mjs",
+      "scripts/check-house.mjs"
+    ],
+    "date": "2026-10-04T01:30:32.983Z"
   }
 ]

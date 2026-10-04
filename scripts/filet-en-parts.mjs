@@ -378,6 +378,40 @@ export function poidsDesBlocs(blocs = [], mesures = []) {
 // clair — 120 blocs dans la part 1, ZÉRO dans les trois autres. La parallélisation ne parallélisait
 // plus rien, en silence, et personne ne l'aurait vu ici où les mesures existent toujours.
 // SANS POIDS, ON RÉPARTIT AU NOMBRE, et le rapport le dit déjà en toutes lettres.
+// UNE UNITÉ SANS CHRONOMÉTRAGE N'EST PAS UNE UNITÉ GRATUITE (2026-10-04, tâche #1599).
+// LE DÉFAUT EST MESURÉ, PAS SUPPOSÉ : au 2026-10-04, 32 unités sur 281 (25 blocs et 7 appels)
+// n'avaient aucune durée enregistrée, soit 20,8 s de travail réel pesées à ZÉRO. Le remplissage
+// de sacs trie du plus lourd au plus léger, donc ces 32-là passent toutes en dernier — et comme
+// elles ne font monter aucun compteur, elles s'empilent dans la part qui se trouve être la moins
+// chargée à ce moment-là. Constaté en clair : la part 4 recevait 53 blocs contre 22 à 25 pour les
+// autres, et mettait 78,9 s là où le plan en annonçait 43,3.
+//
+// LE CAS « AVEUGLE » (AUCUNE mesure du tout) ÉTAIT DÉJÀ TRAITÉ, et c'est ce qui rendait celui-ci
+// invisible : on avait corrigé l'occurrence — un dépôt sans aucun relevé — et pas la CLASSE,
+// qui est « une unité dont on ignore le coût » (leçon L37). Le cas MIXTE est le plus courant des
+// deux, et le seul des deux à se produire ici tous les jours.
+//
+// POURQUOI LA MÉDIANE ET PAS LA MOYENNE : la suite est « une poignée de monstres » — neuf unités
+// sur dix sous 1,1 s, le pire à 23,8 s. La moyenne est tirée par les monstres et surestimerait
+// grossièrement une petite unité inconnue ; la médiane décrit l'unité ORDINAIRE, qui est très
+// exactement ce qu'on suppose d'une unité dont on ne sait rien. Et le choix se DIT dans le
+// rapport, parce qu'un poids estimé présenté comme un poids mesuré est le genre de chiffre qui
+// se recopie ensuite comme une vérité (leçons L5/L11).
+export function poidsParDefaut(unites = []) {
+  const mesurees = unites.map((u) => u?.ms ?? 0).filter((ms) => ms > 0).sort((a, b) => a - b);
+  if (!mesurees.length) return 0;
+  return mesurees[Math.floor(mesurees.length / 2)];
+}
+
+export function completerLesPoids(unites = []) {
+  const defaut = poidsParDefaut(unites);
+  const estimees = unites.filter((u) => !(u?.ms > 0)).length;
+  return {
+    defaut, estimees, mesurees: unites.length - estimees,
+    unites: unites.map((u) => (u?.ms > 0 ? u : { ...u, ms: defaut, poidsEstime: true })),
+  };
+}
+
 export function repartir(blocs = [], combien = PARTS_PAR_DEFAUT) {
   const parts = Array.from({ length: Math.max(1, combien) }, () => ({ blocs: [], ms: 0 }));
   const aveugle = blocs.every((b) => !(b.ms > 0));
@@ -386,7 +420,10 @@ export function repartir(blocs = [], combien = PARTS_PAR_DEFAUT) {
     for (const p of parts) p.blocs.sort((x, y) => x.debut - y.debut);
     return parts;
   }
-  for (const b of [...blocs].sort((x, y) => (y.ms ?? 0) - (x.ms ?? 0))) {
+  // LES POIDS MANQUANTS SE COMPLÈTENT AVANT LE REMPLISSAGE, jamais après : une unité pesée zéro
+  // ne fait monter aucun compteur, donc elle ne quitte jamais la part où elle est tombée.
+  const { unites } = completerLesPoids(blocs);
+  for (const b of [...unites].sort((x, y) => (y.ms ?? 0) - (x.ms ?? 0))) {
     const p = parts.reduce((a, c) => (c.ms < a.ms ? c : a));
     p.blocs.push(b); p.ms += b.ms ?? 0;
   }
@@ -692,7 +729,7 @@ export function formatEmpreinteLines(c = {}) {
   ];
 }
 
-export function plancherDuParallelisme({ src = "", mesures = [], parts = [2, 3, 4, 6, 8] } = {}) {
+export function plancherDuParallelisme({ src = "", mesures = [], parts = [2, 3, 4, 6, 8], coeurs = cpus().length } = {}) {
   if (!src) return { mesurable: false, pourquoi: "aucun filet fourni : un plancher calculé sur rien se lirait comme un plancher nul" };
   if (!mesures.length) return { mesurable: false, pourquoi: "aucun chronométrage : le plancher est un partage de TEMPS, pas de lignes — sans durées il n'y a rien à partager (leçons L5/L11)" };
   const blocs = blocsDeNiveauZero(src);
@@ -736,7 +773,20 @@ export function plancherDuParallelisme({ src = "", mesures = [], parts = [2, 3, 
     msAppels, appels: uA.retenues.length, appelsRefuses: uA.refusees.length,
     blocs: blocs.length, socle: socle.length, deplacables: deplacables.length,
     partDeLEpine: total ? msEpine / total : 0,
-    projection: parts.map((n) => ({ parts: n, msTheorique: Math.max(plancher, plancherSansGrain + msDeplacables / n) })),
+    // LA MACHINE A UN NOMBRE DE CŒURS, ET LA PROJECTION L'IGNORAIT (2026-10-04, tâche #1599).
+    // « à 8 parts → 46,1 s » se lit comme un objectif atteignable ; sur quatre cœurs, huit parts
+    // se partagent les mêmes quatre processeurs et le mur ne bouge pas — c'est de l'arithmétique,
+    // pas une prévision. Deux bornes, donc, et la seconde est celle qu'on paie vraiment :
+    //   · le grain : aucune part ne descend sous l'unité la plus lourde ;
+    //   · les CŒURS : le travail total, épine comprise une fois par part, divisé par le nombre de
+    //     cœurs réellement disponibles — au-delà, ajouter des parts AJOUTE du travail (une épine
+    //     de plus) sans ajouter de bras.
+    coeurs,
+    projection: parts.map((n) => {
+      const theorique = Math.max(plancher, plancherSansGrain + msDeplacables / n);
+      const surLesCoeurs = (msDeplacables + n * msEpine) / Math.min(n, coeurs);
+      return { parts: n, msTheorique: theorique, msSurCetteMachine: Math.max(theorique, surLesCoeurs), borneParLesCoeurs: n > coeurs };
+    }),
     // LA LIMITE EST DÉCLARÉE PLUTÔT QUE TUE : l'attribution ligne→durée vient du recollage
     // d'Ezechiel, qui se déclare INCOMPLET quand une fonction imprime plusieurs « Passed ». Le
     // TOTAL reste juste ; le partage entre épine et blocs ne vaut que corroboré par un lancement
@@ -870,7 +920,10 @@ export function formatPlancherLines(p = {}) {
   L.push(`    dont unités d'APPEL (#1578)                 : ${s(p.msAppels ?? 0)} sur ${p.appels ?? 0} appel(s), ${p.appelsRefuses ?? 0} refusé(s) et laissé(s) au socle`);
   L.push(`  l'unité la plus LOURDE                      : ${s(p.plusLourdeMs ?? 0)}${p.plusLourde ? ` (${p.plusLourde})` : ""} — elle tombe dans UNE part, entière`);
   L.push(`  PLANCHER = ${s(p.plancher)} — aucun nombre de parts ne descend en dessous (${s(p.plancherSansGrain ?? 0)} d'indivisible + la plus lourde, qui ne se coupe pas en deux).`);
-  for (const x of p.projection) L.push(`    à ${x.parts} parts → ${s(x.msTheorique)} en théorie`);
+  L.push(`  CETTE MACHINE A ${p.coeurs} CŒUR(S) — au-delà, une part de plus n'ajoute pas de bras, elle ajoute une épine.`);
+  for (const x of p.projection) {
+    L.push(`    à ${x.parts} parts → ${s(x.msTheorique)} en théorie · ${s(x.msSurCetteMachine)} sur cette machine${x.borneParLesCoeurs ? " (plus de parts que de cœurs : c'est de l'arithmétique, pas une prévision)" : ""}`);
+  }
   L.push(`  HORS PORTÉE : ${p.horsPortee}`);
   return L;
 }
@@ -973,6 +1026,15 @@ async function main() {
       console.log(`   ${uA.refusees.length} refusé(s) (${poids(uA.refusees)} s), et le refus se dit plutôt que de se taire :`);
       for (const r of [...uA.refusees].sort((a, b) => b.ms - a.ms).slice(0, 5)) console.log(`     · ${r.nom} — ${r.pourquoi}`);
       if (uA.refusees.length > 5) console.log(`     · … et ${uA.refusees.length - 5} autre(s), tous dans le socle, donc rejoués comme avant.`);
+    }
+  }
+  // CE QUI EST ESTIMÉ SE DIT, parce qu'un poids estimé présenté comme un poids mesuré se recopie
+  // ensuite comme une vérité (leçons L5/L11).
+  {
+    const c = completerLesPoids([...poidsDesBlocs(deplacables, mesures), ...uA.retenues]);
+    if (c.estimees && c.defaut) {
+      console.log(`⚖️  ${c.estimees} unité(s) sur ${c.estimees + c.mesurees} n'ont AUCUNE durée enregistrée : elles sont pesées à la MÉDIANE des autres (${(c.defaut / 1000).toFixed(1)} s), jamais à zéro.`);
+      console.log("    Une unité non mesurée n'est pas une unité gratuite — pesée zéro, elle ne fait monter aucun compteur, donc elle s'empile toute seule dans la part la moins chargée.");
     }
   }
   if (!mesures.length) console.log("⚠️  aucune mesure de durée trouvée : la répartition se fait à l'aveugle, au nombre de blocs et non à leur poids — lancer `node scripts/ezechiel-les-tests.mjs sante` d'abord donnerait un équilibrage réel.");

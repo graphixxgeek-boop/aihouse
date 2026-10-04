@@ -1,9 +1,9 @@
 {
-  "quand": "2026-10-03T17:18:12.349Z",
+  "quand": "2026-10-04T01:33:21.118Z",
   "source": "trois passages réels mesurés par `ezechiel-les-tests couches`",
-  "nuMs": 266462,
-  "couvertureMs": 266331,
-  "typageMs": 4437,
+  "nuMs": 192300,
+  "couvertureMs": 205175,
+  "typageMs": 3624,
   "codes": {
     "nu": 0,
     "couverture": 0,

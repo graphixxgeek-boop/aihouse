@@ -110,3 +110,19 @@ Les quatre apports, chacun répondant à une question qu'aucun des six axes d'or
 **Et une mesure qui remplace un top-N** : les percentiles de durée disent si la suite est un long
 plateau ou une poignée de monstres — deux chantiers complètement différents, qu'un classement des
 dix plus gros ne distingue jamais.
+
+## Deux pièges d'un outil qui mesure une suite de tests
+
+**① Une mesure enregistrée doit porter son âge ET sa confrontation.** Un outil qui range une durée
+dans un fichier et la réaffiche telle quelle produit, quelques semaines plus tard, un chiffre faux
+qui a l'air juste. La protection n'est pas d'ajouter une date à l'affichage — c'est de **comparer
+la mesure enregistrée au dernier passage réel** et de se déclarer périmé soi-même. Deux règles
+qui vont avec : le seuil de comparaison se prend dans celui que l'outil déclare déjà ailleurs
+(jamais un second planté à côté), et la référence est le DERNIER passage, jamais l'intervalle de
+tous ceux d'après — un intervalle qui enjambe un chantier absout tout ce qui s'y est passé.
+
+**② Lire un fichier de crochets ligne à ligne, c'est lire ce qui est écrit, pas ce qui s'exécute.**
+Dès qu'un crochet porte des branches (corps de fonction shell, condition, repli automatique), un
+inventaire plat surestime ce qui tourne vraiment. La distinction « déclaré » / « exécuté à chaque
+fois » se rend séparément, et la détection suit la STRUCTURE du fichier plutôt qu'une liste de noms
+de fonctions, qui manquerait le premier repli nommé autrement.

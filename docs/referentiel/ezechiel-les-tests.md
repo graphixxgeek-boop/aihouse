@@ -200,3 +200,51 @@ registre est CONFIRMÉE — 78 s annoncés, cinq passages ce jour-là entre 65 e
 
 **La commande** : c'est une section du rapport ordinaire (`node scripts/ezechiel-les-tests.mjs`),
 pas une sous-commande — un mécanisme qui ne sort pas du script est une intention (leçon L2).
+
+## DEUX CHIFFRES QUE LE RAPPORT DONNAIT FAUX (2026-10-04, tâche #1597)
+
+Ses questions, après la campagne d'optimisation du filet : « est-ce qu'Ezechiel a été utilisé ?
+est-ce qu'il a été amélioré ? est-ce que tu peux l'optimiser/fiabiliser à la lumière de ce que tu
+viens de faire ? » Les deux premières se mesurent (109 lancements depuis le 2026-10-02, 7 commits
+sur son script dans la même fenêtre). La troisième a trouvé deux chiffres faux dans son propre
+rapport.
+
+### ① La mesure des trois couches ne disait jamais son âge
+
+`couches.json` annonçait **filet nu 266,5 s** et **total bloquant 270,9 s** pendant que la mesure
+de santé du MÊME outil, prise huit heures plus tard, relevait **194,0 s**. Deux porteurs du même
+chiffre, divergents de 37 %, dans le même rapport, et rien ne disait lequel croire — **un chiffre
+sans âge se lit comme un chiffre d'aujourd'hui** (Article 32, troisième obligation ; leçon L29).
+
+`fraicheurDesCouches()` confronte désormais la mesure au **dernier passage séquentiel vert**
+enregistré après elle, et le rapport dit « 🚨 MESURE PÉRIMÉE » **avant** les chiffres, jamais après.
+
+**Deux décisions de conception à ne pas défaire :**
+
+- **Le seuil n'est pas nouveau** : c'est `MARGE_DE_BRUIT_PCT`, les 3 % déjà déclarés dans ce même
+  fichier. En planter un second à côté aurait fabriqué exactement le défaut que la fonction
+  dénonce.
+- **La référence est le DERNIER passage vert, pas l'intervalle de tous ceux d'après.** Premier
+  jet : l'intervalle complet, qui s'étalait de 190 à 263 s parce qu'il enjambait la campagne
+  d'optimisation — 266 s y tombait à 1 % près, donc l'alerte sortait en annonçant un écart
+  dérisoire. **Un intervalle qui contient l'avant ET l'après d'un chantier absout tout ce qui
+  s'est passé entre les deux.**
+- **Sans passage plus récent, il ne dit rien** — jamais « à jour », qui serait une conclusion
+  tirée d'une absence de données (leçons L5/L11). Et un passage ROUGE n'est jamais une
+  référence : sa durée est celle d'une suite interrompue.
+
+### ② Une commande écrite dans un crochet n'est pas une commande qui tourne
+
+Depuis que le crochet de pré-commit lance le runner parallèle **avec repli automatique**, les deux
+lancements du filet figurent dans le fichier. Ezechiel les comptait tous les deux comme bloquants :
+il annonçait **deux exécutions complètes du filet par commit**, là où il n'en tourne qu'une.
+
+`lignesSousCondition()` suit les accolades et marque toute commande vivant dans un corps de
+fonction shell. Le rapport distingue maintenant `bloquantes` (ce qui est écrit) de
+`bloquantesToujours` (ce qui s'exécute à chaque fois), et marque le repli d'un `↩️`.
+
+**La détection porte sur la STRUCTURE du fichier, jamais sur le nom de la fonction** : un repli
+nommé autrement échapperait à une liste de noms, et une liste de noms est précisément ce que
+l'Article 24 refuse. Elle compte des accolades, donc elle est fausse jusqu'à preuve du contraire
+(leçon L39) — d'où un contre-test sur l'imbrication (`fi` n'est pas une accolade fermante) et sur
+le retour à zéro après la fonction.

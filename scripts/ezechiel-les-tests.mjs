@@ -255,6 +255,40 @@ export const ENVELOPPES = [
 // Elle se LIT dans les crochets, jamais recopiée ici (Article 24) : une ligne ajoutée au crochet
 // demain apparaît toute seule. C'est exactement l'écart qui a rendu ce chantier nécessaire — la
 // charte et les plans décrivaient « le filet », et personne ne décrivait ce qui l'enveloppe.
+// UNE COMMANDE ÉCRITE DANS UN CROCHET N'EST PAS FORCÉMENT UNE COMMANDE QUI TOURNE
+// (2026-10-04, tâche #1597). Depuis que le crochet de pré-commit lance le runner parallèle avec
+// un repli automatique sur le séquentiel, les DEUX lancements du filet figurent dans le fichier —
+// et Ezechiel les comptait tous les deux comme bloquants, donc annonçait deux exécutions du filet
+// à chaque commit là où il n'en tourne qu'une. Le séquentiel vit dans un corps de fonction shell
+// (`lancer_sequentiel() { … }`) qui n'est appelé que si la première échoue.
+//
+// LA DÉTECTION PORTE SUR LA STRUCTURE DU FICHIER, jamais sur le nom de la fonction : un repli
+// qui s'appellerait autrement échapperait à une liste de noms, et une liste de noms est
+// exactement ce que l'Article 24 refuse. On suit les accolades, comme ailleurs dans ce dépôt pour
+// la profondeur du code (leçon L39 : un détecteur qui compte la profondeur est faux jusqu'à
+// preuve du contraire, donc il se teste dans les deux sens).
+export function lignesSousCondition(src = "") {
+  const lignes = String(src).split("\n");
+  const dedans = new Array(lignes.length).fill(null);
+  let fonction = null;
+  let profondeur = 0;
+  for (let i = 0; i < lignes.length; i++) {
+    const l = lignes[i];
+    if (!fonction) {
+      const m = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(\)\s*\{/.exec(l);
+      if (m) { fonction = m[1]; profondeur = 0; }
+    }
+    if (fonction) {
+      const avant = profondeur;
+      for (const c of l) { if (c === "{") profondeur++; else if (c === "}") profondeur--; }
+      // La ligne d'ouverture elle-même n'est pas « dans » la fonction : c'est sa déclaration.
+      if (avant > 0 || !/^\s*[A-Za-z_][A-Za-z0-9_]*\s*\(\)\s*\{/.test(l)) dedans[i] = fonction;
+      if (profondeur <= 0) { dedans[i] = null; fonction = null; }
+    }
+  }
+  return dedans;
+}
+
 export function chaineDuFilet({ root = ROOT, lire = null, crochets = CROCHETS } = {}) {
   const lireF = lire ?? ((f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } });
   const etapes = [];
@@ -262,13 +296,18 @@ export function chaineDuFilet({ root = ROOT, lire = null, crochets = CROCHETS } 
   for (const crochet of crochets) {
     const src = lireF(crochet);
     if (src == null) { illisibles.push(crochet); continue; }
-    for (const brute of String(src).split("\n")) {
+    const sousCondition = lignesSousCondition(src);
+    String(src).split("\n").forEach((brute, i) => {
       const l = brute.trim();
-      if (!l || l.startsWith("#")) continue;
-      if (!/\b(node|npx|npm|pnpm)\b/.test(l)) continue;
+      if (!l || l.startsWith("#")) return;
+      if (!/\b(node|npx|npm|pnpm)\b/.test(l)) return;
       const enveloppes = ENVELOPPES.filter((e) => e.motif.test(l)).map((e) => e.cle);
-      etapes.push({ crochet, ligne: l.slice(0, 160), bloquant: crochet.endsWith("pre-commit"), enveloppes });
-    }
+      const repli = sousCondition[i];
+      // UNE COMMANDE DE REPLI N'EST PAS BLOQUANTE AU SENS DU TEMPS QU'ELLE COÛTE : elle ne coûte
+      // rien tant que la première a réussi. Elle reste bloquante au sens du commit, et les deux
+      // sens sont rendus séparément plutôt que fondus dans un seul drapeau.
+      etapes.push({ crochet, ligne: l.slice(0, 160), bloquant: crochet.endsWith("pre-commit"), enveloppes, repliDe: repli, conditionnelle: Boolean(repli) });
+    });
   }
   // Un crochet illisible n'est JAMAIS une chaîne courte : c'est une chaîne qu'on n'a pas pu lire
   // (leçons L5/L11). Le dire vaut mieux que de rendre un inventaire qui paraît complet.
@@ -277,6 +316,9 @@ export function chaineDuFilet({ root = ROOT, lire = null, crochets = CROCHETS } 
   return {
     mesurable: true, etapes, illisibles,
     bloquantes: etapes.filter((e) => e.bloquant).length,
+    // CE QUI TOURNE VRAIMENT À CHAQUE COMMIT, par opposition à ce qui est écrit dans le fichier.
+    bloquantesToujours: etapes.filter((e) => e.bloquant && !e.conditionnelle).length,
+    conditionnelles: etapes.filter((e) => e.conditionnelle).map((e) => ({ ligne: e.ligne, repliDe: e.repliDe })),
     enveloppes: [...new Set(avecEnveloppe.flatMap((e) => e.enveloppes))].map((cle) => ENVELOPPES.find((x) => x.cle === cle)),
   };
 }
@@ -516,6 +558,62 @@ export function formatCouchesLines(c = {}) {
     `  filet nu ${s(c.nuMs)} · sous instrumentation ${s(c.couvertureMs)} (${surc})` + (c.typageMesure ? ` · typage ${s(c.typageMs)}` : " · typage NON MESURÉ"),
     `  Sur le total bloquant de ${s(c.totalBloquant)} : les tests ${c.partTestsPct.toFixed(0)} %, l'enveloppe ${c.partEnveloppePct.toFixed(0)} %.`,
     `  → ${c.verdict}`,
+  ];
+}
+
+// LA MESURE DES TROIS COUCHES NE DIT JAMAIS SON ÂGE, et c'est ce qui la rend dangereuse
+// (2026-10-04, tâche #1597). Trouvé en la relisant après la campagne d'optimisation du filet :
+// `couches.json` annonçait « filet nu 266,5 s » et « total bloquant 270,9 s » pendant que la
+// mesure de santé du MÊME outil, prise huit heures plus tard, relevait 194,0 s. Deux porteurs du
+// même chiffre avaient divergé de 37 % (leçon L29), et rien dans la sortie ne permettait de
+// savoir lequel était le bon : un chiffre sans âge se lit comme un chiffre d'aujourd'hui
+// (Article 32, troisième obligation).
+//
+// LE SEUIL NE S'INVENTE PAS, IL EXISTE DÉJÀ DANS CE FICHIER : `MARGE_DE_BRUIT_PCT`, les 3 % qui
+// séparent un vrai écart de la variation normale entre deux exécutions de la même suite. En
+// planter un second ici aurait fabriqué exactement le défaut que cette fonction dénonce — deux
+// porteurs du même seuil, qui divergent (leçon L29).
+//
+// ET LA RÉFÉRENCE EST LE DERNIER PASSAGE VERT, jamais l'intervalle de tous ceux d'après. Premier
+// jet : je prenais l'intervalle complet depuis la mesure, qui s'étalait de 190 à 263 s parce
+// qu'il enjambait la campagne d'optimisation elle-même — 266 s en tombait à 1 % près, donc
+// l'alerte sortait en annonçant un écart dérisoire. Un intervalle qui contient l'avant ET l'après
+// d'un chantier ne juge plus rien : il absout tout ce qui s'est passé entre les deux.
+//
+// SANS PASSAGE PLUS RÉCENT, ON NE DIT RIEN — jamais « à jour », qui serait une conclusion tirée
+// d'une absence de données (leçons L5/L11).
+export function fraicheurDesCouches({ couches = null, historique = [], maintenant = Date.now(), margePct = MARGE_DE_BRUIT_PCT } = {}) {
+  if (!couches?.presentes || !Number.isFinite(couches.nuMs)) {
+    return { comparable: false, pourquoi: "aucune mesure des couches à confronter" };
+  }
+  const quand = Date.parse(couches.quand ?? "");
+  const ageJours = Number.isFinite(quand) ? (maintenant - quand) / 86400000 : null;
+  // UN PASSAGE QUI A ÉCHOUÉ NE MESURE RIEN : sa durée est celle d'une suite interrompue, pas
+  // celle du filet. L'inclure tirerait la référence vers le bas et ferait passer une mesure
+  // périmée pour fraîche.
+  const apres = (historique ?? [])
+    .filter((h) => h?.code === 0 && Number.isFinite(h?.totalMs) && Number.isFinite(Date.parse(h?.quand ?? "")) && (!Number.isFinite(quand) || Date.parse(h.quand) > quand))
+    .sort((a, b) => Date.parse(a.quand) - Date.parse(b.quand));
+  if (!apres.length) {
+    return { comparable: false, ageJours, pourquoi: "aucun passage séquentiel vert enregistré depuis la mesure des couches — on ne peut pas dire qu'elle est périmée, seulement qu'on n'a rien pour en juger" };
+  }
+  const dernier = apres[apres.length - 1];
+  const ecartPct = dernier.totalMs > 0 ? Math.abs(couches.nuMs - dernier.totalMs) / dernier.totalMs * 100 : 0;
+  return {
+    comparable: true, perimee: ecartPct >= margePct, ageJours, passages: apres.length,
+    reference: dernier.totalMs, quandReference: dernier.quand, ecartPct, margePct,
+    min: Math.min(...apres.map((h) => h.totalMs)), max: Math.max(...apres.map((h) => h.totalMs)),
+  };
+}
+
+export function formatFraicheurDesCouchesLines(f = {}) {
+  if (!f?.comparable) return [`  ⏳ fraîcheur NON JUGEABLE — ${f?.pourquoi}`];
+  const s = (ms) => `${(ms / 1000).toFixed(1)} s`;
+  const age = Number.isFinite(f.ageJours) ? `${f.ageJours.toFixed(1)} jour(s)` : "âge inconnu";
+  if (!f.perimee) return [`  ✅ mesure cohérente avec le dernier passage vert (${s(f.reference)}, ${f.ecartPct.toFixed(0)} % d'écart, sous la marge de bruit de ${f.margePct} %), prise il y a ${age}.`];
+  return [
+    `  🚨 MESURE PÉRIMÉE — elle a ${age} et annonce ${f.ecartPct.toFixed(0)} % d'écart avec le dernier passage séquentiel vert (${s(f.reference)}, le ${String(f.quandReference).slice(0, 16).replace("T", " ")}).`,
+    `     Les durées et les pourcentages ci-dessous portent donc sur un filet qui n'existe plus. Relancer \`node scripts/ezechiel-les-tests.mjs couches\` avant de s'en servir.`,
   ];
 }
 
@@ -1778,6 +1876,7 @@ export function enqueter({ root = ROOT, lire = null, existe = null, durees = {},
     filet: { lignes: String(src).split("\n").length, groupes: groupes.length, assertions: (src.match(/\bassert\.[a-zA-Z]+\(/g) ?? []).length },
     chaine: chaineDuFilet({ root, lire: lireF }),
     couches: comparerLesCouches(durees),
+    fraicheurCouches: fraicheurDesCouches({ couches: coucheEnregistrees({ root, lire: lireF }), historique: lireHistorique({ root, lire: lireF }) }),
     morsure: groupesSansMorsure(groupes),
     sansRaison: groupesSansRaison(groupes),
     citations: citationsMortes(src, { root, existe }),
@@ -1832,11 +1931,14 @@ export function formatEnqueteLines(e) {
   L.push("=== LA CHAÎNE RÉELLE, lue dans les crochets ===");
   if (!e.chaine.mesurable) L.push(`  PAS MESURÉ — ${e.chaine.pourquoi}`);
   else {
-    L.push(`  ${e.chaine.etapes.length} commande(s), dont ${e.chaine.bloquantes} qui BLOQUENT le commit.`);
+    const cond = e.chaine.conditionnelles?.length ?? 0;
+    L.push(`  ${e.chaine.etapes.length} commande(s), dont ${e.chaine.bloquantes} qui BLOQUENT le commit`
+      + (cond ? ` — mais ${cond} ne tourne(nt) QUE SOUS CONDITION, donc ${e.chaine.bloquantesToujours} seulement s'exécutent à chaque commit.` : "."));
     for (const et of e.chaine.etapes) {
-      const marque = et.bloquant ? "🔒" : "  ";
+      const marque = et.conditionnelle ? "↩️" : et.bloquant ? "🔒" : "  ";
       const env = et.enveloppes.length ? `  ← ${et.enveloppes.join(", ")}` : "";
-      L.push(`  ${marque} ${et.ligne.slice(0, 96)}${env}`);
+      const repli = et.repliDe ? `  (repli \`${et.repliDe}\`, ne tourne que si la précédente échoue)` : "";
+      L.push(`  ${marque} ${et.ligne.slice(0, 96)}${env}${repli}`);
     }
     if (e.chaine.enveloppes.length) {
       L.push("", "  CE QUI ENTOURE LE FILET et coûte du temps sans être un test :");
@@ -1845,6 +1947,9 @@ export function formatEnqueteLines(e) {
   }
 
   L.push("", "=== D'OÙ VIENT LE TEMPS : les tests, ou leur enveloppe ? ===");
+  // LA FRAÎCHEUR SE DIT AVANT LE CHIFFRE, jamais après : lue après, elle arrive quand le lecteur
+  // a déjà pris la mesure pour argent comptant.
+  for (const l of formatFraicheurDesCouchesLines(e.fraicheurCouches)) L.push(l);
   if (!e.couches.mesurable) L.push(`  PAS MESURÉ — ${e.couches.pourquoi}`);
   else {
     const surc = e.couches.surcoutNegligeable ? "surcoût non mesurable — les deux durées sont dans la même marge d'erreur" : `surcoût ${s(e.couches.surcoutCouverture)}`;
@@ -1956,6 +2061,12 @@ export function planDeLEnquete(e) {
     ecarts.push({ constat: "d'où vient le temps n'a pas été mesuré", etat: "retenu", niveau: "obligatoire", tache: "relancer avec les trois durées (filet nu, sous instrumentation, typage) — sans elles, toute optimisation serait faite à l'aveugle" });
   } else if (e.couches.partEnveloppePct >= 50) {
     ecarts.push({ constat: `l'enveloppe pèse ${e.couches.partEnveloppePct.toFixed(0)} % du temps bloquant, plus que les tests`, etat: "a-trancher", niveau: "obligatoire", tache: "porter la question à l'utilisateur AVANT de toucher un seul test : le gain est dans l'instrumentation et le typage, pas dans la suite" });
+  }
+  // UNE MESURE PÉRIMÉE N'EST PAS UNE MESURE MANQUANTE, et c'est pour ça qu'elle a son propre
+  // constat : la branche ci-dessus ne se déclenche que quand il n'y a RIEN, donc une mesure
+  // fausse mais présente passait au travers sans un mot.
+  if (e.fraicheurCouches?.perimee) {
+    ecarts.push({ constat: `la mesure des trois couches a ${e.fraicheurCouches.ecartPct.toFixed(0)} % d'écart avec le dernier passage séquentiel vert : les durées affichées portent sur un filet qui n'existe plus`, etat: "retenu", niveau: "obligatoire", tache: "relancer `node scripts/ezechiel-les-tests.mjs couches` — un chiffre sans âge se lit comme un chiffre d'aujourd'hui" });
   }
   if (e.fraicheur.mesurable && e.fraicheur.perimes.length) {
     ecarts.push({ constat: `${e.fraicheur.perimes.length} test(s) appellent une fonction qui n'existe plus`, etat: "retenu", niveau: "obligatoire", tache: "corriger l'appel ou retirer le test — un test qui interroge une fonction disparue ne protège plus rien et peut passer sur `undefined` sans qu'on le voie" });

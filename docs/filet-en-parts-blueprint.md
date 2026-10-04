@@ -187,3 +187,23 @@ Le runner ne modifie jamais la suite, n'écrit que dans un dossier de travail ig
 en sortant. Son pire échec possible est de rendre un rouge là où le séquentiel est vert : c'est
 désagréable, ce n'est jamais destructeur, et la marche à suivre est imprimée dans son propre message
 d'échec plutôt que laissée à la mémoire de qui le lit.
+
+## Règle 8 — une projection qui ignore le nombre de cœurs promet l'impossible
+
+Un calcul de parallélisation produit naturellement une courbe qui descend à l'infini : « à 16 parts
+→ 21 s ». Elle est arithmétiquement juste et pratiquement fausse dès qu'il y a plus de parts que de
+processeurs — chaque part supplémentaire ajoute alors du travail (son préambule rejoué) sans
+ajouter de bras, et le mur REMONTE. La projection se rend donc en deux colonnes, théorique et
+« sur cette machine », et le nombre de cœurs se LIT à l'exécution plutôt que d'être écrit dans
+l'outil. Sur le projet d'origine, la mesure l'avait confirmé un jour avant qu'on sache l'expliquer :
+huit parts sur quatre cœurs avaient mis 107,9 s pour une théorie à 46 s.
+
+## Règle 9 — une unité sans chronométrage n'est pas une unité gratuite
+
+Le remplissage de sacs trie du plus lourd au plus léger. Une unité pesée zéro part donc en dernier
+ET ne fait monter aucun compteur : elles s'empilent toutes dans la part qui se trouve être la moins
+chargée. Le cas « aucune mesure du tout » est facile à voir et facile à traiter ; le cas MIXTE —
+quelques dizaines d'unités sans durée au milieu de centaines qui en ont — est le courant, et il est
+invisible. Le poids par défaut se prend sur la **médiane** des unités mesurées, jamais la moyenne :
+une suite de tests est presque toujours « une poignée de monstres », et la moyenne y surestime
+grossièrement une petite unité inconnue. Ce qui est estimé se DIT dans le rapport.
