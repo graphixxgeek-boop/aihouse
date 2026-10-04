@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Essai de palette — bleus, cyans, gris</title>
+<title>La charte graphique de l'Agence</title>
 <style>
   /* PALETTE CLAIRE — BLEUS, CYANS, GRIS (2026-10-04, tâche #1600, précisée le jour même).
      SA PREMIÈRE DEMANDE : « je veux un fond gris et pas noir, et une écriture foncée et pas clair.
@@ -28,8 +28,15 @@
      l'autre sens. */
   :root {
     --bg: #dfe7ed; --panel: #f3f7fa; --panel-border: #b9c9d6;
-    --accent: #0e6a72; --accent2: #16567e; --text: #16242f; --muted: #4a5d6c;
+    --accent: #0e6a72; --accent2: #16567e; --text: #1f3b50; --text-gris: #38505e; --muted: #4a5d6c;
     --ok: #0e6a72; --warn: #b01c16;
+    /* LES DEUX NIVEAUX D'ALERTE, ET ILS NE SE VALENT PAS (2026-10-04, sa précision) : « le noir
+       est exceptionnel, tout comme le rouge : uniquement pour alerter […] un exemple de texte en
+       rouge pour m'alerter, et en noir car alerte d'un autre niveau (grave mais pas aussi
+       critique que rouge) ». Le ROUGE est le cran du haut, le NOIR celui juste en dessous. Aucune
+       des deux ne sert jamais à décorer : hors alerte, tout le texte vit en bleu foncé ou en gris
+       foncé, et c'est ce qui donne aux deux leur force. */
+    --alerte: #b01c16; --alerte-grave: #0a0f14;
     /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
        réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
        rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
@@ -96,6 +103,19 @@
   }
   main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
   main .highlight p { margin: 8px 0; }
+  /* LES DEUX NIVEAUX D'ALERTE À L'AFFICHAGE. Ils se déclenchent sur un MARQUEUR en tête de ligne,
+     jamais sur une classe écrite à la main : les outils de ce dépôt écrivent déjà 🚨 et ⛔ dans
+     leur sortie, donc le style suit ce qu'ils produisent au lieu d'exiger qu'ils apprennent une
+     syntaxe de plus. */
+  main .alerte { color: var(--alerte); font-weight: 600; }
+  main .alerte-grave { color: var(--alerte-grave); font-weight: 600; }
+  main p.alerte, main li.alerte {
+    border-left: 3px solid var(--alerte); padding: 8px 12px; background: #f7eceb; border-radius: 0 8px 8px 0;
+  }
+  main p.alerte-grave, main li.alerte-grave {
+    border-left: 3px solid var(--alerte-grave); padding: 8px 12px; background: #e9eef2; border-radius: 0 8px 8px 0;
+  }
+  main .doux { color: var(--text-gris); }
   main ul { padding-left: 22px; }
   main li { margin: 4px 0; }
   main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
@@ -151,21 +171,36 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-04T04:37:39.429Z</div>
-    <h1>Essai de palette — bleus, cyans, gris</h1>
-    <p class="sub">Aucune autre couleur que le rouge pour alerter · fond de texte jamais blanc pur</p>
+    <div class="date">2026-10-04T04:43:35.612Z</div>
+    <h1>La charte graphique de l'Agence</h1>
+    <p class="sub">Bleus, cyans, gris · le rouge et le noir réservés à l'alerte · à valider pour toutes les sorties HTML</p>
   </header>
   <div class="divider"></div>
-  <main><div class="highlight"><p>Produit par <code>node scripts/the-king.mjs strategies</code> le 2026-10-04T01:11Z (heure de source système), en lisant les documents réels de <code>docs/strategies/</code>.
-Ta demande : « peux tu me rappeler la liste des strategies et les classer stp (classification à enregistrer) ».</p></div>
-<p><strong>Les quatre axes de ce classement, et aucun n'est décidé — tous sont lus :</strong></p>
-<ul><li>le <strong>TYPE</strong> est lu dans le titre que le document se donne lui-même (« STRATÉGIE GLOBALE », « STRATÉGIE DE CHANTIER », ou rien de déclaré) ;</li><li>le <strong>RANG</strong> est le nombre de sauts jusqu'à la racine de la cascade, compté sur les déclarations « DÉCOULE DE » réelles ;</li><li>la <strong>DESCENDANCE</strong> compte les documents qui déclarent découler de celui-ci : c'est ce qui sépare une stratégie qui en gouverne d'autres d'une feuille ;</li><li>l'<strong>ÉTAT</strong> dit si le document est écrit à la main ou généré, et s'il porte un plan d'action (Article 28).</li></ul>
-<p>16 stratégie(s) classée(s), rangées par RANG dans la cascade puis par descendance :</p>
-<table><thead><tr><th>Rang</th><th>Type</th><th>Document</th><th>Découle de</th><th>Gouverne</th><th>État</th></tr></thead><tbody><tr><td>1</td><td>globale</td><td><code>strategie-globale-du-projet-entier</code></td><td><code>philosophie-et-politique</code></td><td>14</td><td>écrite à la main · plan d'action</td></tr><tr><td>1</td><td>non déclaré</td><td><code>strategie-cascade-philo-politique</code></td><td><code>philosophie-et-politique</code></td><td>—</td><td>écrite à la main · plan d'action</td></tr><tr><td>1</td><td>globale</td><td><code>strategie-globale-de-l-agence</code></td><td><code>philosophie-et-politique</code></td><td>—</td><td>écrite à la main</td></tr><tr><td>1</td><td>globale</td><td><code>strategie-globale-du-jeu</code></td><td><code>philosophie-et-politique</code></td><td>—</td><td>écrite à la main</td></tr><tr><td>2</td><td>chantier</td><td><code>outillage-et-garde-fous-strategie</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>4</td><td>écrite à la main</td></tr><tr><td>2</td><td>chantier</td><td><code>charte-et-referentiel-strategie</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>3</td><td>écrite à la main</td></tr><tr><td>2</td><td>chantier</td><td><code>classification-et-nivellement-strategie</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>3</td><td>écrite à la main</td></tr><tr><td>2</td><td>chantier</td><td><code>le-jeu-et-le-site-strategie</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>2</td><td>écrite à la main</td></tr><tr><td>2</td><td>chantier</td><td><code>donnees-et-mesure-strategie</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>1</td><td>écrite à la main</td></tr><tr><td>2</td><td>chantier</td><td><code>export-et-commercialisation-strategie</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>1</td><td>écrite à la main</td></tr><tr><td>2</td><td>chantier</td><td><code>process-et-ronde-strategie</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>1</td><td>écrite à la main</td></tr><tr><td>2</td><td>chantier</td><td><code>renommage-en-masse-strategie</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>1</td><td>écrite à la main</td></tr><tr><td>2</td><td>chantier</td><td><code>gestion-des-taches-strategie</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>—</td><td>écrite à la main</td></tr><tr><td>2</td><td>non déclaré</td><td><code>les-deux-scenarios-par-zip</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>—</td><td>écrite à la main · plan d'action</td></tr><tr><td>2</td><td>chantier</td><td><code>organisation-de-l-agence-strategie</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>—</td><td>écrite à la main</td></tr><tr><td>2</td><td>non déclaré</td><td><code>total-recall-strategie</code></td><td><code>strategie-globale-du-projet-entier</code></td><td>—</td><td>générée · plan d'action</td></tr></tbody></table>
-<p>· globale : 3 — strategie-globale-du-projet-entier, strategie-globale-de-l-agence, strategie-globale-du-jeu · non déclaré : 3 — strategie-cascade-philo-politique, les-deux-scenarios-par-zip, total-recall-strategie · chantier : 10 — outillage-et-garde-fous-strategie, charte-et-referentiel-strategie, classification-et-nivellement-strategie, le-jeu-et-le-site-strategie, donnees-et-mesure-strategie, export-et-commercialisation-strategie, process-et-ronde-strategie, renommage-en-masse-strategie, gestion-des-taches-strategie, organisation-de-l-agence-strategie HORS PORTÉE : elle RANGE, elle ne NOTE pas : un document peut être parfaitement classé et complètement périmé sur le fond. Le type est lu dans le titre que le document se donne, le rang vient des déclarations « DÉCOULE DE » réelles — aucun des deux ne dit si la stratégie est bonne.</p>
-<h3>Le détail, document par document</h3>
-<table><thead><tr><th>Document</th><th>Titre qu'il se donne</th><th>Taille</th></tr></thead><tbody><tr><td><code>docs/strategies/strategie-globale-du-projet-entier.md</code></td><td>LA STRATÉGIE GLOBALE DU PROJET ENTIER</td><td>21236 caractères</td></tr><tr><td><code>docs/strategies/strategie-cascade-philo-politique.md</code></td><td>Stratégie — la cascade philo/politique, et le double mouvement</td><td>10666 caractères</td></tr><tr><td><code>docs/strategies/strategie-globale-de-l-agence.md</code></td><td>LA STRATÉGIE GLOBALE DE L'AGENCE — comme si elle était seule</td><td>8648 caractères</td></tr><tr><td><code>docs/strategies/strategie-globale-du-jeu.md</code></td><td>LA STRATÉGIE GLOBALE DU JEU — comme s'il était seul</td><td>8327 caractères</td></tr><tr><td><code>docs/strategies/outillage-et-garde-fous-strategie.md</code></td><td>STRATÉGIE DE CHANTIER — Outillage et garde-fous</td><td>7525 caractères</td></tr><tr><td><code>docs/strategies/charte-et-referentiel-strategie.md</code></td><td>STRATÉGIE DE CHANTIER — Charte et referentiel</td><td>4365 caractères</td></tr><tr><td><code>docs/strategies/classification-et-nivellement-strategie.md</code></td><td>STRATÉGIE DE CHANTIER — CLASSIFICATION ET NIVELLEMENT</td><td>5515 caractères</td></tr><tr><td><code>docs/strategies/le-jeu-et-le-site-strategie.md</code></td><td>STRATÉGIE DE CHANTIER — Le jeu et le site</td><td>2851 caractères</td></tr><tr><td><code>docs/strategies/donnees-et-mesure-strategie.md</code></td><td>STRATÉGIE DE CHANTIER — Donnees et mesure</td><td>3468 caractères</td></tr><tr><td><code>docs/strategies/export-et-commercialisation-strategie.md</code></td><td>STRATÉGIE DE CHANTIER — EXPORT ET COMMERCIALISATION</td><td>30275 caractères</td></tr><tr><td><code>docs/strategies/process-et-ronde-strategie.md</code></td><td>STRATÉGIE DE CHANTIER — Process et Ronde</td><td>9808 caractères</td></tr><tr><td><code>docs/strategies/renommage-en-masse-strategie.md</code></td><td>STRATÉGIE DE CHANTIER — RENOMMAGE EN MASSE</td><td>8579 caractères</td></tr><tr><td><code>docs/strategies/gestion-des-taches-strategie.md</code></td><td>STRATÉGIE DE CHANTIER — GESTION DES TACHES</td><td>6184 caractères</td></tr><tr><td><code>docs/strategies/les-deux-scenarios-par-zip.md</code></td><td>Les deux façons de livrer l'Agence par ZIP — laquelle tient aujourd'hui</td><td>7300 caractères</td></tr><tr><td><code>docs/strategies/organisation-de-l-agence-strategie.md</code></td><td>STRATÉGIE DE CHANTIER — organisation-de-l-agence</td><td>6829 caractères</td></tr><tr><td><code>docs/strategies/total-recall-strategie.md</code></td><td>TOTAL RECALL — le cadrage, et ce que l'opération coûterait vraiment</td><td>5763 caractères</td></tr></tbody></table></main>
-  <div class="divider"></div><footer><p>Dérivé de docs/the-king/classification-des-strategies.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+  <main><p>Ce document n'est pas une maquette : il est passé par <strong>le même générateur</strong> que tous les rapports de l'Agence. Ce que tu vois ici est exactement ce que produiront les sorties HTML une fois le format validé — pas une image de ce qu'elles pourraient être.</p>
+<h3>La gamme, et pourquoi elle est fermée</h3>
+<p>Tout le texte vit en <strong>bleu foncé</strong> ou en <strong>gris foncé</strong>. Les fonds sont des gris bleutés, jamais un blanc pur : une page lue une heure sous un blanc pur fatigue l'œil, et ces documents sont faits pour être lus longtemps.</p>
+<table><thead><tr><th>Rôle</th><th>Couleur</th><th>Où elle sert</th></tr></thead><tbody><tr><td>Corps du texte</td><td>bleu foncé <code>#1f3b50</code></td><td>tout ce qui se lit</td></tr><tr><td>Texte secondaire</td><td>gris foncé <code>#38505e</code></td><td>précisions, légendes, notes de bas de bloc</td></tr><tr><td>Titres et accents</td><td>teal <code>#0e6a72</code></td><td>titres de section, filets, mises en avant</td></tr><tr><td>Liens</td><td>bleu <code>#16567e</code></td><td>toujours soulignés — la couleur seule ne dit jamais qu'un texte est cliquable</td></tr><tr><td>Fond de page</td><td>gris bleuté <code>#dfe7ed</code></td><td>la page</td></tr><tr><td>Fond d'encadré</td><td>blanc bleuté <code>#f3f7fa</code></td><td>jamais <code>#ffffff</code></td></tr></tbody></table>
+<div class="highlight"><p><strong>Un encadré, c'est ceci.</strong> Il sert à isoler ce qui mérite de s'arrêter : une définition, une
+décision prise, un chiffre qui change la lecture de tout le reste.</p><p>Il se pose sur le blanc bleuté, avec un filet teal à gauche.</p></div>
+<h3>Les deux niveaux d'alerte, et ils ne se valent pas</h3>
+<p class="alerte">🚨 <strong>Alerte critique — en rouge.</strong> Elle dit : il faut agir, et maintenant. Le rouge ne sert strictement à rien d'autre. Exemple réel : <em>« 2 parts sur 4 sortent en échec — 134 vérifications perdues. Ne pas se fier à ce lancement. »</em></p>
+<p class="alerte-grave">⛔ <strong>Alerte grave — en noir.</strong> Un cran en dessous. Elle dit : c'est sérieux, ça doit être traité, mais rien ne brûle. Exemple réel : <em>« 7 modules sur 9 s'importent mutuellement : il n'existe aucun ordre par dépendance entre eux. »</em></p>
+<p>La force de ces deux crans vient de leur <strong>rareté</strong>. Une page où tout crie ne dit plus rien — c'est pour ça que le reste de la gamme n'a aucune couleur vive.</p>
+<h3>Ce que donnent les autres éléments</h3>
+<h4>Une liste</h4>
+<ul><li>Un élément ordinaire, en bleu foncé.</li><li class="alerte">🚨 Un élément qui alerte en rouge garde son filet et son fond.</li><li class="alerte-grave">⛔ Un élément grave, d'un cran en dessous.</li><li>Un dernier élément ordinaire, pour voir le contraste entre les trois.</li></ul>
+<h4>Un tableau de mesures</h4>
+<table><thead><tr><th>Mesure</th><th>Avant</th><th>Après</th><th>Écart</th></tr></thead><tbody><tr><td>Filet de sécurité, en séquentiel</td><td>266,0 s</td><td>192,3 s</td><td>−28 %</td></tr><tr><td>Filet de sécurité, en 4 parts</td><td>266,0 s</td><td>67,1 s</td><td>−75 %</td></tr><tr><td>Vérifications</td><td>436</td><td>454</td><td>+18</td></tr><tr><td>Plancher du parallélisme</td><td>46,1 s</td><td>44,3 s</td><td>−4 %</td></tr></tbody></table>
+<h4>Du code</h4>
+<pre><code>node scripts/filet-en-parts.mjs
+  part 1 : ✅ en 58,5 s
+  part 4 : ✅ en 62,8 s</code></pre>
+<hr>
+<h3>Le logo, quand il existera</h3>
+<p>Le format à viser est <strong>SVG</strong>, et pour trois raisons qui tiennent toutes à l'usage réel de ces documents.</p>
+<ul><li><strong>Ces pages s'ouvrent à 150 %</strong> et se copient dans d'autres documents. Un SVG reste net à n'importe quelle échelle ; un PNG devient flou au premier agrandissement.</li><li><strong>Chaque rapport est un fichier HTML autonome</strong>, souvent déplacé ou envoyé seul. Le logo doit donc être <strong>embarqué dans la page</strong>, jamais lié à un fichier voisin — un SVG s'écrit directement dans le HTML, ce qu'aucune image binaire ne permet proprement.</li><li><strong>Un SVG peut hériter de la palette.</strong> Dessiné en <code>currentColor</code>, il prend automatiquement le teal de la page, et resterait juste le jour où la palette bouge.</li></ul>
+<p>Ce qu'il faut te demander au moment de le créer : un tracé <strong>monochrome</strong> (une seule couleur, pas de dégradé), lisible à <strong>24 pixels de haut</strong>, et livré en <code>.svg</code>. Garde un <code>.png</code> à fond transparent, en 512 px, pour les endroits qui n'acceptent pas le vectoriel — une signature de courriel, une icône de dépôt.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de /tmp/claude-0/demo-palette.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
 </div>
 </body>
 </html>

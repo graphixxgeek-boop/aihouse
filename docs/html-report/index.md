@@ -125,4 +125,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/livrables/le-filet-de-securite-2026-10-03.html` | `docs/livrables/le-filet-de-securite-2026-10-03.md` | 14337 | 2026-10-03 14:48Z |
 | `docs/livrables/le-document-maitre-2026-10-03.html` | `docs/livrables/le-document-maitre-2026-10-03.md` | 12089 | 2026-10-03 15:06Z |
 | `/tmp/claude-0/essai-palette.html` | `docs/the-king/classification-des-strategies.md` | 16805 | 2026-10-04 04:14Z |
-| `docs/livrables/ESSAI-palette-claire.html` | `docs/the-king/classification-des-strategies.md` | 17932 | 2026-10-04 04:37Z |
+| `docs/livrables/ESSAI-palette-claire.html` | `/tmp/claude-0/demo-palette.md` | 16166 | 2026-10-04 04:43Z |

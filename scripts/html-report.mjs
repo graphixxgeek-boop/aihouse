@@ -150,6 +150,26 @@ export function renderBlock(block) {
 // puis reconnaître `**gras**` sur le texte DÉJÀ échappé est la seule façon d'avoir les deux à la
 // fois — un rendu fidèle et aucune injection possible. L'ordre inverse laisserait passer du HTML
 // écrit dans un document.
+// LE NIVEAU D'ALERTE SE LIT SUR LE MARQUEUR DE TÊTE (2026-10-04, sa précision sur la palette).
+// DEUX CRANS, ET ILS NE SE VALENT PAS : 🚨 est le rouge — critique, il faut agir ; ⛔ est le noir —
+// grave, mais d'un cran en dessous. Tout le reste du texte vit en bleu foncé ou en gris foncé,
+// et c'est précisément ce qui donne à ces deux-là leur force : une page où tout crie ne dit rien.
+//
+// POURQUOI UN MARQUEUR ET PAS UNE CLASSE ÉCRITE À LA MAIN : les outils de ce dépôt impriment déjà
+// 🚨 dans leur sortie depuis des semaines. Le style suit donc ce qu'ils PRODUISENT, au lieu de
+// leur demander d'apprendre une syntaxe de plus — et un outil écrit demain hérite du rendu sans
+// que personne n'ait à y penser (Article 24).
+export const MARQUEURS_D_ALERTE = Object.freeze([
+  { marqueur: "🚨", classe: "alerte", quoi: "critique — rouge, il faut agir" },
+  { marqueur: "⛔", classe: "alerte-grave", quoi: "grave — noir, un cran sous le rouge" },
+]);
+
+export function classeDAlerte(texte = "") {
+  const t = String(texte ?? "").trim();
+  for (const m of MARQUEURS_D_ALERTE) if (t.startsWith(m.marqueur)) return ` class="${m.classe}"`;
+  return "";
+}
+
 export function renderInline(texte) {
   return escapeHtml(String(texte ?? ""))
     .replace(/`([^`]+)`/g, "<code>$1</code>")
@@ -231,8 +251,8 @@ export function blocsDepuisMarkdown(markdown) {
 export function renderBlockDocument(block) {
   if (block?.type === "heading" && block.level) return `<h${Math.min(block.level + 1, 6)}>${renderInline(block.text)}</h${Math.min(block.level + 1, 6)}>`;
   if (block?.type === "rule") return "<hr>";
-  if (block?.type === "paragraph") return `<p>${renderInline(block.text)}</p>`;
-  if (block?.type === "list") return `<ul>${(block.items || []).map((x) => `<li>${renderInline(x)}</li>`).join("")}</ul>`;
+  if (block?.type === "paragraph") return `<p${classeDAlerte(block.text)}>${renderInline(block.text)}</p>`;
+  if (block?.type === "list") return `<ul>${(block.items || []).map((x) => `<li${classeDAlerte(x)}>${renderInline(x)}</li>`).join("")}</ul>`;
   if (block?.type === "highlight") {
     const ps = (block.paragraphs || []).map((x) => `<p>${renderInline(x)}</p>`).join("");
     return `<div class="highlight">${ps}</div>`;
@@ -281,8 +301,15 @@ export const THEME_CSS = `
      l'autre sens. */
   :root {
     --bg: #dfe7ed; --panel: #f3f7fa; --panel-border: #b9c9d6;
-    --accent: #0e6a72; --accent2: #16567e; --text: #16242f; --muted: #4a5d6c;
+    --accent: #0e6a72; --accent2: #16567e; --text: #1f3b50; --text-gris: #38505e; --muted: #4a5d6c;
     --ok: #0e6a72; --warn: #b01c16;
+    /* LES DEUX NIVEAUX D'ALERTE, ET ILS NE SE VALENT PAS (2026-10-04, sa précision) : « le noir
+       est exceptionnel, tout comme le rouge : uniquement pour alerter […] un exemple de texte en
+       rouge pour m'alerter, et en noir car alerte d'un autre niveau (grave mais pas aussi
+       critique que rouge) ». Le ROUGE est le cran du haut, le NOIR celui juste en dessous. Aucune
+       des deux ne sert jamais à décorer : hors alerte, tout le texte vit en bleu foncé ou en gris
+       foncé, et c'est ce qui donne aux deux leur force. */
+    --alerte: #b01c16; --alerte-grave: #0a0f14;
     /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
        réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
        rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
@@ -349,6 +376,19 @@ export const THEME_CSS = `
   }
   main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
   main .highlight p { margin: 8px 0; }
+  /* LES DEUX NIVEAUX D'ALERTE À L'AFFICHAGE. Ils se déclenchent sur un MARQUEUR en tête de ligne,
+     jamais sur une classe écrite à la main : les outils de ce dépôt écrivent déjà 🚨 et ⛔ dans
+     leur sortie, donc le style suit ce qu'ils produisent au lieu d'exiger qu'ils apprennent une
+     syntaxe de plus. */
+  main .alerte { color: var(--alerte); font-weight: 600; }
+  main .alerte-grave { color: var(--alerte-grave); font-weight: 600; }
+  main p.alerte, main li.alerte {
+    border-left: 3px solid var(--alerte); padding: 8px 12px; background: #f7eceb; border-radius: 0 8px 8px 0;
+  }
+  main p.alerte-grave, main li.alerte-grave {
+    border-left: 3px solid var(--alerte-grave); padding: 8px 12px; background: #e9eef2; border-radius: 0 8px 8px 0;
+  }
+  main .doux { color: var(--text-gris); }
   main ul { padding-left: 22px; }
   main li { margin: 4px 0; }
   main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
